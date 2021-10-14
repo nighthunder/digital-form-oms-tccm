@@ -1,0 +1,28 @@
+div.login {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+div.login form img {
+    text-align: center;
+    width: 60%;
+    margin: auto;
+    margin-bottom: 40px;
+}
+
+form {
+    background-color: white;
+    border-radius: 10px;
+    display: flex;
+    max-width: 90vw;
+    width: 500px;
+    flex-direction: column;
+    padding: 36px 24px;
+}
+
+span.error {
+    color: crimson;
+    text-align: center;
+}

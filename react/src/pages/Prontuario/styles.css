@@ -1,0 +1,82 @@
+.prontuario-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    margin: 40px 0;
+}
+
+.prontuario-options form {
+    padding: 0;
+    flex-direction: row;
+    align-items: center;
+}
+
+.prontuario-options button.add-prontuario {
+    width: 250px;
+}
+
+div.prontuario-result button.add-modulo {
+    float: right;
+    margin: 15px 0;
+}
+
+div.prontuario-result {
+    padding-bottom: 32px;
+}
+
+div.prontuario-result .title-table {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    margin-bottom: 15px;
+    align-items: center;
+    column-gap: 20px;
+}
+
+div.prontuario-result h4 svg:hover {
+    cursor: pointer;
+    color: #0052D2;
+}
+
+div.prontuario-result table {
+    overflow-x: auto;
+}
+
+div.prontuario-result table, div.prontuario-result th, div.prontuario-result td {
+    border: 1px solid #757575;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+div.prontuario-result th, div.prontuario-result td {
+    padding: 15px;
+}
+
+div.prontuario-result th {
+    text-align: left;
+}
+
+div.prontuario-result tr.data-items:hover {
+    cursor: pointer;
+    background-color: rgba(0,0,0,0.1);
+}
+
+@media (max-width: 640px) {
+    div.prontuario-result {
+        overflow: hidden;
+        overflow-x: auto;
+        clear: both;
+        width: 100%;
+    }
+
+    div.prontuario-result .title-table {
+        grid-template-columns: 1fr;
+    }
+
+    div.prontuario-options {
+        flex-direction: column;
+    }
+
+    div.prontuario-options form {
+        padding: 24px;
+    }
+}

@@ -1,0 +1,34 @@
+div.modulos-list {
+    padding-top: 48px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+div.modulos-list div.item {
+    padding: 12px;
+    border: 1px solid #d8d8d8;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+div.modulos-list div.item:hover {
+    cursor: pointer;
+    background-color: rgba(0,0,0,0.1);
+}
+
+div.modulos-list div.item h4 {
+    font-size: 20px;
+}
+
+div.modulos-list div.item p {
+    margin-top: 5px;
+}
+
+@media (max-width: 640px) {
+    div.modulos-list {
+        grid-template-columns: 1fr;
+    }
+}

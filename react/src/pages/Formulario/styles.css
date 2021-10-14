@@ -1,0 +1,58 @@
+form.module {
+  margin: 0;
+  padding: 48px 0;
+  width: 100%;  
+}
+
+form.module .loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+form.module .loading img {
+  height: 100px;
+}
+
+form.module .qst .MuiTextField-root {
+  padding: 20px 0;
+  width: 60%;
+}
+
+form.module .qst .MuiInputBase-root {
+  width: 100%;
+}
+
+form.module .qst .MuiInput-formControl {
+  margin-top: 0;
+}
+
+form.module div.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  column-gap: 60px;
+  row-gap: 40px;
+}
+
+form.module h3 {
+  margin-top: 80px;
+  margin-bottom: 25px;
+}
+
+form.module div.form-submit {
+  display: flex;
+  flex-direction: column;
+  padding-top: 64px;
+  align-items: center;
+  justify-content: center;
+}
+
+form.module div.form-submit p.error {
+  color: crimson;
+  margin-bottom: 32px;
+}
+
+form.module div.form-submit button {
+  width: 200px;
+}

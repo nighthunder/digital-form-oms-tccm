@@ -1,0 +1,34 @@
+main.cadastro form {
+    padding: 36px 0;
+    width: 100%;
+}
+
+main.cadastro form .form-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 36px;
+    row-gap: 24px;
+}
+
+form div.register-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 36px;
+}
+
+form div.register-form span.error {
+    color: crimson;
+}
+
+main.cadastro form div.MuiInput-underline {
+    width: 100%;
+}
+
+@media (max-width: 640px) {
+    main.cadastro form .form-inputs {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+}

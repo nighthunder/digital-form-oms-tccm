@@ -1,0 +1,10 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\laravel\\database",
+    "\\laravel\\database\\factories",
+    "\\laravel\\database\\migrations",
+    "\\laravel\\database\\seeders"
+  ],
+  "PreviewInSolutionExplorer": false
+}
