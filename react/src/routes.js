@@ -19,6 +19,7 @@ export default function Routes() {
         <Route path="/login" component={Login} exact />
         <Route path="/cadastro" component={Cadastro} exact />
         <Route path="/hospital" component={Hospital} exact />
+        <Route path="/admin" component={Hospital} exact />
         <Route path="/prontuario" component={Prontuario} exact />
         <Route path="/add-prontuario" component={AddProntuario} exact />
         <Route path="/editar-prontuario" component={EditProntuario} exact />

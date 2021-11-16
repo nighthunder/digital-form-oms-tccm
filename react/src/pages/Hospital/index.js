@@ -1,6 +1,8 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { useHistory } from "react-router-dom";
 import { Button } from '@material-ui/core';
+import Pesquisa from '../Pesquisa/index';
 import './styles.css';
 
 import { connect } from 'react-redux';
@@ -10,6 +12,7 @@ function Hospital({user}) {
     const history = useHistory();
 
     return (
+        <div>
         <main className="container">
             <div>
                 <h2>Selecione o hospital</h2>
@@ -33,6 +36,10 @@ function Hospital({user}) {
                 ))}
             </div>
         </main>
+        <main className="container">
+           <Pesquisa/>
+        </main>
+        </div>
     );
 }
 

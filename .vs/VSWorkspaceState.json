@@ -1,10 +1,16 @@
 {
   "ExpandedNodes": [
     "",
-    "\\laravel\\database",
-    "\\laravel\\database\\factories",
-    "\\laravel\\database\\migrations",
-    "\\laravel\\database\\seeders"
+    "\\react",
+    "\\react\\src",
+    "\\react\\src\\pages",
+    "\\react\\src\\pages\\AddProntuario",
+    "\\react\\src\\pages\\Cadastro",
+    "\\react\\src\\pages\\Formulario",
+    "\\react\\src\\pages\\Modulos",
+    "\\react\\src\\pages\\Pesquisa",
+    "\\react\\src\\pages\\Prontuario"
   ],
+  "SelectedNode": "\\react\\src\\pages\\Pesquisa\\index.js",
   "PreviewInSolutionExplorer": false
 }
