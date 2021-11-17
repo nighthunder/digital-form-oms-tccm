@@ -2,15 +2,15 @@
   "ExpandedNodes": [
     "",
     "\\react",
-    "\\react\\src",
-    "\\react\\src\\pages",
     "\\react\\src\\pages\\AddProntuario",
     "\\react\\src\\pages\\Cadastro",
+    "\\react\\src\\pages\\EditProntuario",
     "\\react\\src\\pages\\Formulario",
+    "\\react\\src\\pages\\Login",
     "\\react\\src\\pages\\Modulos",
     "\\react\\src\\pages\\Pesquisa",
     "\\react\\src\\pages\\Prontuario"
   ],
-  "SelectedNode": "\\react\\src\\pages\\Pesquisa\\index.js",
+  "SelectedNode": "\\react\\package.json",
   "PreviewInSolutionExplorer": false
 }

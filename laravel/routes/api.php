@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FormController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\MedicalRecordController;
 
 /*
@@ -25,11 +26,13 @@ Route::group(['middleware' => 'cors:api'], function() {
     Route::post('searchMedicalRecord/', [MedicalRecordController::class, 'getModulesMedicalRecord']);
     Route::post('editMedicalRecord/', [MedicalRecordController::class, 'edit']);
 
-    Route::get('form/{id}', [FormController::class, 'show']);
+    Route::get('form/{id}', [FormController::class, 'show']); // obtenção das perguntas de um formulário
     Route::get('formResponses/{formRecordId}', [FormController::class, 'responses']);
     Route::get('form/', [FormController::class, 'search']);
     Route::post('form/{id}', [FormController::class, 'store']);
     Route::put('form/{id}', [FormController::class, 'update']);
+
+    Route::get('survey/{id}', [SurveyController::class, 'show']);
 });
 
 

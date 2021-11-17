@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 class FormController extends Controller
 {
-    public function show($id)
+    public function show($id) // procedure que obtem as perguntas de um formulário
     {
         return response()->json(DB::select("CALL getqst_rsp_modulo('{$id}')"));
     }

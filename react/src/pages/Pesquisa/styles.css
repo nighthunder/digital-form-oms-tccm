@@ -1,6 +1,18 @@
+h2{
+	margin-bottom: 25px;
+}
+table{
+	width: 100%;
+	text-align: center;
+}
+thead{
+	background: #0052d2;
+	color: #fff;
+}
 .add-pesquisa{
 	float: right;
 }
 .pesquisas-list{
-	margin-top: 55px;
+	padding-top: 25px;
+	clear: right;
 }

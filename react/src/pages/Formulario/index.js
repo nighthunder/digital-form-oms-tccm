@@ -1,3 +1,4 @@
+// View do formulário quando é preenchido.
 import React, { useState, useEffect  } from 'react';
 import './styles.css';
 import { useLocation } from "react-router-dom";
