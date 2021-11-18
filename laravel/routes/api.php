@@ -33,6 +33,7 @@ Route::group(['middleware' => 'cors:api'], function() {
     Route::put('form/{id}', [FormController::class, 'update']);
 
     Route::get('survey/{id}', [SurveyController::class, 'show']);
+    Route::get('survey/', [SurveyController::class, 'search']);
 });
 
 

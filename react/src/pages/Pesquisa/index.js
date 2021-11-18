@@ -17,7 +17,7 @@ function Pesquisa({user}) {
 
     useEffect(() => {
         async function loadQuestionnaires() {
-            const response = await api.get('/survey/1');
+            const response = await api.get('/survey');
             setQuestionnaires(response.data);
         }
         loadQuestionnaires();
@@ -39,11 +39,11 @@ function Pesquisa({user}) {
                             <thead>
                                 <tr>
                                     <th>Pesquisa</th>
+                                    <th>Versão</th> 
+                                    <th>Criado em</th> 
                                     <th>Modificado</th> 
                                     <th>Status</th>
-                                    <th>Ver</th>
-                                    <th>Editar</th>
-                                    <th>Criar Novo</th>
+                                    <th>Copiar</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -51,11 +51,11 @@ function Pesquisa({user}) {
                                 questionnaires.map(q => ( 
                                     <tr>
                                         <td>{q.description}</td>
+                                        <td>{q.version}</td>
                                         <td>{q.creationDate}</td> 
-                                        <td>{q.questionnaireStatusID}</td>
-                                        <td>Ver</td>
-                                        <td>Editar</td>
-                                        <td>Criar novo</td>
+                                        <td>{q.lastModification}</td> 
+                                        <td>{q.questionnaireStatus}</td>
+                                        <td>Criar</td>
                                     </tr>
                             
                                  ))

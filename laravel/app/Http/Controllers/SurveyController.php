@@ -14,4 +14,9 @@ class SurveyController extends Controller
         return response()->json(DB::select("CALL getQuestionnaire({$id})"));
     }
 
+    public function search() // procedure que obtem as perguntas de um formulário
+    {
+        return response()->json(DB::select("CALL getAllQuestionnaires()"));
+    }
 }
+
