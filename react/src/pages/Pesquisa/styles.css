@@ -1,13 +1,36 @@
+main.container{
+	min-height: 250px;
+}
 h2{
-	margin-bottom: 25px;
+	margin-bottom: 5px;
 }
 table{
 	width: 100%;
 	text-align: center;
+	border-collapse: collapse;
+	cursor: pointer;
+	text-align: left;
+	box-shadow: 5px 5px 5px #eeeded;
+	margin-bottom: 25px;
 }
 thead{
 	background: #0052d2;
 	color: #fff;
+}
+th{
+	padding: 6px;
+	font-size: 0.8em;
+	letter-spacing: 0.02em;
+	font-weight: lighter;
+}
+tr:nth-child(even){
+	background-color: #f4dfb6;
+}
+
+td{
+	font-size: 0.90em;
+	padding: 5px;
+	line-height: 1.75em;
 }
 .add-pesquisa{
 	float: right;

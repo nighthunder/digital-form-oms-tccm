@@ -24,26 +24,41 @@ function Pesquisa({user}) {
 
     }, [])
 
+    function getPtBrDate(somedate) {
+        //var today = new Date();
+        var dd = String(somedate.getDate()).padStart(2, '0');
+        var mm = String(somedate.getMonth() + 1).padStart(2, '0');
+        var yyyy = somedate.getFullYear();
+        return dd + '/' + mm + '/' + yyyy;
+    }
+
+    function getPtBrQuestionnaireStatus(someQuestionnaireStatus){
+
+        var status = someQuestionnaireStatus
+
+        var status1 = status === "Published" ? "Publicado" : 
+        (   
+            status1 = status === "New" ? "Novo" : 
+            (
+                status1 = status === "Deprecated" ? "Deprecado": "Unknow"
+            )
+        )
+        return status1;
+    }
+
 	return (
             <div className="pesquisa">
-				<h2>Selecione uma pesquisa</h2>
-				<Button variant="outlined" color="primary" className="add-prontuario add-pesquisa" onClick={ () => {
-                    history.push('/add-prontuario', { hospitalIndex: location.state.hospitalIndex })
-                }}>
-                    <Add color="primary" />
-                    Adicionar nova Pesquisa
-                </Button>
+				<h2>Crie e edite pesquisas</h2>
                
                 <div className="pesquisas-list">
                     <table>
                             <thead>
                                 <tr>
-                                    <th>Pesquisa</th>
-                                    <th>Versão</th> 
-                                    <th>Criado em</th> 
-                                    <th>Modificado</th> 
-                                    <th>Status</th>
-                                    <th>Copiar</th>
+                                    <th>PESQUISA</th>
+                                    <th>VER.</th> 
+                                    <th>STATUS</th>
+                                    <th>CRIADO EM</th> 
+                                    <th>MODIFICADO EM</th> 
                                 </tr>
                             </thead>
                             <tbody>
@@ -52,10 +67,9 @@ function Pesquisa({user}) {
                                     <tr>
                                         <td>{q.description}</td>
                                         <td>{q.version}</td>
-                                        <td>{q.creationDate}</td> 
-                                        <td>{q.lastModification}</td> 
-                                        <td>{q.questionnaireStatus}</td>
-                                        <td>Criar</td>
+                                        <td>{getPtBrQuestionnaireStatus(q.questionnaireStatus)}</td>
+                                        <td>{getPtBrDate(new Date(q.creationDate))}</td> 
+                                        <td>{getPtBrDate(new Date(q.lastModification))}</td> 
                                     </tr>
                             
                                  ))
@@ -64,7 +78,14 @@ function Pesquisa({user}) {
                             
                     </table>
                 </div>
+                <Button variant="outlined" color="primary" className="add-prontuario add-pesquisa" onClick={ () => {
+                    history.push('/add-prontuario', { hospitalIndex: location.state.hospitalIndex })
+                }}>
+                    <Add color="primary" />
+                    Adicionar nova Pesquisa
+                </Button>
 			</div>
+
      );
 
 }
