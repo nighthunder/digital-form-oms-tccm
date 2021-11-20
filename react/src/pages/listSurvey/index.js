@@ -1,3 +1,5 @@
+// Lista de todas as pesquisas
+
 import React, { useState, useEffect } from 'react';
 import { useHistory, useLocation } from "react-router-dom";
 import api from '../../services/api';
@@ -7,7 +9,7 @@ import './styles.css';
 
 import { connect } from 'react-redux';
 
-function Pesquisa({user}) {
+function ListSurvey({user}) {
 
     const location = useLocation();
 
@@ -32,23 +34,9 @@ function Pesquisa({user}) {
         return dd + '/' + mm + '/' + yyyy;
     }
 
-    function getPtBrQuestionnaireStatus(someQuestionnaireStatus){
-
-        var status = someQuestionnaireStatus
-
-        var status1 = status === "Published" ? "Publicado" : 
-        (   
-            status1 = status === "New" ? "Novo" : 
-            (
-                status1 = status === "Deprecated" ? "Deprecado": "Unknow"
-            )
-        )
-        return status1;
-    }
-
 	return (
             <div className="pesquisa">
-				<h2>Crie e edite pesquisas</h2>
+				<h2>Criação e edite pesquisas</h2>
                
                 <div className="pesquisas-list">
                     <table>
@@ -67,7 +55,7 @@ function Pesquisa({user}) {
                                     <tr>
                                         <td>{q.description}</td>
                                         <td>{q.version}</td>
-                                        <td>{getPtBrQuestionnaireStatus(q.questionnaireStatus)}</td>
+                                        <td>{q.questionnaireStatus}</td>
                                         <td>{getPtBrDate(new Date(q.creationDate))}</td> 
                                         <td>{getPtBrDate(new Date(q.lastModification))}</td> 
                                     </tr>
@@ -90,4 +78,4 @@ function Pesquisa({user}) {
 
 }
 
-export default Pesquisa;
+export default ListSurvey;

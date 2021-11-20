@@ -1,7 +1,16 @@
 {
   "ExpandedNodes": [
     "",
-    "\\react"
+    "\\Formulário de Pesquisa Clínica Uniforme",
+    "\\laravel\\app",
+    "\\laravel\\app\\Exceptions",
+    "\\laravel\\app\\Http",
+    "\\laravel\\app\\Providers",
+    "\\laravel\\routes",
+    "\\laravel\\storage\\logs",
+    "\\react",
+    "\\react\\src"
   ],
+  "SelectedNode": "\\react\\src\\pages\\Modulos",
   "PreviewInSolutionExplorer": false
 }

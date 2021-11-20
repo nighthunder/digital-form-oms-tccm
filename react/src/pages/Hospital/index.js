@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { useHistory } from "react-router-dom";
 import { Button } from '@material-ui/core';
-import Pesquisa from '../Pesquisa/index';
+import ListSurvey from '../listSurvey/index';
 import './styles.css';
 
 import { connect } from 'react-redux';
@@ -37,7 +37,7 @@ function Hospital({user}) {
             </div>
         </main>
         <main className="container">
-           <Pesquisa/>
+           <ListSurvey/>
         </main>
         </div>
     );
