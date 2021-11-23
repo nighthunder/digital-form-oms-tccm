@@ -1,5 +1,5 @@
 main.container{
-	min-height: 250px;
+	min-height: 285px;
 }
 h2{
 	margin-bottom: 5px;
@@ -12,6 +12,7 @@ table{
 	text-align: left;
 	box-shadow: 5px 5px 5px #eeeded;
 	margin-bottom: 25px;
+	border: 1px solid #eeeded;
 }
 thead{
 	background: #0052d2;
@@ -20,17 +21,21 @@ thead{
 th{
 	padding: 6px;
 	font-size: 0.8em;
-	letter-spacing: 0.02em;
+	letter-spacing: 0.03em;
 	font-weight: lighter;
+	line-height: 2.05em;
 }
 tr:nth-child(even){
 	background-color: #f4dfb6;
 }
-
+tr:hover{
+	cursor: pointer;
+	background-color: rgba(0,0,0,0.1);
+}
 td{
 	font-size: 0.90em;
 	padding: 5px;
-	line-height: 1.75em;
+	line-height: 2.25em;
 }
 .add-pesquisa{
 	float: right;

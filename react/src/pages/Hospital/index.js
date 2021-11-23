@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { useHistory } from "react-router-dom";
+import { useHistory, useLocation } from "react-router-dom";
 import { Button } from '@material-ui/core';
-import ListSurvey from '../listSurvey/index';
+import ListSurvey from '../ListSurvey/index';
 import './styles.css';
 
 import { connect } from 'react-redux';
@@ -10,6 +10,12 @@ import { connect } from 'react-redux';
 function Hospital({user}) {
 
     const history = useHistory();
+
+    console.log("History Hospital", history);
+
+    const location = useLocation();
+
+    console.log("Location Hospital", location);
 
     return (
         <div>

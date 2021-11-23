@@ -13,7 +13,11 @@ function ListSurvey({user}) {
 
     const location = useLocation();
 
+    console.log("Location ListSurvey", location)
+
     const history = useHistory();
+
+    console.log("History ListSurvey", history)
 
     const [questionnaires, setQuestionnaires] = useState([]);
 
@@ -67,7 +71,7 @@ function ListSurvey({user}) {
                     </table>
                 </div>
                 <Button variant="outlined" color="primary" className="add-prontuario add-pesquisa" onClick={ () => {
-                    history.push('/add-prontuario', { hospitalIndex: location.state.hospitalIndex })
+                    history.push('/add-survey')
                 }}>
                     <Add color="primary" />
                     Adicionar nova Pesquisa
@@ -78,4 +82,4 @@ function ListSurvey({user}) {
 
 }
 
-export default ListSurvey;
+export default connect(state => ({ user: state.user }))(ListSurvey);

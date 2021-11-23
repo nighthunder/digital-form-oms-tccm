@@ -1,0 +1,80 @@
+BEGIN
+#========================================================================================================================
+#== Procedure criada para o registro de um participant associado a um hospital para futuro lançamento dos modulos do formulario
+#== Cria o registro na tb_participant e na tb_AssessmentQuestionnaire
+#== retorna um registro contendo o participantId e a msg de retorno
+#== Alterada em 22 dez 2020
+#== Criada em 21 dez 2020
+#========================================================================================================================
+
+DECLARE v_Exist integer;
+DECLARE p_participantId integer;
+DECLARE p_msg_retorno varchar(500);
+
+sp:BEGIN 
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+	set p_medicalrecord = rtrim(ltrim(p_medicalRecord));
+
+	if (p_medicalRecord is null) or ( p_medicalRecord = '')  then
+ 	    set p_msg_retorno = 'Informe o numero do prontuário eletronico para cadastro. ';
+        leave sp;   
+    end if;
+    
+    set p_participantId = null;
+                         
+	# verificando se já existe registro criado para o paciente no hospital para registro desse questionario
+    Select t1.participantID into p_participantId from tb_assessmentquestionnaire t1, tb_participant t2
+		where t1.participantID = t2.participantid and
+			  hospitalUnitID = p_hospitalunitid and
+              questionnaireID = p_questionnaireid and
+              t2.medicalRecord = p_medicalRecord;
+                         
+ 	if ( p_participantId is not null ) then
+	    set p_msg_retorno = 'Prontuário já registrado para o Hospital.';
+        leave sp;
+	end if;
+	
+   START TRANSACTION;
+	# Inserindo o registro do participante      
+	INSERT INTO tb_participant (
+			    medicalRecord)
+                values (p_medicalRecord);
+	set p_participantid = LAST_INSERT_ID();
+    
+	if p_participantid is NULL then
+       ROLLBACK;
+	    set p_msg_retorno = 'Erro no registro do Prontuario Medico. Verifique!';
+        leave sp;
+	end if;
+    
+    INSERT INTO tb_assessmentquestionnaire (
+				participantID, hospitalUnitId, questionnaireId )
+		    VALUES ( p_participantid, p_hospitalUnitid, p_questionnaireId );
+
+
+    # registrando a informação de notificação para a inclusao do modulo 
+    INSERT INTO tb_notificationrecord (
+			userid, profileid, hospitalunitid, tablename, rowdid, changedon, operation, log)
+            values (p_userid, p_grouproleid, p_hospitalunitid, 'tb_participant', p_participantid, now(), 'I', CONCAT('Inclusão de paciente: ', p_medicalRecord));
+
+    # registrando a informação de notificação para a inclusao da questão referente a data do modulo
+    INSERT INTO tb_notificationrecord (
+			userid, profileid, hospitalunitid, tablename, rowdid, changedon, operation, log)
+            values (p_userid, p_grouproleid, p_hospitalunitid, 'tb_assessmentquestionnaire', 0, now(), 'I', CONCAT('Inclusão do registro referente ao paciente: ', CONVERT(p_participantId, char), ' para o hospital: ', CONVERT(p_hospitalunitid, char)));
+    
+	COMMIT;
+
+    set p_msg_retorno = 'Registro do Prontuario Medico com Sucesso';
+
+END sp;	
+
+## select inserido para tratar limitaçao do retorno de procedures no Laravel
+Select p_participantid as participantId, p_msg_retorno as msgRetorno FROM DUAL;
+  
+END

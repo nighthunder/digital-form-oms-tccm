@@ -13,6 +13,8 @@ function Formulario({logged, user, participantId}) {
 
     const location = useLocation();
 
+    console.log("Location Formulario", location);
+
     const titles = ['Admissão','Acompanhamento','Desfecho']
 
     const [form, setForm] = useState({
