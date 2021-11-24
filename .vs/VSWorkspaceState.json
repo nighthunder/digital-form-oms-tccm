@@ -1,8 +1,16 @@
 {
   "ExpandedNodes": [
     "",
-    "\\react\\src"
+    "\\laravel\\app\\Http\\Controllers",
+    "\\laravel\\storage\\logs",
+    "\\react",
+    "\\react\\src",
+    "\\react\\src\\pages",
+    "\\react\\src\\pages\\AddProntuario",
+    "\\react\\src\\pages\\Formulario",
+    "\\react\\src\\pages\\ListSurvey",
+    "\\react\\src\\services"
   ],
-  "SelectedNode": "\\Formulário de Pesquisa Clínica Uniforme",
+  "SelectedNode": "\\react\\src\\pages\\ListSurvey\\styles.css",
   "PreviewInSolutionExplorer": false
 }
