@@ -1,8 +1,6 @@
 {
   "ExpandedNodes": [
     "",
-    "\\laravel\\app\\Http\\Controllers",
-    "\\laravel\\storage\\logs",
     "\\react",
     "\\react\\src",
     "\\react\\src\\pages",
@@ -11,6 +9,5 @@
     "\\react\\src\\pages\\ListSurvey",
     "\\react\\src\\services"
   ],
-  "SelectedNode": "\\react\\src\\pages\\ListSurvey\\styles.css",
   "PreviewInSolutionExplorer": false
 }
