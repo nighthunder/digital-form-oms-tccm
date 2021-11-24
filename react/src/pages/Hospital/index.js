@@ -1,6 +1,6 @@
-import React from 'react';
+import React, {useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
-import { useHistory, useLocation } from "react-router-dom";
+import { useHistory, useLocation} from "react-router-dom";
 import { Button } from '@material-ui/core';
 import ListSurvey from '../ListSurvey/index';
 import './styles.css';
@@ -11,11 +11,14 @@ function Hospital({user}) {
 
     const history = useHistory();
 
-    console.log("History Hospital", history);
-
     const location = useLocation();
 
-    console.log("Location Hospital", location);
+    const [hospital, setHospital] = useState();
+
+    useEffect(() => {
+        console.log("Location Hospital", location);
+        console.log("History Hospital", history);
+    });
 
     return (
         <div>
@@ -32,7 +35,6 @@ function Hospital({user}) {
                             <h4> {hospital.hospitalName} </h4>
                             <p> {hospital.userrole} </p>
                         </div>
-                        
                         { (hospital.userrole === "Administrador") && 
                             <Button variant="contained" color="primary" onClick={ () => {
                                 history.push('/cadastro', { hospitalId: hospital.hospitalunitid, hospitalIndex: index})
@@ -43,7 +45,7 @@ function Hospital({user}) {
             </div>
         </main>
         <main className="container">
-           <ListSurvey/>
+           <ListSurvey hospital={hospital}/>
         </main>
         </div>
     );

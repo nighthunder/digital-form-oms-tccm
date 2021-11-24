@@ -9,7 +9,7 @@ import './styles.css';
 
 import { connect } from 'react-redux';
 
-function ListSurvey({user}) {
+function ListSurvey({user, hospital}) {
 
     const location = useLocation();
 
@@ -18,6 +18,8 @@ function ListSurvey({user}) {
     const history = useHistory();
 
     console.log("History ListSurvey", history)
+
+    console.log("Hospital props", hospital);
 
     const [questionnaires, setQuestionnaires] = useState([]);
 
@@ -69,15 +71,14 @@ function ListSurvey({user}) {
                              </tbody>
                             
                     </table>
-                </div>
-                <Button variant="outlined" color="primary" className="add-prontuario add-pesquisa" onClick={ () => {
+                    <Button variant="outlined" color="primary" className="add-prontuario add-pesquisa" onClick={ () => {
                     history.push('/add-survey')
-                }}>
+                    }}>
                     <Add color="primary" />
                     Adicionar nova Pesquisa
-                </Button>
+                    </Button>
+                </div>
 			</div>
-
      );
 
 }

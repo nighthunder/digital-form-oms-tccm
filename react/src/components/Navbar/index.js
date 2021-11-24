@@ -33,7 +33,7 @@ function Navbar({ onSubmit, state, dispatch }) {
         <nav>
             <div className="navContent">
                 <div className="leftItems">
-                    <img src="assets/logo-icon.png" />
+                   <a href="/"><img src="assets/logo-icon.png" /></a>
                     <h1>VODAN BR</h1>
                 </div>
                 <div className="rightItems">
