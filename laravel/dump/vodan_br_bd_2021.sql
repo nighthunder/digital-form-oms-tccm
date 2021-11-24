@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 19, 2021 at 11:25 PM
+-- Generation Time: Nov 24, 2021 at 02:04 AM
 -- Server version: 10.4.21-MariaDB
 -- PHP Version: 7.3.31
 
@@ -65,7 +65,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `getAllQuestionnaires` ()  select t1
        t1.version,
        t1.lastModification,
        t1.creationDate,
-	   t2.description as questionnaireStatus
+	   translate('pt-br',t2.description) as questionnaireStatus
 from tb_questionnaire as t1, 
 	 tb_questionnairestatus as t2
 where t1.questionnaireStatusID = t2.questionnaireStatusID$$
@@ -366,7 +366,7 @@ DECLARE v_alteracao text;
 		
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `postMedicalRecord` (`p_userid` INTEGER, `p_groupRoleid` INTEGER, `p_hospitalUnitid` INTEGER, `p_questionnaireId` INTEGER, `p_medicalRecord` VARCHAR(255))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `postMedicalRecord` (IN `p_userid` INT, IN `p_groupRoleid` INT, IN `p_hospitalUnitid` INT, IN `p_questionnaireId` INT, IN `p_medicalRecord` VARCHAR(255))  BEGIN
 #========================================================================================================================
 #== Procedure criada para o registro de um participant associado a um hospital para futuro lançamento dos modulos do formulario
 #== Cria o registro na tb_participant e na tb_AssessmentQuestionnaire
@@ -442,8 +442,9 @@ sp:BEGIN
 
 END sp;	
 
-## select inserido para tratar limitaçao do retorno de procedures no Laravel
-Select p_participantid as participantId, p_msg_retorno as msgRetorno FROM DUAL;
+ ## select inserido para tratar limitaçao do retorno de procedures no Laravel	
+ select p_msg_retorno as msgRetorno from DUAL;
+	
   
 END$$
 
@@ -595,6 +596,59 @@ END;
 		
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `postQuestionnaire` (IN `p_userID` INT, IN `p_groupRoleID` INT, IN `p_hospitalUnitID` INT, IN `p_questionnaireDescription` VARCHAR(255), IN `p_questionnaireVersion` VARCHAR(255), IN `p_questionnaireStatusID` INT, IN `p_questionnaireLastModification` TIMESTAMP, IN `p_questionnaireCreationDate` TIMESTAMP)  BEGIN
+#========================================================================================================================
+#== Procedure criada para o registro de um participant associado a um hospital para futuro lançamento dos modulos do formulario
+#== Cria o registro na tb_participant e na tb_AssessmentQuestionnaire
+#== retorna um registro contendo o participantId e a msg de retorno
+#== Alterada em 22 dez 2020
+#== Criada em 21 dez 2020
+#========================================================================================================================
+
+DECLARE p_userID integer;
+DECLARE p_msg_retorno varchar(500);
+
+sp:BEGIN 
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+	set p_questionnaireDescription = rtrim(ltrim(p_questionnaireDescription));
+
+	if (p_questionnaireDescription is null) or ( p_questionnaireDescription = '')  then
+ 	    set p_msg_retorno = 'Informe uma descrição para a pesquisa. ';
+        leave sp;   
+    end if;
+
+	
+   START TRANSACTION;
+	# Inserindo nova pesquisa       
+    
+    INSERT INTO tb_questionnaire (
+			questionnaireID, description, questionnaireStatusID, isBasedOn, createdBy, version, 
+    		lastModification, creationDate )
+            values (DEFAULT, p_questionnaireDescription, p_questionnaireStatusID, NULL, NULL, p_questionnaireVersion, p_questionnaireLastModification, p_questionnaireCreationDate);
+
+
+    # registrando a informação de notificação para a inclusao do modulo 
+    INSERT INTO tb_notificationrecord (
+			userid, profileid, hospitalunitid, tablename, rowdid, changedon, operation, log)
+            values (p_userid, p_grouproleid, p_hospitalunitid, 'tb_questionnaire', 1, now(), 'I', CONCAT('Criação de pesquisa: ', p_questionnaireDescription));
+    
+	COMMIT;
+
+    set p_msg_retorno = 'Questionário criado com sucesso';
+
+END sp;	
+
+ ## select inserido para tratar limitaçao do retorno de procedures no Laravel	
+select p_msg_retorno as msgRetorno from DUAL;
+  
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `postuser` (`p_adminid` INTEGER, `p_adminGroupRoleid` INTEGER, `p_adminHospitalUnitid` INTEGER, `p_login` VARCHAR(255), `p_firstname` VARCHAR(100), `p_lastname` VARCHAR(100), `p_regionalcouncilcode` VARCHAR(255), `p_password` VARCHAR(255), `p_email` VARCHAR(255), `p_fonenumber` VARCHAR(255), `p_groupRole` VARCHAR(255), OUT `p_userid` INTEGER, OUT `p_msg_retorno` VARCHAR(500))  sp:BEGIN
 #========================================================================================================================
 #== Procedure criada para a inclusão de usuários no sistema
@@ -692,7 +746,7 @@ DECLARE v_hospitalUnitName varchar(500);
 		
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `putMedicalRecord` (`p_userid` INTEGER, `p_groupRoleid` INTEGER, `p_hospitalUnitid` INTEGER, `p_questionnaireId` INTEGER, `p_participantId` INTEGER, `p_medicalRecordNew` VARCHAR(255), OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `putMedicalRecord` (IN `p_userid` INT, IN `p_groupRoleid` INT, IN `p_hospitalUnitid` INT, IN `p_questionnaireId` INT, IN `p_participantId` INT, IN `p_medicalRecordNew` VARCHAR(255), OUT `p_msg_retorno` VARCHAR(500))  BEGIN
 #========================================================================================================================
 #== Procedure criada para o atualizar o registro de um participant associado a um hospital para futuro lançamento dos modulos do formulario
 #== Altera o numero do Prontuario na tb_participant
@@ -760,8 +814,8 @@ sp:BEGIN
     COMMIT;
 END sp;
 
- ## select inserido para tratar limitaçao do retorno de procedures no Laravel	
- select p_msg_retorno as msgRetorno from DUAL;
+## select inserido para tratar limitaçao do retorno de procedures no Laravel
+Select p_participantid as participantId, p_msg_retorno as msgRetorno FROM DUAL;
 		
 END$$
 
@@ -2571,7 +2625,10 @@ INSERT INTO `tb_multilanguage` (`languageID`, `description`, `descriptionLang`) 
 (1, 'ynun_list', 'Lista YNUN'),
 (1, 'YNUN_Question', 'Questão com resposta Sim Não Desconhecido Não Informado'),
 (1, 'Zambia', 'Zambia'),
-(1, 'Zimbabwe', 'Zimbabwe');
+(1, 'Zimbabwe', 'Zimbabwe'),
+(1, 'Published', 'Publicado'),
+(1, 'Deprecated', 'Deprecado'),
+(1, 'New', 'Novo');
 
 -- --------------------------------------------------------
 
@@ -4595,13 +4652,13 @@ INSERT INTO `tb_questiongroupformrecord` (`questionGroupFormRecordID`, `formReco
 --
 
 CREATE TABLE `tb_questionnaire` (
-  `questionnaireID` int(10) NOT NULL,
+  `questionnaireID` int(255) NOT NULL,
   `description` varchar(255) NOT NULL,
   `questionnaireStatusID` int(10) DEFAULT NULL,
   `IsBasedOn` int(10) DEFAULT NULL,
   `createdBy` int(10) DEFAULT NULL,
   `version` varchar(50) DEFAULT NULL,
-  `lastModification` timestamp NULL DEFAULT NULL,
+  `lastModification` timestamp NOT NULL DEFAULT current_timestamp(),
   `creationDate` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -4611,7 +4668,13 @@ CREATE TABLE `tb_questionnaire` (
 
 INSERT INTO `tb_questionnaire` (`questionnaireID`, `description`, `questionnaireStatusID`, `IsBasedOn`, `createdBy`, `version`, `lastModification`, `creationDate`) VALUES
 (1, 'WHO COVID-19 Rapid Version CRF', 1, NULL, NULL, '1.0', '2021-11-17 21:06:57', '2021-11-17 21:08:01'),
-(2, 'Pesquisa de teste 2', 3, NULL, NULL, '0.0', '2021-11-17 23:16:07', '2021-11-19 22:21:11');
+(2, 'Pesquisa de teste 2', 3, NULL, NULL, '0.0', '2021-11-17 23:16:07', '2021-11-19 22:21:11'),
+(3, 'teste', 1, NULL, NULL, '0.0', '2021-11-24 00:23:05', '2021-11-24 00:23:05'),
+(4, 'teste', 1, NULL, NULL, '0.0', '2021-11-24 00:23:05', '2021-11-24 00:23:05'),
+(5, 'nova pesquisa', 1, NULL, NULL, '0.0', '2021-11-24 00:25:22', '2021-11-24 00:25:22'),
+(6, 'Questionário 2', 2, NULL, NULL, '0.0', '2021-11-24 00:31:02', '2021-11-24 00:31:02'),
+(7, 'textao', 2, NULL, NULL, '0.0', '2021-11-24 00:31:46', '2021-11-24 00:31:46'),
+(8, 'Outra pesquisa', 2, NULL, NULL, '0.0', '2021-11-24 00:47:34', '2021-11-24 00:47:34');
 
 -- --------------------------------------------------------
 
@@ -5125,7 +5188,7 @@ CREATE TABLE `vw_questiongroup_covidcrfrapid` (
 -- (See below for the actual view)
 --
 CREATE TABLE `vw_questionnaire_covidcrfrapid` (
-`questionnaireID` int(10)
+`questionnaireID` int(255)
 ,`description` varchar(255)
 ,`ontologyURI` varchar(500)
 );
@@ -5510,7 +5573,7 @@ ALTER TABLE `tb_questiongroupformrecord`
 -- AUTO_INCREMENT for table `tb_questionnaire`
 --
 ALTER TABLE `tb_questionnaire`
-  MODIFY `questionnaireID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `questionnaireID` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `tb_questionnairepartstable`
