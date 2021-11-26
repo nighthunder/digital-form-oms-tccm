@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import Hospital from "./pages/Hospital";
 import AddSurvey from "./pages/AddSurvey";
+import ShowSurvey from "./pages/ShowSurvey";
 import Prontuario from "./pages/Prontuario";
 import Modulos from "./pages/Modulos";
 import Formulario from "./pages/Formulario";
@@ -21,6 +22,7 @@ export default function Routes() {
         <Route path="/cadastro" component={Cadastro} exact />
         <Route path="/hospital" component={Hospital} exact />
         <Route path="/add-survey" component={AddSurvey} exact />
+        <Route path="/show-survey" component={ShowSurvey} exact />
         <Route path="/prontuario" component={Prontuario} exact />
         <Route path="/add-prontuario" component={AddProntuario} exact />
         <Route path="/editar-prontuario" component={EditProntuario} exact />

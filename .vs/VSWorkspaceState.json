@@ -3,11 +3,8 @@
     "",
     "\\react",
     "\\react\\src",
-    "\\react\\src\\pages",
-    "\\react\\src\\pages\\AddProntuario",
-    "\\react\\src\\pages\\Formulario",
-    "\\react\\src\\pages\\ListSurvey",
-    "\\react\\src\\services"
+    "\\react\\src\\pages\\ListSurvey"
   ],
+  "SelectedNode": "\\react\\src\\pages",
   "PreviewInSolutionExplorer": false
 }

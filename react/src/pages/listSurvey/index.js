@@ -13,13 +13,7 @@ function ListSurvey({user, hospital}) {
 
     const location = useLocation();
 
-    console.log("Location ListSurvey", location)
-
     const history = useHistory();
-
-    console.log("History ListSurvey", history)
-
-    console.log("Hospital props", hospital);
 
     const [questionnaires, setQuestionnaires] = useState([]);
 
@@ -41,10 +35,10 @@ function ListSurvey({user, hospital}) {
     }
 
 	return (
-            <div className="pesquisa">
+            <div className="survey">
 				<h2>Criação e edite pesquisas</h2>
                
-                <div className="pesquisas-list">
+                <div className="surveys-list">
                     <table>
                             <thead>
                                 <tr>
@@ -58,7 +52,16 @@ function ListSurvey({user, hospital}) {
                             <tbody>
                             {
                                 questionnaires.map(q => ( 
-                                    <tr>
+                                    <tr key={q.questionnaireID} data-key={q.questionnaireID} onClick={ () => {
+                                    history.push('/show-survey/', 
+                                    {questionnaireID: q.questionnaireID, 
+                                    description : q.description,
+                                    version : q.version,
+                                    questionnaireStatusID : q.questionnaireStatus,
+                                    lastModification: getPtBrDate(new Date(q.lastModification)),
+                                    creationDate: getPtBrDate(new Date(q.creationDate))
+                                    })
+                                    }}>
                                         <td>{q.description}</td>
                                         <td>{q.version}</td>
                                         <td>{q.questionnaireStatus}</td>
@@ -71,7 +74,7 @@ function ListSurvey({user, hospital}) {
                              </tbody>
                             
                     </table>
-                    <Button variant="outlined" color="primary" className="add-prontuario add-pesquisa" onClick={ () => {
+                    <Button variant="outlined" color="primary" className="add-survey" onClick={ () => {
                     history.push('/add-survey')
                     }}>
                     <Add color="primary" />
