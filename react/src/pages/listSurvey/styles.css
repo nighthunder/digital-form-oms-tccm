@@ -46,6 +46,9 @@ td{
 .add-survey{
 	float: right;
 }
+.add-based{
+	margin-top: 15px;
+}
 .surveys-list{
 	padding-top: 25px;
 	clear: right;

@@ -20,8 +20,10 @@ function ShowSurvey({user}) {
         async function loadModules() {
             const response = await api.get('/modules/'+location.state.questionnaireID);
             setModules(response.data);
-			console.log("Resposta", modules);
-        }
+			console.log("Resposta2", user);
+			console.log("Resposta4", modules);
+			console.log("Resposta3", location.state);
+        }                                                                                                                                                                                                       
         loadModules();
     }, [])
 
@@ -48,7 +50,7 @@ function ShowSurvey({user}) {
 				<table>
 					<thead>
 						<tr>
-							<th>FORMULARIO</th>
+							<th>FORMULÁRIO</th>
 							<th>STATUS</th>
 							<th>CRIADO EM</th> 
 							<th>MODIFICADO EM</th> 
@@ -58,8 +60,14 @@ function ShowSurvey({user}) {
 					{
                               modules.map(q => ( 
                                     <tr key={q.questionnaireID} data-key={q.questionnaireID} onClick={ () => {
-                                    history.push('/show-survey/'
-									)
+                                    history.push('/show-survey/',
+									{questionnaireID: q.questionnaireID, 
+                                    description : q.description,
+                                    version : q.version,
+                                    questionnaireStatus : q.questionnaireStatus,
+                                    lastModification: getPtBrDate(new Date(q.lastModification)),
+                                    creationDate: getPtBrDate(new Date(q.creationDate))
+                                    })
                                     }}>
                                         <td>{q.description}</td>
                                         <td>{q.crfFormsStatus}</td>
@@ -72,7 +80,14 @@ function ShowSurvey({user}) {
 				</table>
 			</div>
 			 <Button variant="outlined" color="primary" className="add-module" onClick={ () => {
-				history.push('/add-module')
+				history.push('/add-module',  
+				{questionnaireID: location.state.questionnaireID, 
+								  description : location.state.description,
+                                  version : location.state.version,
+                                  questionnaireStatus : location.state.questionnarieStatus,
+                                  lastModification: location.state.lastModification,
+                                  creationDate: location.state.creationDate
+                })
 			 }}>
 				<Add color="primary" />
 				Adicionar novo formulário de módulo +

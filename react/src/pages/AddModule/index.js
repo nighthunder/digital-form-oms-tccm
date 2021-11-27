@@ -15,19 +15,15 @@ const styles = {
     }
 };
 
-function AddSurvey({user}) {
+function AddModule({user}) {
 
     const history = useHistory();
 
-    //console.log("history addsurvey", history);
-
     const location = useLocation();
-
-    //console.log("history addsurvey", location);
 
     const [formError, setFormError] = useState('')
 
-    const [survey, setSurvey] = useState('');
+    const [module, setModule] = useState('');
 
     const [creationDate, setCreationDate] = useState('');
 
@@ -53,14 +49,14 @@ function AddSurvey({user}) {
             userid : user[0].userid,    
             grouproleid : user[0].grouproleid,    
             hospitalunitid : user[0].hospitalunitid,    
-            description: survey,
-            version: "0.0",
-            questionnaireStatusID: "2", // New
-            creationDate: creationDate,
-            lastModification: creationDate
+            questionnaireID: location.state.questionnaireID,
+            description: module,
+            moduleStatusID: "2", // New
+            lastModification: creationDate,
+            creationDate: creationDate
        }
        console.log("request", param);
-       const response = await api.post('/survey', param).catch( function (error) {
+       const response = await api.post('/module/', param).catch( function (error) {
             setLoading(false);
             console.log(error)
             if(error.response.data.Message) {
@@ -70,41 +66,43 @@ function AddSurvey({user}) {
             }
         });
 
-        if(response) {
+       if(response) {
             setLoading(false);
             setSuccess(response.data.msgRetorno);
-            history.push("hospital/");
+            history.push("show-survey/", location.state.questionnaireID);
         }
     }
 
     function handleChange(e) {
         setError('');
         //console.log(user)
-        console.log("Location pesq", location)
-        setSurvey(e.target.value)
-        //console.log(survey);
+        setModule(e.target.value)
+        console.log(module);
         setCreationDate(convertToDate(new Date()));
     }
 
     return (
-        <div>
             <main className="container">
-                <div>
-                    <h2>Adicione nova pesquisa</h2>
-                </div>
-                <div>
-                 <form className="module" onSubmit={handleSubmit}>
+                <p className="subtitle"> Adicione um novo formulário na pesquisa:</p>
+                <h2>{location.state.description}</h2>
+			    <div className="survey-details">
+				    <p>Versão: {location.state.version}</p><br/>
+				    <p className="padding-10">Status: {location.state.questionnaireStatus}</p><br/>
+				    <p>Data de criação: {location.state.creationDate}</p><br/>
+				    <p className="padding-10">Última modificação: {location.state.lastModification}</p><br/>
+			    </div>
+                <form className="module" onSubmit={handleSubmit}>
                     <div className="formGroup">
-                        <InputLabel>(Versão 0.0) Nome da sua versão: </InputLabel><br/>
-                        <TextField name="survey" label="Descrição" onChange={handleChange} value={survey}/>
+                        <InputLabel>Dê um nome para o seu formulário: </InputLabel><br/>
+                        <TextField name="survey" label="Descrição" onChange={handleChange} value={module}/>
                     </div>
                     <div className="submit-prontuario">
                         <span className="error">{ error }</span>
                         <span className="success">{ success }</span>
                         <br/>
-                        <Button style={styles.Button} variant="contained" type="submit" color="primary" disabled={!survey}>
+                        <Button style={styles.Button} variant="contained" type="submit" color="primary" disabled={!module}>
                             { !loading &&
-                                'Registrar nova pesquisa'
+                                'Registrar novo formulário'
                             }
                             { loading &&
                                 <CircularProgress color="white"/>
@@ -112,10 +110,8 @@ function AddSurvey({user}) {
                         </Button>
                     </div>
                  </form>
-                </div>
             </main>
-        </div>
     );
 }
 
-export default connect(state => ({ user: state.user }))(AddSurvey);
+export default connect(state => ({ user: state.user }))(AddModule);
