@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 24, 2021 at 02:04 AM
+-- Generation Time: Nov 27, 2021 at 03:53 AM
 -- Server version: 10.4.21-MariaDB
 -- PHP Version: 7.3.31
 
@@ -59,6 +59,17 @@ set p_msg_retorno = 'Cadastro realizado com sucesso';
 COMMIT;
 
  END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getAllModules` (IN `p_surveyid` INT)  BEGIN
+Select crfFormsID,
+	   questionnaireID,
+       translate('pt-br', description) as description,
+       translate('pt-br', (Select description from tb_crfformsstatus as t1
+       where t1.crfformsStatusID = t2.crfformsStatusID)) as crfFormsStatus,
+       lastModification,
+       creationDate
+from tb_crfforms as t2 where questionnaireID = p_surveyid;
+END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `getAllQuestionnaires` ()  select t1.questionnaireID, 	
 	   t1.description,
@@ -596,7 +607,7 @@ END;
 		
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `postQuestionnaire` (IN `p_userID` INT, IN `p_groupRoleID` INT, IN `p_hospitalUnitID` INT, IN `p_questionnaireDescription` VARCHAR(255), IN `p_questionnaireVersion` VARCHAR(255), IN `p_questionnaireStatusID` INT, IN `p_questionnaireLastModification` TIMESTAMP, IN `p_questionnaireCreationDate` TIMESTAMP)  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `postQuestionnaire` (IN `p_userID` INT, IN `p_groupRoleID` INT, IN `p_hospitalUnitID` INT, IN `p_questionnaireDescription` VARCHAR(255), IN `p_questionnaireVersion` VARCHAR(255), IN `p_questionnaireStatusID` INT, IN `p_questionnaireLastModification` TIMESTAMP, IN `p_questionnaireCreationDate` TIMESTAMP, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
 #========================================================================================================================
 #== Procedure criada para o registro de um participant associado a um hospital para futuro lançamento dos modulos do formulario
 #== Cria o registro na tb_participant e na tb_AssessmentQuestionnaire
@@ -2628,7 +2639,8 @@ INSERT INTO `tb_multilanguage` (`languageID`, `description`, `descriptionLang`) 
 (1, 'Zimbabwe', 'Zimbabwe'),
 (1, 'Published', 'Publicado'),
 (1, 'Deprecated', 'Deprecado'),
-(1, 'New', 'Novo');
+(1, 'New', 'Novo'),
+(1, 'Finalized', 'Finalizado');
 
 -- --------------------------------------------------------
 
@@ -4674,7 +4686,8 @@ INSERT INTO `tb_questionnaire` (`questionnaireID`, `description`, `questionnaire
 (5, 'nova pesquisa', 1, NULL, NULL, '0.0', '2021-11-24 00:25:22', '2021-11-24 00:25:22'),
 (6, 'Questionário 2', 2, NULL, NULL, '0.0', '2021-11-24 00:31:02', '2021-11-24 00:31:02'),
 (7, 'textao', 2, NULL, NULL, '0.0', '2021-11-24 00:31:46', '2021-11-24 00:31:46'),
-(8, 'Outra pesquisa', 2, NULL, NULL, '0.0', '2021-11-24 00:47:34', '2021-11-24 00:47:34');
+(8, 'Outra pesquisa', 2, NULL, NULL, '0.0', '2021-11-24 00:47:34', '2021-11-24 00:47:34'),
+(0, 'nem', 2, NULL, NULL, '0.0', '2021-11-26 20:29:47', '2021-11-26 20:29:47');
 
 -- --------------------------------------------------------
 

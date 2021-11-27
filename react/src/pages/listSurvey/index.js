@@ -57,7 +57,7 @@ function ListSurvey({user, hospital}) {
                                     {questionnaireID: q.questionnaireID, 
                                     description : q.description,
                                     version : q.version,
-                                    questionnaireStatusID : q.questionnaireStatus,
+                                    questionnaireStatus : q.questionnaireStatus,
                                     lastModification: getPtBrDate(new Date(q.lastModification)),
                                     creationDate: getPtBrDate(new Date(q.creationDate))
                                     })

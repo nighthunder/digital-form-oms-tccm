@@ -14,6 +14,25 @@ function ShowSurvey({user}) {
 	const location = useLocation();
 	const history = useHistory();
 
+	const [modules, setModules] = useState([]);
+
+	useEffect(() => {
+        async function loadModules() {
+            const response = await api.get('/modules/'+location.state.questionnaireID);
+            setModules(response.data);
+			console.log("Resposta", modules);
+        }
+        loadModules();
+    }, [])
+
+	function getPtBrDate(somedate) {
+        //var today = new Date();
+        var dd = String(somedate.getDate()).padStart(2, '0');
+        var mm = String(somedate.getMonth() + 1).padStart(2, '0');
+        var yyyy = somedate.getFullYear();
+        return dd + '/' + mm + '/' + yyyy;
+    }
+
 	return (
 
 	  <main className="container">
@@ -21,7 +40,7 @@ function ShowSurvey({user}) {
 			<h2>{location.state.description}</h2>
 			<div className="survey-details">
 				<p>Versão: {location.state.version}</p><br/>
-				<p className="padding-10">Status: {location.state.questionnaireStatusID}</p><br/>
+				<p className="padding-10">Status: {location.state.questionnaireStatus}</p><br/>
 				<p>Data de criação: {location.state.creationDate}</p><br/>
 				<p className="padding-10">Última modificação: {location.state.lastModification}</p><br/>
 			</div>
@@ -30,13 +49,25 @@ function ShowSurvey({user}) {
 					<thead>
 						<tr>
 							<th>FORMULARIO</th>
-							<th>VER.</th> 
 							<th>STATUS</th>
 							<th>CRIADO EM</th> 
 							<th>MODIFICADO EM</th> 
 						</tr>
 					</thead>
 					<tbody>
+					{
+                              modules.map(q => ( 
+                                    <tr key={q.questionnaireID} data-key={q.questionnaireID} onClick={ () => {
+                                    history.push('/show-survey/'
+									)
+                                    }}>
+                                        <td>{q.description}</td>
+                                        <td>{q.crfFormsStatus}</td>
+                                        <td>{getPtBrDate(new Date(q.creationDate))}</td> 
+                                        <td>{getPtBrDate(new Date(q.lastModification))}</td> 
+                                    </tr>
+                               ))
+                     }
 					</tbody>
 				</table>
 			</div>

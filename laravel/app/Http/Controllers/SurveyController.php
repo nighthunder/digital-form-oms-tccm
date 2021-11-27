@@ -9,17 +9,17 @@ use Illuminate\Support\Facades\DB;
 
 class SurveyController extends Controller
 {
-    public function show($id) // procedure que obtem as perguntas de um formulário
+    public function show($id) // obtem metadados de uma pesquisa
     {
         return response()->json(DB::select("CALL getQuestionnaire({$id})"));
     }
 
-    public function search() // procedure que obtem as perguntas de um formulário
+    public function search() // obtem todas as pesquisas
     {
         return response()->json(DB::select("CALL getAllQuestionnaires()"));
     }
 
-    public function insert(Request $request) 
+    public function insert(Request $request)  // insere uma pesquisa nova no banco
     {
         try {
             $query_msg = DB::select("CALL postQuestionnaire('{$request->userid}',
