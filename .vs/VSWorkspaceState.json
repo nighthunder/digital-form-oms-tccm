@@ -1,10 +1,14 @@
 {
   "ExpandedNodes": [
     "",
+    "\\laravel\\app\\Http\\Controllers",
     "\\react",
-    "\\react\\src",
-    "\\react\\src\\pages\\ListSurvey"
+    "\\react\\src\\pages",
+    "\\react\\src\\pages\\AddSurvey",
+    "\\react\\src\\pages\\ListSurvey",
+    "\\react\\src\\pages\\ShowSurvey",
+    "\\react\\src\\store"
   ],
-  "SelectedNode": "\\react\\src\\pages",
+  "SelectedNode": "\\react\\src",
   "PreviewInSolutionExplorer": false
 }

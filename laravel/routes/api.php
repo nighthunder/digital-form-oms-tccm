@@ -39,6 +39,7 @@ Route::group(['middleware' => 'cors:api'], function() {
 
     Route::get('modules/{id}', [ModuleController::class, 'search']); // Módulos da pesquisa
     Route::post('module/', [ModuleController::class, 'insert']); 
+    Route::post('module/{id}', [ModuleController::class, 'show']); 
 });
 
 

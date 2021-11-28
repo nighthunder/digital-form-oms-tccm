@@ -50,7 +50,7 @@ function ShowSurvey({user}) {
 				<table>
 					<thead>
 						<tr>
-							<th>FORMULÁRIO</th>
+							<th>MÓDULO</th>
 							<th>STATUS</th>
 							<th>CRIADO EM</th> 
 							<th>MODIFICADO EM</th> 
