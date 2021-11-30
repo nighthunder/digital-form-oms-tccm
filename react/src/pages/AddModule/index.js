@@ -23,7 +23,9 @@ function AddModule({user}) {
 
     const [formError, setFormError] = useState('')
 
-    const [module, setModule] = useState('');
+    const [module, setModule] = useState([]);
+
+    const [selectModule, setSelectModule] = useState('');
 
     const [creationDate, setCreationDate] = useState('');
 
@@ -42,20 +44,21 @@ function AddModule({user}) {
     }
 
     async function handleSubmit(e) {
-        e.preventDefault();
-        setLoading(true);
-       
+       e.preventDefault();
+       setLoading(true);
+       setCreationDate(convertToDate(new Date()));
        const param = {
             userid : user[0].userid,    
             grouproleid : user[0].grouproleid,    
             hospitalunitid : user[0].hospitalunitid,    
             questionnaireID: location.state.questionnaireID,
-            description: module,
+            description: selectModule,
             moduleStatusID: "2", // New
-            lastModification: creationDate,
-            creationDate: creationDate
+            lastModification: convertToDate(new Date()),
+            creationDate: convertToDate(new Date())
        }
        console.log("request", param);
+       
        const response = await api.post('/module/', param).catch( function (error) {
             setLoading(false);
             console.log(error)
@@ -69,21 +72,44 @@ function AddModule({user}) {
        if(response) {
             setLoading(false);
             setSuccess(response.data.msgRetorno);
-            history.push("show-survey/", location.state.questionnaireID);
-        }
+            //history.goBack();
+       }
     }
+
+    useEffect(() => {
+       async function getModules(){
+           const response = await api.get('/modules/1').catch( function (error) {
+                console.log(error)
+                if(error.response.data.Message) {
+                    setError(error.response.data.Message);
+                } else {
+                    setError(error.response.data.msgRetorno);
+                }
+            });
+
+           if(response) {
+                setModule(response.data);
+                console.log("Módulos description", module);
+            }
+        }
+        getModules();
+    }, [])
 
     function handleChange(e) {
         setError('');
         //console.log(user)
-        setModule(e.target.value)
-        console.log(module);
-        setCreationDate(convertToDate(new Date()));
+        //this.setState({ defaultModule: e.target.value});
+        setSelectModule(e.target.value);
+        console.log("Valor selecionado", selectModule);
+    }
+
+    {
+        selectModule === '' && setSelectModule("Formulário de Admissão")
     }
 
     return (
             <main className="container">
-                <p className="subtitle"> Adicione um novo formulário na pesquisa:</p>
+                <p className="subtitle"> Adicione um novo formulário clínico na pesquisa:</p>
                 <h2>{location.state.description}</h2>
 			    <div className="survey-details">
 				    <p>Versão: {location.state.version}</p><br/>
@@ -92,9 +118,15 @@ function AddModule({user}) {
 				    <p className="padding-10">Última modificação: {location.state.lastModification}</p><br/>
 			    </div>
                 <form className="module" onSubmit={handleSubmit}>
-                    <div className="formGroup">
-                        <InputLabel>Dê um nome para o seu formulário: </InputLabel><br/>
-                        <TextField name="survey" label="Descrição" onChange={handleChange} value={module}/>
+                    <div className="formGroup formGroup1">
+                        <InputLabel>Selecione o tipo de formulário CRF:</InputLabel><br/>
+                        <select name="selectModule" className="sel1" value={selectModule} onChange={handleChange}>
+                           {
+                                module.map(q => ( 
+                                        <option key={q.crfFormsID} value={q.description}>{q.description}</option>
+                                 ))
+                             }
+                        </select>
                     </div>
                     <div className="submit-prontuario">
                         <span className="error">{ error }</span>

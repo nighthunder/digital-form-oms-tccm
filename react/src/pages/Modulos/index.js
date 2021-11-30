@@ -13,6 +13,7 @@ import { connect } from 'react-redux';
         async function setModules() {
             const { data } = await api.get('/form');
             setResponseQuantityModules(data)
+            //console.log("registeredModules", location.state.registeredModules);
         }
         setModules();
     },[])

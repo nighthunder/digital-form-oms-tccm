@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory, useLocation } from "react-router-dom";
 import api from '../../services/api';
-import { Button, TextField, CircularProgress } from '@material-ui/core';
+import { Button, TextField, CircularProgress, Select } from '@material-ui/core';
 import { Add, Edit } from '@material-ui/icons';
 import './styles.css';
 
@@ -20,9 +20,9 @@ function ShowSurvey({user}) {
         async function loadModules() {
             const response = await api.get('/modules/'+location.state.questionnaireID);
             setModules(response.data);
-			console.log("Resposta2", user);
-			console.log("Resposta4", modules);
-			console.log("Resposta3", location.state);
+			//console.log("Resposta2", user);
+			//console.log("Resposta4", modules);
+			//console.log("Resposta3", location.state);
         }                                                                                                                                                                                                       
         loadModules();
     }, [])
@@ -60,11 +60,14 @@ function ShowSurvey({user}) {
 					{
                               modules.map(q => ( 
                                     <tr key={q.questionnaireID} data-key={q.questionnaireID} onClick={ () => {
-                                    history.push('/show-survey/',
+                                    history.push('/handle-form/',
 									{questionnaireID: q.questionnaireID, 
-                                    description : q.description,
-                                    version : q.version,
-                                    questionnaireStatus : q.questionnaireStatus,
+                                    description : location.state.description,
+                                    version : location.state.version,
+                                    questionnaireStatus : location.state.questionnaireStatus,
+									moduleID: q.crfFormsID,
+									moduleDescription: q.description,
+									moduleStatus: q.crfFormsStatus,
                                     lastModification: getPtBrDate(new Date(q.lastModification)),
                                     creationDate: getPtBrDate(new Date(q.creationDate))
                                     })

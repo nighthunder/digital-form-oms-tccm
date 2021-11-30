@@ -36,7 +36,7 @@ function ListSurvey({user, hospital}) {
 
 	return (
             <div className="survey">
-				<h2>Criação e edite pesquisas</h2>
+				<h2>Crie e edite pesquisas</h2>
                
                 <div className="surveys-list">
                     <table>
@@ -81,7 +81,7 @@ function ListSurvey({user, hospital}) {
                     Adicionar nova Pesquisa do zero
                     </Button>
                     <br/>
-                    <Button variant="outlined" color="primary" className="add-survey add-based" onClick={ () => {
+                    <Button variant="outlined" color="primary" className="add-survey add-based " onClick={ () => {
                     history.push('/add-survey')
                     }}>
                     <Add color="primary" />

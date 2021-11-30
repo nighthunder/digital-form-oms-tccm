@@ -43,13 +43,13 @@ td{
 	padding: 5px;
 	line-height: 2.25em;
 }
-.add-survey{
-	float: right;
-}
-.add-based{
+button.add-based{
 	margin-top: 15px;
 }
 .surveys-list{
 	padding-top: 25px;
 	clear: right;
+}
+input.add-based{
+	width: 70%;
 }

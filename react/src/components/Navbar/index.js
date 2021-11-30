@@ -22,6 +22,8 @@ function userLogout() {
 
 function Navbar({ onSubmit, state, dispatch }) {
     
+    const history = useHistory();    
+
     console.log(state);
 
     function logout() {
@@ -29,11 +31,15 @@ function Navbar({ onSubmit, state, dispatch }) {
         window.location.href = '/';
     }
 
+    /*function clickHandler(){
+        history.goBack();
+    }*/
+
     return (
         <nav>
             <div className="navContent">
                 <div className="leftItems">
-                   <a href="/"><img src="assets/logo-icon.png" /></a>
+                   <a href="/" ><img src="assets/logo-icon.png" /></a>
                     <h1>VODAN BR</h1>
                 </div>
                 <div className="rightItems">

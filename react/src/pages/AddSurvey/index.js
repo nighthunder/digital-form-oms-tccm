@@ -9,10 +9,13 @@ import './styles.css';
 import { connect } from 'react-redux';
 
 const styles = {
-    Button: {
-      margin: 24,
-      marginBottom: 0
-    }
+  TextField: {
+    
+  },
+  Button: {
+    margin: 24,
+    marginBottom: 0
+  }
 };
 
 function AddSurvey({user}) {
@@ -88,15 +91,15 @@ function AddSurvey({user}) {
 
     return (
         <div>
-            <main className="container">
+            <main className="container add-survey">
                 <div>
-                    <h2>Adicione nova pesquisa</h2>
+                    <h2>Adicione uma nova pesquisa clínica:</h2>
                 </div>
                 <div>
                  <form className="module" onSubmit={handleSubmit}>
                     <div className="formGroup">
-                        <InputLabel>(Versão 0.0) Nome da sua versão: </InputLabel><br/>
-                        <TextField name="survey" label="Descrição" onChange={handleChange} value={survey}/>
+                        <InputLabel>Digite a descrição para sua pesquisa (pt-br): (versão: 0.0) </InputLabel>
+                        <TextField name="survey" label="Descrição" onChange={handleChange} value={survey} style={styles.TextField} />
                     </div>
                     <div className="submit-prontuario">
                         <span className="error">{ error }</span>
