@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory, useLocation } from "react-router-dom";
 import api from '../../services/api';
-import { Button, TextField, CircularProgress, Select } from '@material-ui/core';
+//import Dialog from '@mui/material/Dialog';
+import { Button, TextField, CircularProgress, Select, useMediaQuery, useTheme } from '@material-ui/core';
 import { Add, Edit } from '@material-ui/icons';
 import './styles.css';
 
@@ -13,7 +14,7 @@ function ShowSurvey({user}) {
 
 	const location = useLocation();
 	const history = useHistory();
-
+	
 	const [modules, setModules] = useState([]);
 
 	useEffect(() => {
@@ -34,6 +35,13 @@ function ShowSurvey({user}) {
         var yyyy = somedate.getFullYear();
         return dd + '/' + mm + '/' + yyyy;
     }
+
+	/*function MyComponent() {
+	  const theme = useTheme();
+	  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+
+	  return <Dialog fullScreen={fullScreen} />
+	}*/
 
 	return (
 
@@ -59,7 +67,8 @@ function ShowSurvey({user}) {
 					<tbody>
 					{
                               modules.map(q => ( 
-                                    <tr key={q.questionnaireID} data-key={q.questionnaireID} onClick={ () => {
+                                    <tr key={q.questionnaireID} data-key={q.questionnaireID} onClick={
+									() => {
                                     history.push('/handle-form/',
 									{questionnaireID: q.questionnaireID, 
                                     description : location.state.description,
@@ -71,7 +80,8 @@ function ShowSurvey({user}) {
                                     lastModification: getPtBrDate(new Date(q.lastModification)),
                                     creationDate: getPtBrDate(new Date(q.creationDate))
                                     })
-                                    }}>
+                                    }
+									}>
                                         <td>{q.description}</td>
                                         <td>{q.crfFormsStatus}</td>
                                         <td>{getPtBrDate(new Date(q.creationDate))}</td> 
