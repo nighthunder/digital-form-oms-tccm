@@ -22,6 +22,10 @@ function ShowSurvey({user}) {
 	
 	const [modules, setModules] = useState([]);
 
+    const [popupTitle, setPopupTitle] = useState('');
+    const [popupBodyText, setPopupBodyText] = useState('');
+
+
 	useEffect(() => {
         async function loadModules() {
             const response = await api.get('/modules/'+location.state.questionnaireID);
@@ -44,11 +48,27 @@ function ShowSurvey({user}) {
 	const [open, setOpen] = React.useState(false);
 
     const handleClickOpen = () => {
-        {location.state.questionnaireStatus === "Publicado" &&  setOpen(true);}
+        setOpen(false);
+        {location.state.questionnaireStatus === "Publicado" &&
+            setPopupTitle("Este questionário está em uso.");
+            setPopupBodyText("Tem certeza de que deseja alterar um formulário deprecado?");
+            setOpen(true);
+        }
+        { location.state.questionnaireStatus === "Deprecado" &&  
+            setPopupTitle("Este questionário foi deprecado.");
+            setPopupBodyText("Apenas edições básicas são permitidas em formulários em uso.");
+            setOpen(true);
+        }
+        {location.state.questionnaireStatus === "Novo" &&  history.push('/edit-unpublished-form');}
     };
 
     const handleClose = () => {
+
         setOpen(false);
+    };
+
+    const handleOpenEditPublishedForm = () => {
+        //history.push('/edit-published-form');
     };
 
 	return (
@@ -84,23 +104,26 @@ function ShowSurvey({user}) {
                                ))
                      }
 					</tbody>
-                  <Dialog
+                  <Dialog key={location.state.questionnaireStatus}
                     open={open}
                     onClose={handleClose}
                     aria-labelledby="alert-dialog-title"
                     aria-describedby="alert-dialog-description"
                   >
                     <DialogTitle id="alert-dialog-title">
-                      {"Este questionário está em uso"}
+                      {popupTitle}
                     </DialogTitle>
                     <DialogContent>
                       <DialogContentText id="alert-dialog-description">
-                        Apenas edições básicas são permitidas em formulários em uso.
+                      { location.state.questionnaireStatus === "Publicado" &&
+                      "Apenas edições básicas são permitidas em formulários em uso."}
+                       { location.state.questionnaireStatus === "Deprecado" &&
+                      "Tem certeza de que deseja alterar um formulário deprecado?"}
                       </DialogContentText>
                     </DialogContent>
                     <DialogActions>
                       <Button onClick={handleClose}>Não concordo</Button>
-                      <Button onClick={handleClose} autoFocus>
+                      <Button onClick={handleOpenEditPublishedForm} autoFocus>
                         Concordo
                       </Button>
                     </DialogActions>
