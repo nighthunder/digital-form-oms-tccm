@@ -82,7 +82,7 @@ function ListSurvey({user, hospital}) {
                     </Button>
                     <br/>
                     <Button variant="outlined" color="primary" className="add-survey add-based " onClick={ () => {
-                    history.push('/add-survey')
+                    history.push('/add-based-survey')
                     }}>
                     <Add color="primary" />
                     Adicionar nova Pesquisa baseada
