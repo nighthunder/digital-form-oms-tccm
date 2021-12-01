@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useHistory, useLocation } from "react-router-dom";
 import api from '../../services/api';
 import { Button, TextField, CircularProgress, Select } from '@material-ui/core';
@@ -12,8 +12,6 @@ function HandleForm({user}) {
 	const location = useLocation();
 	const history = useHistory();
 
-    const [ moduleID, setModuleID ] = useState('');
-
 	useEffect(() => {
         async function HandleForm() {
                 console.log("Module ID",  location.state.moduleID);
@@ -23,15 +21,16 @@ function HandleForm({user}) {
                 console.log("Questionnaire status", location.state.questionnaireStatus);
                 console.log("Creation date", location.state.creationDate);
                 console.log("Modification date",  location.state.lastModification);
-                console.log("User",  user);
 
-            { location.state.moduleDescription === "Formul�rio de Admiss�o" && setModuleID("1"); }
-            { location.state.moduleDescription === "Acompanhamento" && setModuleID("2"); }
-            { location.state.moduleDescription === "Formul�rio de alta/�bito" && setModuleID("3"); }
+                var moduleID2;
+
+            { location.state.moduleDescription === "Formulário de Admissão" && console.log("um"); moduleID2 = "1"; }
+            { location.state.moduleDescription === "Acompanhamento" && console.log("dois"); moduleID2 = "2" }
+            { location.state.moduleDescription === "Formulário de alta/óbito" && console.log("tres"); moduleID2= "3" }
 			//console.log("Resposta4", modules);
 			//console.log("Resposta3", location.state);
             {
-                 location.state.questionnaireStatus === "Publicado" &&  console.log("Publicado");
+                 location.state.questionnaireStatus === "Publicado" &&  console.log("ID do módulo",moduleID2);
 
                  /*history.push('/edit-form-published',
                          { modulo: location.state.moduleID, 
