@@ -1,12 +1,17 @@
-﻿// Detalhe de uma pesquisa
+﻿// Detalhamento de uma pesquisa
 
 import React, { useState, useEffect } from 'react';
 import { useHistory, useLocation } from "react-router-dom";
 import api from '../../services/api';
-//import Dialog from '@mui/material/Dialog';
 import { Button, TextField, CircularProgress, Select, useMediaQuery, useTheme } from '@material-ui/core';
 import { Add, Edit } from '@material-ui/icons';
 import './styles.css';
+
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
 
 import { connect } from 'react-redux';
 
@@ -36,12 +41,15 @@ function ShowSurvey({user}) {
         return dd + '/' + mm + '/' + yyyy;
     }
 
-	/*function MyComponent() {
-	  const theme = useTheme();
-	  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+	const [open, setOpen] = React.useState(false);
 
-	  return <Dialog fullScreen={fullScreen} />
-	}*/
+    const handleClickOpen = () => {
+        {location.state.questionnaireStatus === "Publicado" &&  setOpen(true);}
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
 
 	return (
 
@@ -67,21 +75,7 @@ function ShowSurvey({user}) {
 					<tbody>
 					{
                               modules.map(q => ( 
-                                    <tr key={q.questionnaireID} data-key={q.questionnaireID} onClick={
-									() => {
-                                    history.push('/handle-form/',
-									{questionnaireID: q.questionnaireID, 
-                                    description : location.state.description,
-                                    version : location.state.version,
-                                    questionnaireStatus : location.state.questionnaireStatus,
-									moduleID: q.crfFormsID,
-									moduleDescription: q.description,
-									moduleStatus: q.crfFormsStatus,
-                                    lastModification: getPtBrDate(new Date(q.lastModification)),
-                                    creationDate: getPtBrDate(new Date(q.creationDate))
-                                    })
-                                    }
-									}>
+                                    <tr key={q.questionnaireID} data-key={q.questionnaireID} onClick={handleClickOpen}>
                                         <td>{q.description}</td>
                                         <td>{q.crfFormsStatus}</td>
                                         <td>{getPtBrDate(new Date(q.creationDate))}</td> 
@@ -90,6 +84,27 @@ function ShowSurvey({user}) {
                                ))
                      }
 					</tbody>
+                  <Dialog
+                    open={open}
+                    onClose={handleClose}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                  >
+                    <DialogTitle id="alert-dialog-title">
+                      {"Este formulário está em uso"}
+                    </DialogTitle>
+                    <DialogContent>
+                      <DialogContentText id="alert-dialog-description">
+                        Apenas edições básicas são permitidas em formulários em uso.
+                      </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                      <Button onClick={handleClose}>Não concordo</Button>
+                      <Button onClick={handleClose} autoFocus>
+                        Concordo
+                      </Button>
+                    </DialogActions>
+                  </Dialog>
 				</table>
 			</div>
 			 <Button variant="outlined" color="primary" className="add-module" onClick={ () => {
