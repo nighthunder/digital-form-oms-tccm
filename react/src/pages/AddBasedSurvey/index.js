@@ -9,28 +9,23 @@ import './styles.css';
 import { connect } from 'react-redux';
 
 const styles = {
-  TextField: {
-    
-  },
-  Button: {
-    margin: 24,
-    marginBottom: 0
-  }
+    Button: {
+      margin: 24,
+      marginBottom: 0
+    }
 };
 
-function AddSurvey({user}) {
+function AddBasedSurvey({user}) {
 
     const history = useHistory();
 
-    //console.log("history addsurvey", history);
-
     const location = useLocation();
-
-    //console.log("history addsurvey", location);
 
     const [formError, setFormError] = useState('')
 
-    const [survey, setSurvey] = useState('');
+    const [survey, setSurvey] = useState([]);
+
+    const [selectSurvey, setSelectSurvey] = useState('');
 
     const [creationDate, setCreationDate] = useState('');
 
@@ -49,21 +44,22 @@ function AddSurvey({user}) {
     }
 
     async function handleSubmit(e) {
-        e.preventDefault();
-        setLoading(true);
-       
+       e.preventDefault();
+       setLoading(true);
+       setCreationDate(convertToDate(new Date()));
        const param = {
             userid : user[0].userid,    
             grouproleid : user[0].grouproleid,    
             hospitalunitid : user[0].hospitalunitid,    
-            description: survey,
-            version: "0.0",
-            questionnaireStatusID: "2", // New
-            creationDate: creationDate,
-            lastModification: creationDate
+            questionnaireID: location.state.questionnaireID,
+            description: selectSurvey,
+            moduleStatusID: "2", // New
+            lastModification: convertToDate(new Date()),
+            creationDate: convertToDate(new Date())
        }
        console.log("request", param);
-       const response = await api.post('/survey', param).catch( function (error) {
+       
+       const response = await api.post('/module/', param).catch( function (error) {
             setLoading(false);
             console.log(error)
             if(error.response.data.Message) {
@@ -73,33 +69,58 @@ function AddSurvey({user}) {
             }
         });
 
-        if(response) {
+       if(response) {
             setLoading(false);
             setSuccess(response.data.msgRetorno);
-            history.push("hospital/");
-        }
+            history.goBack();
+       }
     }
+
+    useEffect(() => {
+       async function getSurvey(){
+           const response = await api.get('/survey').catch( function (error) {
+                console.log(error)
+                if(error.response.data.Message) {
+                    setError(error.response.data.Message);
+                } else {
+                    setError(error.response.data.msgRetorno);
+                }
+            });
+
+           if(response) {
+                setSurvey(response.data);
+                console.log("Survey description", survey);
+            }
+        }
+        getSurvey();
+    }, [])
 
     function handleChange(e) {
         setError('');
         //console.log(user)
-        console.log("Location pesq", location)
-        setSurvey(e.target.value)
-        //console.log(survey);
-        setCreationDate(convertToDate(new Date()));
+        //this.setState({ defaultModule: e.target.value});
+        setSelectSurvey(e.target.value);
+        console.log("Valor selecionado", selectSurvey);
+    }
+
+    {
+        selectSurvey === '' && setSelectSurvey("WHO COVID-19 Rapid Version CRF")
     }
 
     return (
-        <div>
-            <main className="container add-survey">
-                <div>
-                    <h2>Adicione uma nova pesquisa clínica:</h2>
-                </div>
-                <div>
-                 <form className="module" onSubmit={handleSubmit}>
-                    <div className="formGroup">
-                        <InputLabel>Digite a descrição para sua pesquisa (pt-br): (versão: 0.0) </InputLabel>
-                        <TextField name="survey" label="Descrição" onChange={handleChange} value={survey} style={styles.TextField} />
+            <main className="container">
+                {/* <p className="subtitle"> Adicione uma nova pesquisa baseada em:</p> */}
+                <h2>Pesquisa Baseada</h2>
+                <form className="module" onSubmit={handleSubmit}>
+                    <div className="formGroup formGroup1">
+                        <InputLabel>Selecione a Pesquisa:</InputLabel><br/>
+                        <select name="selectSurvey" className="sel1" value={selectSurvey} onChange={handleChange}>
+                           {
+                                survey.map(q => ( 
+                                        <option key={q.questionnaireID} value={q.description}>{q.description}</option>
+                                 ))
+                             }
+                        </select>
                     </div>
                     <div className="submit-prontuario">
                         <span className="error">{ error }</span>
@@ -115,10 +136,8 @@ function AddSurvey({user}) {
                         </Button>
                     </div>
                  </form>
-                </div>
             </main>
-        </div>
     );
 }
 
-export default connect(state => ({ user: state.user }))(AddSurvey);
+export default connect(state => ({ user: state.user }))(AddBasedSurvey);

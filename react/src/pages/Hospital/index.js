@@ -15,11 +15,6 @@ function Hospital({user}) {
 
     const [hospital, setHospital] = useState();
 
-    useEffect(() => {
-        console.log("Location Hospital", location);
-        console.log("History Hospital", history);
-    });
-
     return (
         <div>
         <main className="container">

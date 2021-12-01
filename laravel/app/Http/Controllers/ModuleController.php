@@ -7,27 +7,22 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class SurveyController extends Controller
+class ModuleController extends Controller
 {
-    public function show($id) // obtem metadados de uma pesquisa
+    public function search($id) // obtem metadados de todos os formulários (modulos) de uma pesquisa
     {
-        return response()->json(DB::select("CALL getQuestionnaire({$id})"));
+        return response()->json(DB::select("CALL getAllModules({$id})"));
     }
 
-    public function search() // obtem todas as pesquisas
-    {
-        return response()->json(DB::select("CALL getAllQuestionnaires()"));
-    }
-
-    public function insert(Request $request)  // insere uma pesquisa nova no banco
+    public function insert(Request $request)  // cria uma formulário novo
     {
         try {
-            $query_msg = DB::select("CALL postQuestionnaire('{$request->userid}',
+            $query_msg = DB::select("CALL postModule('{$request->userid}',
                                                             '{$request->grouproleid}',
                                                             '{$request->hospitalunitid}',
                                                             '{$request->description}',
-                                                            '0.0',
-                                                            '2',
+                                                            '{$request->moduleStatusID}',
+                                                            '{$request->questionnaireID}',
                                                             '{$request->lastModification}',
                                                             '{$request->creationDate}')");
             $query_msg = $query_msg[0];

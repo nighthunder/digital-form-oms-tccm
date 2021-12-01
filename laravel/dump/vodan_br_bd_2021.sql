@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 24, 2021 at 02:04 AM
+-- Generation Time: Nov 28, 2021 at 11:35 PM
 -- Server version: 10.4.21-MariaDB
 -- PHP Version: 7.3.31
 
@@ -59,6 +59,17 @@ set p_msg_retorno = 'Cadastro realizado com sucesso';
 COMMIT;
 
  END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getAllModules` (IN `p_surveyid` INT)  BEGIN
+Select crfFormsID,
+	   questionnaireID,
+       description,
+       translate('pt-br', (Select description from tb_crfformsstatus as t1
+       where t1.crfformsStatusID = t2.crfformsStatusID)) as crfFormsStatus,
+       lastModification,
+       creationDate
+from tb_crfforms as t2 where questionnaireID = p_surveyid;
+END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `getAllQuestionnaires` ()  select t1.questionnaireID, 	
 	   t1.description,
@@ -445,6 +456,58 @@ END sp;
  ## select inserido para tratar limitaçao do retorno de procedures no Laravel	
  select p_msg_retorno as msgRetorno from DUAL;
 	
+  
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `postModule` (IN `p_userID` INT, IN `p_groupRuleID` INT, IN `p_hospitalUnityID` INT, IN `p_moduleDescription` VARCHAR(500), IN `p_moduleStatusID` INT, IN `p_questionnaireID` INT, IN `p_lastModification` TIMESTAMP, IN `p_creationDate` TIMESTAMP)  BEGIN
+#========================================================================================================================
+#== Procedure criada para registrar um novo módulo em uma pesquisa
+#== Cria o registro na tb_crfforms 
+#== retorna uma mensagem de retorno
+#== Alterada em 27 novembro 2020
+#== Criada em 27 de novembro de 2020
+#========================================================================================================================
+
+DECLARE p_userID integer;
+DECLARE p_msg_retorno varchar(500);
+
+sp:BEGIN 
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+	set p_moduleDescription = rtrim(ltrim(p_moduleDescription));
+
+	if (p_moduleDescription is null) or ( p_moduleDescription = '')  then
+ 	    set p_msg_retorno = 'Informe uma descrição para o módulo. ';
+        leave sp;   
+    end if;
+
+	
+   START TRANSACTION;
+	# Inserindo novo módulo     
+    
+    INSERT INTO tb_crfforms (
+			crfformsID, questionnaireID, description, crfformsStatusID, lastModification,creationDate )
+            values (DEFAULT, p_questionnaireID, p_moduleDescription, p_moduleStatusID, p_lastModification ,NOW());
+
+
+    # registrando a informação de notificação para a inclusao do modulo 
+    INSERT INTO tb_notificationrecord (
+			userid, profileid, hospitalunitid, tablename, rowdid, changedon, operation, log)
+            values (p_userid, p_grouproleid, p_hospitalunitid, 'tb_module', 1, now(), 'I', CONCAT('Criação de módulo: ', p_moduleDescription));
+    
+	COMMIT;
+
+    set p_msg_retorno = 'Módulo criado com sucesso';
+
+END sp;	
+
+ ## select inserido para tratar limitaçao do retorno de procedures no Laravel	
+select p_msg_retorno as msgRetorno from DUAL;
   
 END$$
 
@@ -1298,7 +1361,8 @@ INSERT INTO `tb_assessmentquestionnaire` (`participantID`, `hospitalUnitID`, `qu
 (182, 1, 1),
 (183, 1, 1),
 (184, 1, 1),
-(185, 1, 1);
+(185, 1, 1),
+(186, 1, 1);
 
 -- --------------------------------------------------------
 
@@ -1322,7 +1386,8 @@ CREATE TABLE `tb_crfforms` (
 INSERT INTO `tb_crfforms` (`crfFormsID`, `questionnaireID`, `description`, `crfformsStatusID`, `lastModification`, `creationDate`) VALUES
 (1, 1, 'Admission form', 1, '2021-11-17 21:19:53', '2021-11-17 21:20:38'),
 (2, 1, 'Follow-up', 1, '2021-11-17 21:19:44', '2021-11-17 21:20:38'),
-(3, 1, 'Discharge/death form', 1, '2021-11-17 21:19:51', '2021-11-17 21:20:38');
+(3, 1, 'Discharge/death form', 1, '2021-11-17 21:19:51', '2021-11-17 21:20:38'),
+(19, 2, 'novo mod', 2, '2021-11-28 21:52:22', '2021-11-28 21:52:23');
 
 -- --------------------------------------------------------
 
@@ -2628,7 +2693,8 @@ INSERT INTO `tb_multilanguage` (`languageID`, `description`, `descriptionLang`) 
 (1, 'Zimbabwe', 'Zimbabwe'),
 (1, 'Published', 'Publicado'),
 (1, 'Deprecated', 'Deprecado'),
-(1, 'New', 'Novo');
+(1, 'New', 'Novo'),
+(1, 'Finalized', 'Finalizado');
 
 -- --------------------------------------------------------
 
@@ -2857,7 +2923,9 @@ INSERT INTO `tb_notificationrecord` (`userID`, `profileID`, `hospitalUnitID`, `t
 (11, 1, 1, 'tb_user', 22, '2021-10-15 08:34:34', 'I', 'Inclusão de dados do Usuario: mayamoraiss@gmail.com'),
 (20, 1, 1, 'tb_participant', 185, '2021-11-16 19:39:33', 'I', 'Inclusão de paciente: 657567577'),
 (20, 1, 1, 'tb_assessmentquestionnaire', 0, '2021-11-16 19:39:33', 'I', 'Inclusão do registro referente ao paciente: 185 para o hospital: 1'),
-(20, 1, 1, 'tb_participant', 185, '2021-11-17 18:38:10', 'A', 'Alteração - Prontuario de: 657567577 para 6575675778');
+(20, 1, 1, 'tb_participant', 185, '2021-11-17 18:38:10', 'A', 'Alteração - Prontuario de: 657567577 para 6575675778'),
+(20, 1, 1, 'tb_participant', 186, '2021-11-27 03:05:37', 'I', 'Inclusão de paciente: 94564563'),
+(20, 1, 1, 'tb_assessmentquestionnaire', 0, '2021-11-27 03:05:37', 'I', 'Inclusão do registro referente ao paciente: 186 para o hospital: 1');
 
 -- --------------------------------------------------------
 
@@ -2998,7 +3066,8 @@ INSERT INTO `tb_participant` (`participantID`, `medicalRecord`) VALUES
 (182, '12345678910'),
 (183, '11223344'),
 (184, '1234355345'),
-(185, '6575675778');
+(185, '6575675778'),
+(186, '94564563');
 
 -- --------------------------------------------------------
 
@@ -4674,7 +4743,13 @@ INSERT INTO `tb_questionnaire` (`questionnaireID`, `description`, `questionnaire
 (5, 'nova pesquisa', 1, NULL, NULL, '0.0', '2021-11-24 00:25:22', '2021-11-24 00:25:22'),
 (6, 'Questionário 2', 2, NULL, NULL, '0.0', '2021-11-24 00:31:02', '2021-11-24 00:31:02'),
 (7, 'textao', 2, NULL, NULL, '0.0', '2021-11-24 00:31:46', '2021-11-24 00:31:46'),
-(8, 'Outra pesquisa', 2, NULL, NULL, '0.0', '2021-11-24 00:47:34', '2021-11-24 00:47:34');
+(8, 'Outra pesquisa', 2, NULL, NULL, '0.0', '2021-11-24 00:47:34', '2021-11-24 00:47:34'),
+(0, 'nem', 2, NULL, NULL, '0.0', '2021-11-26 20:29:47', '2021-11-26 20:29:47'),
+(9, 'nova', 2, NULL, NULL, '0.0', '2021-11-27 02:55:01', '2021-11-27 02:55:01'),
+(10, 'nova', 2, NULL, NULL, '0.0', '2021-11-27 02:55:01', '2021-11-27 02:55:01'),
+(11, 'nova', 2, NULL, NULL, '0.0', '2021-11-27 02:55:01', '2021-11-27 02:55:01'),
+(12, 'oi', 2, NULL, NULL, '0.0', '2021-11-27 02:56:21', '2021-11-27 02:56:21'),
+(13, 'pesquisa criada agora', 2, NULL, NULL, '0.0', '2021-11-28 21:51:48', '2021-11-28 21:51:48');
 
 -- --------------------------------------------------------
 
@@ -5501,7 +5576,7 @@ ALTER TABLE `tb_userrole`
 -- AUTO_INCREMENT for table `tb_crfforms`
 --
 ALTER TABLE `tb_crfforms`
-  MODIFY `crfFormsID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `crfFormsID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `tb_formrecord`
@@ -5549,7 +5624,7 @@ ALTER TABLE `tb_ontology`
 -- AUTO_INCREMENT for table `tb_participant`
 --
 ALTER TABLE `tb_participant`
-  MODIFY `participantID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=186;
+  MODIFY `participantID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=187;
 
 --
 -- AUTO_INCREMENT for table `tb_permission`
@@ -5573,7 +5648,7 @@ ALTER TABLE `tb_questiongroupformrecord`
 -- AUTO_INCREMENT for table `tb_questionnaire`
 --
 ALTER TABLE `tb_questionnaire`
-  MODIFY `questionnaireID` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `questionnaireID` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `tb_questionnairepartstable`
