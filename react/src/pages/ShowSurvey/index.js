@@ -91,7 +91,7 @@ function ShowSurvey({user}) {
                     aria-describedby="alert-dialog-description"
                   >
                     <DialogTitle id="alert-dialog-title">
-                      {"Este formulário está em uso"}
+                      {"Este questionário está em uso"}
                     </DialogTitle>
                     <DialogContent>
                       <DialogContentText id="alert-dialog-description">
