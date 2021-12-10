@@ -30,8 +30,8 @@ class SurveyController extends Controller
                                                             '2',
                                                             '{$request->lastModification}',
                                                             '{$request->creationDate}')");
-            $query_msg = $query_msg[0];
-            /*if($query_msg->msgRetorno == 'Informe uma descrição para a pesquisa. '
+            /*$query_msg = $query_msg[0];
+            if($query_msg->msgRetorno == 'Informe uma descrição para a pesquisa. '
             || $query_msg->msgRetorno == 'Usuário não identificado. Verifique'
             || $query_msg->msgRetorno == 'Hospital não identificado no cadastro. Verifique.') {
                 return response()->json($query_msg, 404);
@@ -41,7 +41,7 @@ class SurveyController extends Controller
                 if($query_msg->msgRetorno == 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!') {
                     return response()->json($query_msg, 404);
                 }
-            }  */  
+            }    */
 
             return response()->json($query_msg);
         } catch(Exception $e) {

@@ -122,6 +122,13 @@ function AddBasedSurvey({user}) {
                              }
                         </select>
                     </div>
+                    <div className="formGroup formGroup2">
+                        <InputLabel>Selecione o tipo de vínculo:</InputLabel><br/>
+                        <select name="selectSurvey" className="sel1" value={selectSurvey} onChange={handleChange}>
+                           <option value="version">Próxima versão da pesquisa</option>
+                           <option value="based">A partir da pesquisa</option>
+                        </select>
+                    </div>
                     <div className="submit-prontuario">
                         <span className="error">{ error }</span>
                         <span className="success">{ success }</span>

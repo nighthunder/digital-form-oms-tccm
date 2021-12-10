@@ -35,13 +35,17 @@ function Hospital({user}) {
                                 history.push('/cadastro', { hospitalId: hospital.hospitalunitid, hospitalIndex: index})
                             }}>Cadastrar usuários</Button>
                         }
+                        { (hospital.userrole === "Administrador") && 
+                            <Button variant="contained" color="primary" onClick={ () => {
+                                history.push('/survey', { hospitalId: hospital.hospitalunitid, hospitalIndex: index})
+                            }}>Gerenciar pesquisas</Button>
+                        }
                     </div>
                 ))}
             </div>
         </main>
-        <main className="container">
-           <ListSurvey hospital={hospital}/>
-        </main>
+       
+           { /*<ListSurvey hospital={hospital}/>*/ }
         </div>
     );
 }

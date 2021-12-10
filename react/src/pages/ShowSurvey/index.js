@@ -21,10 +21,10 @@ function ShowSurvey({user}) {
 	const history = useHistory();
 	
 	const [modules, setModules] = useState([]);
+    const [moduleID, setModuleID] = useState('');
 
     const [popupTitle, setPopupTitle] = useState('');
     const [popupBodyText, setPopupBodyText] = useState('');
-
 
 	useEffect(() => {
         async function loadModules() {
@@ -47,8 +47,9 @@ function ShowSurvey({user}) {
 
 	const [open, setOpen] = React.useState(false);
 
-    const handleClickOpen = () => {
+    const handleClickOpen = (event) => {
         setOpen(false);
+        //setModuleID(moduleDescription);
         {location.state.questionnaireStatus === "Publicado" &&
             setPopupTitle("Este questionário está em uso.");
             setPopupBodyText("Tem certeza de que deseja alterar um formulário deprecado?");
@@ -62,13 +63,15 @@ function ShowSurvey({user}) {
         {location.state.questionnaireStatus === "Novo" &&  history.push('/edit-unpublished-form');}
     };
 
-    const handleClose = () => {
 
+    const handleClose = () => {
         setOpen(false);
     };
 
     const handleOpenEditPublishedForm = () => {
-        //history.push('/edit-published-form');
+        history.push('/edit-published-form', {
+            //moduleID: moduleID,
+            hospitalIndex: user[0].hospitalIndex});
     };
 
 	return (
@@ -95,7 +98,7 @@ function ShowSurvey({user}) {
 					<tbody>
 					{
                               modules.map(q => ( 
-                                    <tr key={q.questionnaireID} data-key={q.questionnaireID} onClick={handleClickOpen}>
+                                    <tr key={q.description} data-key={q.questionnaireID} onClick={handleClickOpen}>
                                         <td>{q.description}</td>
                                         <td>{q.crfFormsStatus}</td>
                                         <td>{getPtBrDate(new Date(q.creationDate))}</td> 

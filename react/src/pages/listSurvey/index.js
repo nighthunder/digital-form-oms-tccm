@@ -35,60 +35,62 @@ function ListSurvey({user, hospital}) {
     }
 
 	return (
-            <div className="survey">
-				<h2>Crie e edite pesquisas</h2>
+            <main className="container">
+                <div className="survey">
+				    <h2>Crie e edite pesquisas</h2>
                
-                <div className="surveys-list">
-                    <table>
-                            <thead>
-                                <tr>
-                                    <th>PESQUISA</th>
-                                    <th>VER.</th> 
-                                    <th>STATUS</th>
-                                    <th>CRIADO EM</th> 
-                                    <th>MODIFICADO EM</th> 
-                                </tr>
-                            </thead>
-                            <tbody>
-                            {
-                                questionnaires.map(q => ( 
-                                    <tr key={q.questionnaireID} data-key={q.questionnaireID} onClick={ () => {
-                                    history.push('/show-survey/', 
-                                    {questionnaireID: q.questionnaireID, 
-                                    description : q.description,
-                                    version : q.version,
-                                    questionnaireStatus : q.questionnaireStatus,
-                                    lastModification: getPtBrDate(new Date(q.lastModification)),
-                                    creationDate: getPtBrDate(new Date(q.creationDate))
-                                    })
-                                    }}>
-                                        <td>{q.description}</td>
-                                        <td>{q.version}</td>
-                                        <td>{q.questionnaireStatus}</td>
-                                        <td>{getPtBrDate(new Date(q.creationDate))}</td> 
-                                        <td>{getPtBrDate(new Date(q.lastModification))}</td> 
+                    <div className="surveys-list">
+                        <table>
+                                <thead>
+                                    <tr>
+                                        <th>PESQUISA</th>
+                                        <th>VER.</th> 
+                                        <th>STATUS</th>
+                                        <th>CRIADO EM</th> 
+                                        <th>MODIFICADO EM</th> 
                                     </tr>
+                                </thead>
+                                <tbody>
+                                {
+                                    questionnaires.map(q => ( 
+                                        <tr key={q.questionnaireID} data-key={q.questionnaireID} onClick={ () => {
+                                        history.push('/show-survey/', 
+                                        {questionnaireID: q.questionnaireID, 
+                                        description : q.description,
+                                        version : q.version,
+                                        questionnaireStatus : q.questionnaireStatus,
+                                        lastModification: getPtBrDate(new Date(q.lastModification)),
+                                        creationDate: getPtBrDate(new Date(q.creationDate))
+                                        })
+                                        }}>
+                                            <td>{q.description}</td>
+                                            <td>{q.version}</td>
+                                            <td>{q.questionnaireStatus}</td>
+                                            <td>{getPtBrDate(new Date(q.creationDate))}</td> 
+                                            <td>{getPtBrDate(new Date(q.lastModification))}</td> 
+                                        </tr>
                             
-                                 ))
-                             }
-                             </tbody>
+                                     ))
+                                 }
+                                 </tbody>
                             
-                    </table>
-                    <Button variant="outlined" color="primary" className="add-survey" onClick={ () => {
-                    history.push('/add-survey')
-                    }}>
-                    <Add color="primary" />
-                    Adicionar nova Pesquisa do zero
-                    </Button>
-                    <br/>
-                    <Button variant="outlined" color="primary" className="add-survey add-based " onClick={ () => {
-                    history.push('/add-based-survey')
-                    }}>
-                    <Add color="primary" />
-                    Adicionar nova Pesquisa baseada
-                    </Button>
-                </div>
-			</div>
+                        </table>
+                        <Button variant="outlined" color="primary" className="add-survey" onClick={ () => {
+                        history.push('/add-survey')
+                        }}>
+                        <Add color="primary" />
+                        Adicionar nova Pesquisa do zero
+                        </Button>
+                        <br/>
+                        <Button variant="outlined" color="primary" className="add-survey add-based " onClick={ () => {
+                        history.push('/add-based-survey')
+                        }}>
+                        <Add color="primary" />
+                        Adicionar nova Pesquisa a partir de
+                        </Button>
+                    </div>
+			    </div>
+            </main>
      );
 
 }

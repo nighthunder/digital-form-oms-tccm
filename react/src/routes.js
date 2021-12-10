@@ -6,6 +6,7 @@ import Cadastro from "./pages/Cadastro";
 import Hospital from "./pages/Hospital";
 import AddSurvey from "./pages/AddSurvey";
 import AddBasedSurvey from "./pages/AddBasedSurvey";
+import ListSurvey from "./pages/ListSurvey";
 import ShowSurvey from "./pages/ShowSurvey";
 import AddModule from "./pages/AddModule";
 import EditUnpublishedForm from "./pages/EditUnpublishedForm";
@@ -25,6 +26,7 @@ export default function Routes() {
         <Route path="/login" component={Login} exact />
         <Route path="/cadastro" component={Cadastro} exact />
         <Route path="/hospital" component={Hospital} exact />
+        <Route path="/survey" component={ListSurvey} exact />
         <Route path="/add-survey" component={AddSurvey} exact />
         <Route path="/add-based-survey" component={AddBasedSurvey} exact />
         <Route path="/show-survey" component={ShowSurvey} exact />

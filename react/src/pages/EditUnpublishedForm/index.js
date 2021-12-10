@@ -10,8 +10,13 @@ import { connect } from 'react-redux';
 function EditUnpublishedForm({user}) {
 
 	return (
-		<main className="container">
+		<main className="container unpublished">
+			<div className="col-left">
 
+			</div>
+			<div className="col-right">
+				
+			</div>
 		</main>
 	);
 

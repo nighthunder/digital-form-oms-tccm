@@ -1,3 +1,9 @@
-main{
+main.container.unpublished{
 	width: 80%;
+}
+.col-left{
+	width: 30%;
+}
+.col-right{
+	width: 70%;
 }
