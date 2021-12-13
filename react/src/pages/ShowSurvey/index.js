@@ -23,7 +23,7 @@ function ShowSurvey({user}) {
 	
 	const [modules, setModules] = useState([]);
     const [moduleID, setModuleID] = useState(''); // ID do módulo clicado
-    const [moduleDescription, setModuleDescription] = useState(''); // Desc do módulo clicado
+    const [moduleStatus, setModuleStatus] = useState(''); 
 
     const [popupTitle, setPopupTitle] = useState('');
     const [popupBodyText, setPopupBodyText] = useState('');
@@ -49,13 +49,10 @@ function ShowSurvey({user}) {
 
 	const [open, setOpen] = React.useState(false);
 
-    const handleClickOpen = (value) => {
+    const handleClickOpen = (q) => {
         setOpen(false);
-        console.log("Descrição"+ value);
-        setModuleDescription(value);
-        value === "Acompanhamento" && setModuleID(2)
-        value === "Formulário de Admissão" && setModuleID(1)
-        value === "Formulário de alta/óbito" && setModuleID(3)
+        setModuleID(q.crfFormsID);
+        setModuleStatus(q.crfFormsStatus);
         {location.state.questionnaireStatus === "Publicado" &&
             setPopupTitle("Este questionário está em uso.");
             setPopupBodyText("Tem certeza de que deseja alterar um formulário deprecado?");
@@ -78,7 +75,12 @@ function ShowSurvey({user}) {
        console.log(moduleID);
        history.push('/edit-published-form', {
             modulo: moduleID,
-            hospitalIndex: user[0].hospitalunitid});
+            moduleStatus: moduleStatus,
+            hospitalIndex: user[0].hospitalunitid,
+            questionnaireStatus: location.state.questionnaireStatus,
+            questionnaireDesc: location.state.description,
+            questionnaireVers: location.state.version
+        });
     };
 
 	return (
@@ -105,7 +107,7 @@ function ShowSurvey({user}) {
 					<tbody>
 					{
                               modules.map(q => ( 
-                                    <tr value={q.description} key={q.questionnaireID} data-key={q.description} onClick={() => handleClickOpen(q.description)}>
+                                    <tr value={q.description} key={q.questionnaireID} data-key={q.description} onClick={() => handleClickOpen(q)}>
                                         <td>{q.description}</td>
                                         <td>{q.crfFormsStatus}</td>
                                         <td>{getPtBrDate(new Date(q.creationDate))}</td> 

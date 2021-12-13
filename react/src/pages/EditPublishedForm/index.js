@@ -3,23 +3,12 @@ import React, { useState, useEffect  } from 'react';
 import './styles.css';
 import { useLocation } from "react-router-dom";
 import { TextField, Button, FormLabel, RadioGroup, Radio, FormControlLabel, InputLabel, Select, MenuItem } from '@material-ui/core';
-import { makeStyles } from "@material-ui/core/styles";
 import api from '../../services/api';
 import { connect } from 'react-redux';
 import { useHistory } from "react-router-dom";
 import validFormDate from '../../utils/methods/validFormDate';
 
-const useStyles = makeStyles(theme => ({
-  root: {
-    "& .MuiFormLabel-root": {
-      color: "red" // or black
-    }
-  }
-}));
-
 function EditPublishedForm({logged, user, participantId}) {
-
-    const classes = useStyles();
 
     const location = useLocation();
 
@@ -186,9 +175,10 @@ function EditPublishedForm({logged, user, participantId}) {
         <main className="container">
             <div>
                 <header className="index">
-                    { user[location.state.hospitalIndex].hospitalName } > 100017029697 > <b>{ titles[location.state.modulo-1] }</b>
+                    { user[location.state.hospitalIndex].hospitalName } > <b>{ titles[location.state.modulo-1] }</b>
                 </header>
-                <h2>Editar Módulo { location.state.modulo } - { titles[location.state.modulo-1] } - {location.state.moduleStatus}</h2>
+                <h2 className="pageTitle">Editar Módulo { location.state.modulo } - { titles[location.state.modulo-1] } - {location.state.moduleStatus}</h2>
+                <p className="questionnaireDesc"> Questionário: {location.state.questionnaireDesc} ( {location.state.questionnaireVers} ) {location.state.questionnaireStatus}  </p>
                 <form className="module" onSubmit={submit}>
                     <div>
                     { questions.length === 0 && (location.state.formRecordId ? !loadedResponses : true) &&
@@ -201,26 +191,13 @@ function EditPublishedForm({logged, user, participantId}) {
 
                             {/* Se for um novo grupo de questões*/}
                             { (question.dsc_qst_grp !== "" && checkTitle(index, question)) &&
-                            <h3>Grupo de questões: {question.dsc_qst_grp}</h3>
+                            <h3 className="groupName">Grupo de questões: {question.dsc_qst_grp}</h3>
                             }
 
                             {/* Se for do tipo Date question*/}
                             { (question.qst_type === "Date question") && 
                                 ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
                             <div>
-                                {/*<TextField
-                                    id="date"
-                                    label={question.dsc_qst}
-                                    type="datetime-local"
-                                    name={String(question.qstId)}
-                                    // defaultValue={getCurrentDate()}
-                                    InputLabelProps={{
-                                        shrink: true,
-                                    }}
-                                    disabled={ location.state.formRecordId && ( question.qstId == getIdFromDateQuestion() ) }
-                                    onChange={handleChange}
-                                    value={form[question.qstId] ? form[question.qstId] : '' }
-                                /><br/>*/}
                                 <h4 className="questionDesc">{question.dsc_qst}</h4>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                             </div>
@@ -230,32 +207,34 @@ function EditPublishedForm({logged, user, participantId}) {
                             { (question.qst_type === "Number question") && 
                                 ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
                             <div>
-                            <TextField type="number" name={String(question.qstId)} label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' } />
+                            {/*<TextField type="number" name={String(question.qstId)} label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' } />*/}
                             <h4 className="questionDesc">{question.dsc_qst}</h4>
                             <p className="questionType">Tipo da questão: {question.qst_type}</p>
                             </div>
                             }
 
-                            {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha menos de 6 op��es */}
+                            {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha menos de 6 opções */}
                             { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length < 6 ) &&
                                 ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
                             <div className="MuiTextField-root">
                                 <h4 className="questionDesc">{question.dsc_qst}</h4>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
-                                <RadioGroup aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
-                                    {question.rsp_pad.split(',').map((item) => (
-                                        <FormControlLabel key={item} value={item} control={<Radio />} label={item} />
-                                    ))}
-                                </RadioGroup>
+                                <p className="subQstDesc">Respostas padronizadas</p>
+                                <Select multiple native label={question.dsc_qst} value={form[String(question.qstId)] || ''} aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
+                                        {question.rsp_pad.split(',').map((item) => (
+                                            <option key={item} value={item}>{ item }</option>
+                                        ))}
+                                </Select>
                             </div>
                             } 
 
-                            {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha 6 ou mais op��es */}
+                            {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha 6 ou mais opções */}
                             { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length >= 6 ) &&
                                 ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
                             <div className="MuiTextField-root">
                                 <h4 className="questionDesc">{question.dsc_qst}</h4>
-                                <p>Tipo da questão: {question.qst_type}</p>
+                                <p className="questionType">Tipo da questão: {question.qst_type}</p>
+                                <p className="subQstDesc">Respostas padronizadas</p>
                                 <Select multiple native label={question.dsc_qst} value={form[String(question.qstId)] || ''} aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
                                         {question.rsp_pad.split(',').map((item) => (
                                             <option key={item} value={item}>{ item }</option>
@@ -281,10 +260,11 @@ function EditPublishedForm({logged, user, participantId}) {
                             <div className="MuiTextField-root">
                                 <h4 className="questionDesc">{question.dsc_qst}</h4>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
-                                <RadioGroup aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
-                                    <FormControlLabel value='true' control={<Radio />} label='Sim' />
-                                    <FormControlLabel value='false' control={<Radio />} label='Não' />
-                                </RadioGroup>
+                                <p className="subQstDesc">Respostas padronizadas</p>
+                                 <Select multiple native label={question.dsc_qst} aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange}>
+                                       <option value='true' label='Sim'/>
+                                       <option value='false' label='Não'/>
+                                </Select>
                                
                             </div>
                             } 

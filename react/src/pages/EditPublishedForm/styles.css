@@ -1,11 +1,32 @@
 .questionType{
 	font-size: 0.85rem;
 	color: #515050;
+	color: #fff;
 	padding: 3px 10px 5px 10px;
-	background: #eed3b1;
+	background: #9aeaad;
+	background: #2ac14c;
 	border-radius: 3px;
 	width: fit-content;
 }
 h4.questionDesc{
 	margin-bottom: 15px;
+}
+h2.pageTitle, h3.groupName{
+	color: #3c4971;
+	color: #132053;
+}
+.subQstDesc{
+	font-size: 0.90rem;
+	margin: 10px 0px 0px;
+	text-decoration: underline;
+	letter-spacing: 0.04em;
+	color: #7d7c7c;
+}
+.questionnaireDesc{
+	font-size: 0.90rem;
+	color: #6a6969;
+	background-color: #d2f7b9;
+	padding: 10px 10px;
+	width: fit-content;
+	border-radius: 3px;
 }
