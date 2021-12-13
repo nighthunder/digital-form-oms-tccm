@@ -1,0 +1,11 @@
+.questionType{
+	font-size: 0.85rem;
+	color: #515050;
+	padding: 3px 10px 5px 10px;
+	background: #eed3b1;
+	border-radius: 3px;
+	width: fit-content;
+}
+h4.questionDesc{
+	margin-bottom: 15px;
+}
