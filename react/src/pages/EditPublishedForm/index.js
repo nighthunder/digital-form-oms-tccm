@@ -1,4 +1,4 @@
-// View do formulário quando é preenchido.
+ï»¿// View do formulÃ¡rio quando ï¿½ preenchido.
 import React, { useState, useEffect  } from 'react';
 import './styles.css';
 import { useLocation } from "react-router-dom";
@@ -15,7 +15,7 @@ function EditPublishedForm({logged, user, participantId}) {
 
     console.log("Location Formulario", location);
 
-    const titles = ['Admissão','Acompanhamento','Desfecho']
+    const titles = ['AdmissÃ£o','Acompanhamento','Desfecho']
 
     const [form, setForm] = useState({
 
@@ -33,7 +33,7 @@ function EditPublishedForm({logged, user, participantId}) {
             const response = await api.get('/form/' + location.state.modulo);
             setQuestions(response.data);
 
-            // Caso seja uma atualização de formulário
+            // Caso seja uma atualizaÃ§Ã£o de formulÃ¡rio
             if(location.state.formRecordId) {
                 getRecordedResponses(location.state.formRecordId)
             }
@@ -78,7 +78,7 @@ function EditPublishedForm({logged, user, participantId}) {
         const value = target.value;
         const name = target.name;
 
-        console.log('idQuestão: ' + target.name, 'value: ' + target.value);
+        console.log('idQuestÃ£o: ' + target.name, 'value: ' + target.value);
 
         if(target.name == getIdFromDateQuestion() && formError)
             setFormError('')
@@ -133,9 +133,9 @@ function EditPublishedForm({logged, user, participantId}) {
             return;
         }
 
-        // Caso seja uma atualização de formulário
+        // Caso seja uma atualizaÃ§Ã£o de formulÃ¡rio
         if(location.state.formRecordId) {
-            console.log('ATUALIZAÇÃO DO FORM ', location.state.formRecordId);
+            console.log('ATUALIZAï¿½ï¿½O DO FORM ', location.state.formRecordId);
 
             request = {
                 respostas: JSON.stringify(form),
@@ -151,7 +151,7 @@ function EditPublishedForm({logged, user, participantId}) {
 
             response = await api.put('/form/' + location.state.modulo, request);
             
-        } else { // Caso seja um novo formulário
+        } else { // Caso seja um novo formulÃ¡rio
             request = {
                 respostas: JSON.stringify(form),
                 info: user[location.state.hospitalIndex],
@@ -178,7 +178,7 @@ function EditPublishedForm({logged, user, participantId}) {
                 <header className="index">
                     { user[location.state.hospitalIndex].hospitalName } > 100017029697 > <b>{ titles[location.state.modulo-1] }</b>
                 </header>
-                <h2>Módulo { location.state.modulo } - { titles[location.state.modulo-1] }</h2>
+                <h2>Editar MÃ³dulo { location.state.modulo } - { titles[location.state.modulo-1] }</h2>
                 <form className="module" onSubmit={submit}>
                     <div>
                     { questions.length === 0 && (location.state.formRecordId ? !loadedResponses : true) &&
@@ -189,7 +189,7 @@ function EditPublishedForm({logged, user, participantId}) {
                     {questions.map((question, index) => (
                         <div className="qst" key={question.qstId}>
 
-                            {/* Se for um novo grupo de questões*/}
+                            {/* Se for um novo grupo de questÃµes*/}
                             { (question.dsc_qst_grp !== "" && checkTitle(index, question)) &&
                             <h3>{question.dsc_qst_grp}</h3>
                             }
@@ -220,7 +220,7 @@ function EditPublishedForm({logged, user, participantId}) {
                             <TextField type="number" name={String(question.qstId)} label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' } />
                             }
 
-                            {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha menos de 6 opções */}
+                            {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha menos de 6 opï¿½ï¿½es */}
                             { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length < 6 ) &&
                                 ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
                             <div className="MuiTextField-root">
@@ -233,7 +233,7 @@ function EditPublishedForm({logged, user, participantId}) {
                             </div>
                             } 
 
-                            {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha 6 ou mais opções */}
+                            {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha 6 ou mais opï¿½ï¿½es */}
                             { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length >= 6 ) &&
                                 ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
                             <div className="MuiTextField-root">
@@ -259,7 +259,7 @@ function EditPublishedForm({logged, user, participantId}) {
                                 <FormLabel component="legend">{question.dsc_qst}</FormLabel>
                                 <RadioGroup aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
                                     <FormControlLabel value='true' control={<Radio />} label='Sim' />
-                                    <FormControlLabel value='false' control={<Radio />} label='Não' />
+                                    <FormControlLabel value='false' control={<Radio />} label='NÃ£o' />
                                 </RadioGroup>
                             </div>
                             } 
@@ -270,7 +270,7 @@ function EditPublishedForm({logged, user, participantId}) {
 
                     <div className="form-submit">
                         <p className="error"> { formError } </p>
-                        <Button variant="contained" type="submit" color="primary">Enviar</Button>
+                        <Button variant="contained" type="submit" color="primary">Editar formulÃ¡rio</Button>
                     </div>
                 </form>
             </div>

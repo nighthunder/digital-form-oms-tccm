@@ -23,6 +23,7 @@ function ShowSurvey({user}) {
 	
 	const [modules, setModules] = useState([]);
     const [moduleID, setModuleID] = useState(''); // ID do módulo clicado
+    const [moduleDescription, setModuleDescription] = useState(''); // Desc do módulo clicado
 
     const [popupTitle, setPopupTitle] = useState('');
     const [popupBodyText, setPopupBodyText] = useState('');
@@ -51,7 +52,10 @@ function ShowSurvey({user}) {
     const handleClickOpen = (value) => {
         setOpen(false);
         console.log("Descrição"+ value);
-        setModuleID(value);
+        setModuleDescription(value);
+        value === "Acompanhamento" && setModuleID(2)
+        value === "Formulário de Admissão" && setModuleID(1)
+        value === "Formulário de alta/óbito" && setModuleID(3)
         {location.state.questionnaireStatus === "Publicado" &&
             setPopupTitle("Este questionário está em uso.");
             setPopupBodyText("Tem certeza de que deseja alterar um formulário deprecado?");
@@ -73,7 +77,7 @@ function ShowSurvey({user}) {
     const handleOpenEditPublishedForm = () => {
        console.log(moduleID);
        history.push('/edit-published-form', {
-            moduleID: moduleID,
+            modulo: moduleID,
             hospitalIndex: user[0].hospitalunitid});
     };
 
