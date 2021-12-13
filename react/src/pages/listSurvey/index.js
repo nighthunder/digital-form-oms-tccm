@@ -55,7 +55,8 @@ function ListSurvey({user, hospital}) {
                                     questionnaires.map(q => ( 
                                         <tr key={q.questionnaireID} data-key={q.questionnaireID} onClick={ () => {
                                         history.push('/show-survey/', 
-                                        {questionnaireID: q.questionnaireID, 
+                                        {
+                                        questionnaireID: q.questionnaireID, 
                                         description : q.description,
                                         version : q.version,
                                         questionnaireStatus : q.questionnaireStatus,

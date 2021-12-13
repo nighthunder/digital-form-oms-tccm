@@ -18,10 +18,11 @@ import { connect } from 'react-redux';
 function ShowSurvey({user}) {
 
 	const location = useLocation();
+    console.log("LOCATION", location);
 	const history = useHistory();
 	
 	const [modules, setModules] = useState([]);
-    const [moduleID, setModuleID] = useState('');
+    const [moduleID, setModuleID] = useState(''); // ID do módulo clicado
 
     const [popupTitle, setPopupTitle] = useState('');
     const [popupBodyText, setPopupBodyText] = useState('');
@@ -47,9 +48,10 @@ function ShowSurvey({user}) {
 
 	const [open, setOpen] = React.useState(false);
 
-    const handleClickOpen = (event) => {
+    const handleClickOpen = (value) => {
         setOpen(false);
-        //setModuleID(moduleDescription);
+        console.log("Descrição"+ value);
+        setModuleID(value);
         {location.state.questionnaireStatus === "Publicado" &&
             setPopupTitle("Este questionário está em uso.");
             setPopupBodyText("Tem certeza de que deseja alterar um formulário deprecado?");
@@ -69,9 +71,10 @@ function ShowSurvey({user}) {
     };
 
     const handleOpenEditPublishedForm = () => {
-        history.push('/edit-published-form', {
-            //moduleID: moduleID,
-            hospitalIndex: user[0].hospitalIndex});
+       console.log(moduleID);
+       history.push('/edit-published-form', {
+            moduleID: moduleID,
+            hospitalIndex: user[0].hospitalunitid});
     };
 
 	return (
@@ -98,7 +101,7 @@ function ShowSurvey({user}) {
 					<tbody>
 					{
                               modules.map(q => ( 
-                                    <tr key={q.description} data-key={q.questionnaireID} onClick={handleClickOpen}>
+                                    <tr value={q.description} key={q.questionnaireID} data-key={q.description} onClick={() => handleClickOpen(q.description)}>
                                         <td>{q.description}</td>
                                         <td>{q.crfFormsStatus}</td>
                                         <td>{getPtBrDate(new Date(q.creationDate))}</td> 
