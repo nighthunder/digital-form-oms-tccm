@@ -198,7 +198,7 @@ function EditPublishedForm({logged, user, participantId}) {
                             { (question.qst_type === "Date question") && 
                                 ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
                             <div>
-                                <h4 className="questionDesc">{question.dsc_qst}</h4>
+                                <TextField className="inputQst" value={question.dsc_qst} fullWidth>{question.dsc_qst}</TextField>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                             </div>
                             }
@@ -208,7 +208,7 @@ function EditPublishedForm({logged, user, participantId}) {
                                 ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
                             <div>
                             {/*<TextField type="number" name={String(question.qstId)} label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' } />*/}
-                            <h4 className="questionDesc">{question.dsc_qst}</h4>
+                            <TextField className="inputQst" value={question.dsc_qst} fullWidth>{question.dsc_qst}</TextField>
                             <p className="questionType">Tipo da questão: {question.qst_type}</p>
                             </div>
                             }
@@ -216,8 +216,8 @@ function EditPublishedForm({logged, user, participantId}) {
                             {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha menos de 6 opções */}
                             { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length < 6 ) &&
                                 ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
-                            <div className="MuiTextField-root">
-                                <h4 className="questionDesc">{question.dsc_qst}</h4>
+                            <div className="MuiTextField-root MuiForm">
+                                <TextField className="inputQst" value={question.dsc_qst} fullWidth>{question.dsc_qst}</TextField>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                 <p className="subQstDesc">Respostas padronizadas</p>
                                 <Select multiple native label={question.dsc_qst} value={form[String(question.qstId)] || ''} aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
@@ -231,8 +231,8 @@ function EditPublishedForm({logged, user, participantId}) {
                             {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha 6 ou mais opções */}
                             { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length >= 6 ) &&
                                 ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
-                            <div className="MuiTextField-root">
-                                <h4 className="questionDesc">{question.dsc_qst}</h4>
+                            <div className="MuiTextField-root MuiForm">
+                                <TextField className="inputQst" value={question.dsc_qst} fullWidth>{question.dsc_qst}</TextField>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                 <p className="subQstDesc">Respostas padronizadas</p>
                                 <Select multiple native label={question.dsc_qst} value={form[String(question.qstId)] || ''} aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
@@ -249,7 +249,7 @@ function EditPublishedForm({logged, user, participantId}) {
                                 ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
                             <div>
                             {/*<TextField name={String(question.qstId)} label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }/>*/}
-                            <h4 className="questionDesc">{question.dsc_qst}</h4>
+                            <TextField className="inputQst" value={question.dsc_qst} fullWidth>{question.dsc_qst}</TextField>
                             <p className="questionType">Tipo da questão: {question.qst_type}</p>
                             </div>
                             }
@@ -257,8 +257,8 @@ function EditPublishedForm({logged, user, participantId}) {
                             {/* Se for do tipo Boolean_Question*/}
                             { (question.qst_type === "Boolean_Question") && 
                                 ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
-                            <div className="MuiTextField-root">
-                                <h4 className="questionDesc">{question.dsc_qst}</h4>
+                            <div className="MuiTextField-root MuiForm">
+                                <TextField className="inputQst" value={question.dsc_qst} fullWidth>{question.dsc_qst}</TextField>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                 <p className="subQstDesc">Respostas padronizadas</p>
                                  <Select multiple native label={question.dsc_qst} aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange}>

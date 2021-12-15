@@ -110,7 +110,7 @@ function AddBasedSurvey({user}) {
     return (
             <main className="container">
                 {/* <p className="subtitle"> Adicione uma nova pesquisa baseada em:</p> */}
-                <h2>Pesquisa Baseada</h2>
+                <h2>Adicionar pesquisa derivada</h2>
                 <form className="module" onSubmit={handleSubmit}>
                     <div className="formGroup formGroup1">
                         <InputLabel>Selecione a Pesquisa:</InputLabel><br/>
@@ -123,10 +123,10 @@ function AddBasedSurvey({user}) {
                         </select>
                     </div>
                     <div className="formGroup formGroup2">
-                        <InputLabel>Selecione o tipo de vínculo:</InputLabel><br/>
+                        <InputLabel>Selecione o tipo de derivação:</InputLabel><br/>
                         <select name="selectSurvey" className="sel1" value={selectSurvey} onChange={handleChange}>
-                           <option value="version">Próxima versão da pesquisa</option>
-                           <option value="based">A partir da pesquisa</option>
+                           <option value="version">Nova Versão</option>
+                           <option value="based">Como template</option>
                         </select>
                     </div>
                     <div className="submit-prontuario">

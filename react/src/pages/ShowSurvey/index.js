@@ -155,12 +155,18 @@ function ShowSurvey({user}) {
 				<Add color="primary" />
 				Adicionar novo formulário de módulo +
 			 </Button><br/>
-			  <Button variant="outlined" color="primary" className="add-module publish" onClick={ () => {
+			 <Button variant="outlined" color="primary" className="add-module publish" onClick={ () => {
 				history.push('/survey-publish')
 			 }}>
 				<Add color="primary" />
 				Publicar pesquisa
-			 </Button>
+			 </Button><br/>
+             <Button variant="outlined" color="primary" className="add-survey add-based " onClick={ () => {
+                        history.push('/add-based-survey')
+                        }}>
+                        <Add color="primary" />
+                        Adicionar pesquisa derivada
+             </Button>
 		 </div>
       </main>
 
