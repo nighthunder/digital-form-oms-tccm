@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory, useLocation } from "react-router-dom";
 import api from '../../services/api';
-import { Button, TextField, CircularProgress } from '@material-ui/core';
+import { Button, TextField, CircularProgress} from '@material-ui/core';
 import { Add, Edit } from '@material-ui/icons';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import './styles.css';
 
 import { connect } from 'react-redux';
@@ -34,11 +35,20 @@ function ListSurvey({user, hospital}) {
         return dd + '/' + mm + '/' + yyyy;
     }
 
+    function handleBackButton(){
+        history.goBack();
+    }
+
 	return (
             <main className="container containerWider">
                 <div className="survey">
-				    <h2>Crie e edite pesquisas</h2>
-               
+                    <div className="mainNav">
+				        <h2>Crie e edite pesquisas</h2>
+                        <ArrowBackIcon className="ArrowBack" onClick={handleBackButton}/>
+                    </div>
+                    <div className="survey-details">
+                        Gerencie as pesquisas: : crie, versione, copie, edite e publique.
+                    </div>
                     <div className="surveys-list">
                         <table>
                                 <thead>

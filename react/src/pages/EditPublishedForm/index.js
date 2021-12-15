@@ -3,6 +3,7 @@ import React, { useState, useEffect  } from 'react';
 import './styles.css';
 import { useLocation } from "react-router-dom";
 import { TextField, Button, FormLabel, RadioGroup, Radio, FormControlLabel, InputLabel, Select, MenuItem } from '@material-ui/core';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import api from '../../services/api';
 import { connect } from 'react-redux';
 import { useHistory } from "react-router-dom";
@@ -171,14 +172,21 @@ function EditPublishedForm({logged, user, participantId}) {
             history.go(-2);
     }
 
+    function handleBackButton(){
+        history.goBack();
+    }
+
     return (
         <main className="container">
             <div>
-                <header className="index">
+                <header className="index ">
                     { user[location.state.hospitalIndex].hospitalName } > <b>{ titles[location.state.modulo-1] }</b>
                 </header>
-                <h2 className="pageTitle">Editar Módulo { location.state.modulo } - { titles[location.state.modulo-1] } - {location.state.moduleStatus}</h2>
-                <p className="questionnaireDesc"> Questionário: {location.state.questionnaireDesc} ( {location.state.questionnaireVers} ) {location.state.questionnaireStatus}  </p>
+                <div className="mainNav">
+				    <h2 className="pageTitle">Editar Módulo { location.state.modulo } - { titles[location.state.modulo-1] } - {location.state.moduleStatus}</h2>
+                    <ArrowBackIcon className="ArrowBack" onClick={handleBackButton}/>
+                </div>
+                 <p className="questionnaireDesc"> Questionário: {location.state.questionnaireDesc} ( {location.state.questionnaireVers} ) {location.state.questionnaireStatus}  </p>
                 <form className="module" onSubmit={submit}>
                     <div>
                     { questions.length === 0 && (location.state.formRecordId ? !loadedResponses : true) &&
@@ -275,7 +283,7 @@ function EditPublishedForm({logged, user, participantId}) {
 
                     <div className="form-submit">
                         <p className="error"> { formError } </p>
-                        <Button variant="contained" type="submit" color="primary">Editar formulário</Button>
+                        <Button variant="contained" type="submit" color="primary">Salvar</Button>
                     </div>
                 </form>
             </div>

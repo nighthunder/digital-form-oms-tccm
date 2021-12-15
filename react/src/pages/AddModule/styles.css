@@ -5,7 +5,7 @@ form.module{
 	padding-top: 58px;
 }
 .survey-details{
-	display: inline-flex;
+	display: flex;
 	font-size: 0.8em;
 	color: #6a6969;
 }

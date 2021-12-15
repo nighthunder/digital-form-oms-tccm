@@ -4,6 +4,7 @@ import api from '../../services/api';
 import ReactDOM from 'react-dom';
 import { TextField, Button, InputLabel, FormLabel, Select, CircularProgress } from '@material-ui/core';
 import { Add, Edit } from '@material-ui/icons';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import './styles.css';
 
 import { connect } from 'react-redux';
@@ -103,14 +104,20 @@ function AddBasedSurvey({user}) {
         console.log("Valor selecionado", selectSurvey);
     }
 
+    function handleBackButton(){
+        history.goBack();
+    }
+
     {
         selectSurvey === '' && setSelectSurvey("WHO COVID-19 Rapid Version CRF")
     }
 
     return (
             <main className="container">
-                {/* <p className="subtitle"> Adicione uma nova pesquisa baseada em:</p> */}
-                <h2>Adicionar pesquisa derivada</h2>
+                <div className="mainNav">
+                    <h2>Adicionar pesquisa derivada</h2>
+                    <ArrowBackIcon className="ArrowBack" onClick={handleBackButton}/>
+                </div>
                 <form className="module" onSubmit={handleSubmit}>
                     <div className="formGroup formGroup1">
                         <InputLabel>Selecione a Pesquisa:</InputLabel><br/>
@@ -135,7 +142,7 @@ function AddBasedSurvey({user}) {
                         <br/>
                         <Button style={styles.Button} variant="contained" type="submit" color="primary" disabled={!survey}>
                             { !loading &&
-                                'Registrar nova pesquisa'
+                                'Salvar'
                             }
                             { loading &&
                                 <CircularProgress color="white"/>

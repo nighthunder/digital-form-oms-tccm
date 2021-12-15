@@ -4,6 +4,7 @@ import api from '../../services/api';
 import ReactDOM from 'react-dom';
 import { TextField, Button, InputLabel, FormLabel, Select, CircularProgress } from '@material-ui/core';
 import { Add, Edit } from '@material-ui/icons';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import './styles.css';
 
 import { connect } from 'react-redux';
@@ -103,13 +104,20 @@ function AddModule({user}) {
         console.log("Valor selecionado", selectModule);
     }
 
+    function handleBackButton(){
+        history.goBack();
+    }
+
     {
         selectModule === '' && setSelectModule("Formulário de Admissão")
     }
 
     return (
             <main className="container">
-                <h2>{location.state.description}</h2>
+              <div className="mainNav">
+                   <h2>{location.state.description}</h2>
+                   <ArrowBackIcon className="ArrowBack" onClick={handleBackButton}/>
+                </div>
 			    <div className="survey-details">
 				    <p>Versão: {location.state.version}</p><br/>
 				    <p className="padding-10">Status: {location.state.questionnaireStatus}</p><br/>
@@ -133,7 +141,7 @@ function AddModule({user}) {
                         <br/>
                         <Button style={styles.Button} variant="contained" type="submit" color="primary" disabled={!module}>
                             { !loading &&
-                                'Registrar novo formulário'
+                                'Salvar'
                             }
                             { loading &&
                                 <CircularProgress color="white"/>

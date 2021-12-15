@@ -4,6 +4,7 @@ import api from '../../services/api';
 import ReactDOM from 'react-dom';
 import { TextField, Button, InputLabel, FormLabel, Select, CircularProgress } from '@material-ui/core';
 import { Add, Edit } from '@material-ui/icons';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import './styles.css';
 
 import { connect } from 'react-redux';
@@ -88,12 +89,17 @@ function AddSurvey({user}) {
         //console.log(survey);
         setCreationDate(convertToDate(new Date()));
     }
+    
+    function handleBackButton(){
+        history.goBack();
+    }
 
     return (
         <div>
             <main className="container add-survey">
-                <div>
-                    <h2>Adicione uma nova pesquisa clínica:</h2>
+                <div className="mainNav">
+				    <h2>Adicione uma nova pesquisa clínica:</h2>
+                    <ArrowBackIcon className="ArrowBack" onClick={handleBackButton}/>
                 </div>
                 <div>
                  <form className="module" onSubmit={handleSubmit}>
@@ -107,7 +113,7 @@ function AddSurvey({user}) {
                         <br/>
                         <Button style={styles.Button} variant="contained" type="submit" color="primary" disabled={!survey}>
                             { !loading &&
-                                'Registrar nova pesquisa'
+                                'Salvar'
                             }
                             { loading &&
                                 <CircularProgress color="white"/>
