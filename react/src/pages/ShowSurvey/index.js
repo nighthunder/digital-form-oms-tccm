@@ -85,7 +85,7 @@ function ShowSurvey({user}) {
 
 	return (
 
-	  <main className="container">
+	  <main className="container containerWider">
 	    <div className="module">
 			<h2>{location.state.description}</h2>
 			<div className="survey-details">
@@ -102,6 +102,7 @@ function ShowSurvey({user}) {
 							<th>STATUS</th>
 							<th>CRIADO EM</th> 
 							<th>MODIFICADO EM</th> 
+							<th>EDITAR</th> 
 						</tr>
 					</thead>
 					<tbody>
@@ -112,6 +113,7 @@ function ShowSurvey({user}) {
                                         <td>{q.crfFormsStatus}</td>
                                         <td>{getPtBrDate(new Date(q.creationDate))}</td> 
                                         <td>{getPtBrDate(new Date(q.lastModification))}</td> 
+                                        <td><Edit /></td>
                                     </tr>
                                ))
                      }

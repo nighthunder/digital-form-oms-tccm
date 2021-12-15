@@ -31,17 +31,6 @@ h2:after{
 	margin: 5px 0px 12px;
 	opacity: 0.65;
 }
-.subtitle{
-	letter-spacing: 0.05em;
-	font-size: 0.85em;
-	padding: 5px;
-	background-color: #f4dfb6;
-	margin-bottom: 15px;
-	width: -moz-fit-content;
-	width: fit-content;
-	width: 100%;
-	border-radius: 2px;
-}
 select.sel1{
 	font-size: 0.80em;
 	padding: 5px;

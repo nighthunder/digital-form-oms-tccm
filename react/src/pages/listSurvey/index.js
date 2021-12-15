@@ -35,7 +35,7 @@ function ListSurvey({user, hospital}) {
     }
 
 	return (
-            <main className="container">
+            <main className="container containerWider">
                 <div className="survey">
 				    <h2>Crie e edite pesquisas</h2>
                
@@ -48,6 +48,7 @@ function ListSurvey({user, hospital}) {
                                         <th>STATUS</th>
                                         <th>CRIADO EM</th> 
                                         <th>MODIFICADO EM</th> 
+                                        <th>EDITAR</th> 
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -69,6 +70,7 @@ function ListSurvey({user, hospital}) {
                                             <td>{q.questionnaireStatus}</td>
                                             <td>{getPtBrDate(new Date(q.creationDate))}</td> 
                                             <td>{getPtBrDate(new Date(q.lastModification))}</td> 
+                                            <td><Edit /></td>
                                         </tr>
                             
                                      ))

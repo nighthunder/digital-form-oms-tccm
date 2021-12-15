@@ -1,6 +1,9 @@
 .survey{
 	overflow: auto;
 }
+.containerWider{
+	width: 54%;
+}
 main.container{
 	min-height: 285px;
 }

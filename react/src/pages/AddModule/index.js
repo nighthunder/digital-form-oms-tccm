@@ -109,7 +109,6 @@ function AddModule({user}) {
 
     return (
             <main className="container">
-                <p className="subtitle"> Adicione um novo formulário clínico na pesquisa:</p>
                 <h2>{location.state.description}</h2>
 			    <div className="survey-details">
 				    <p>Versão: {location.state.version}</p><br/>
