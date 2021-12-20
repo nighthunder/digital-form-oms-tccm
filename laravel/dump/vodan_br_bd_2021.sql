@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 28, 2021 at 11:35 PM
+-- Generation Time: Dec 20, 2021 at 06:58 PM
 -- Server version: 10.4.21-MariaDB
 -- PHP Version: 7.3.31
 
@@ -63,7 +63,7 @@ COMMIT;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `getAllModules` (IN `p_surveyid` INT)  BEGIN
 Select crfFormsID,
 	   questionnaireID,
-       description,
+       translate('pt-br',description) as description,
        translate('pt-br', (Select description from tb_crfformsstatus as t1
        where t1.crfformsStatusID = t2.crfformsStatusID)) as crfFormsStatus,
        lastModification,
@@ -492,7 +492,7 @@ sp:BEGIN
     
     INSERT INTO tb_crfforms (
 			crfformsID, questionnaireID, description, crfformsStatusID, lastModification,creationDate )
-            values (DEFAULT, p_questionnaireID, p_moduleDescription, p_moduleStatusID, p_lastModification ,NOW());
+            values (DEFAULT, p_questionnaireID, translate('eng', p_moduleDescription), p_moduleStatusID, p_lastModification ,NOW());
 
 
     # registrando a informação de notificação para a inclusao do modulo 
@@ -691,9 +691,9 @@ sp:BEGIN
 	# Inserindo nova pesquisa       
     
     INSERT INTO tb_questionnaire (
-			questionnaireID, description, questionnaireStatusID, isBasedOn, createdBy, version, 
+			questionnaireID, description, questionnaireStatusID, isNewVersionOf, isBasedOn, createdBy, version, 
     		lastModification, creationDate )
-            values (DEFAULT, p_questionnaireDescription, p_questionnaireStatusID, NULL, NULL, p_questionnaireVersion, p_questionnaireLastModification, p_questionnaireCreationDate);
+            values (DEFAULT, p_questionnaireDescription, p_questionnaireStatusID, NULL, NULL, NULL, p_questionnaireVersion, p_questionnaireLastModification, p_questionnaireCreationDate);
 
 
     # registrando a informação de notificação para a inclusao do modulo 
@@ -1187,6 +1187,26 @@ DECLARE v_dadosAlterados text;
 		
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `searchQuestionnaire` (IN `p_descricao` VARCHAR(50))  BEGIN
+
+Select * from tb_questionnaire as t1 where t1.description like CONCAT(p_descricao, '%');
+
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `teste` (`p_teste` VARCHAR(255))  BEGIN
+
+declare p_userid integer;
+declare p_msg_retorno varchar(500);
+declare p_participantid integer;
+declare p_formrecordid integer;
+ 
+call postModule(1,1,1,"descrição", 1,2, now(), now(), @p_msg_retorno);
+
+select p_teste, p_msg_retorno;
+
+ 
+ END$$
+
 --
 -- Functions
 --
@@ -1375,7 +1395,7 @@ CREATE TABLE `tb_crfforms` (
   `questionnaireID` int(10) NOT NULL,
   `description` varchar(255) NOT NULL COMMENT '(pt-br) Descrição .\r\n(en) description.',
   `crfformsStatusID` int(10) NOT NULL,
-  `lastModification` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `lastModification` timestamp NOT NULL DEFAULT current_timestamp(),
   `creationDate` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='(pt-br)\r\ntb_CRFForms identifica o tipo do formulario refere-se ao Questionnaire Subsection da Ontologia:\r\nAdmissão - Modulo 1\r\nAcompanhamento - Modulo 2\r\nDesfecho - Modulo 3\r\n(en)\r\ntb_CRFForms identifies the type of the form refers to the Questionnaire Subsection of Ontology: Admission - Module 1 Monitoring - Module 2 Outcome - Module 3';
 
@@ -1387,7 +1407,19 @@ INSERT INTO `tb_crfforms` (`crfFormsID`, `questionnaireID`, `description`, `crff
 (1, 1, 'Admission form', 1, '2021-11-17 21:19:53', '2021-11-17 21:20:38'),
 (2, 1, 'Follow-up', 1, '2021-11-17 21:19:44', '2021-11-17 21:20:38'),
 (3, 1, 'Discharge/death form', 1, '2021-11-17 21:19:51', '2021-11-17 21:20:38'),
-(19, 2, 'novo mod', 2, '2021-11-28 21:52:22', '2021-11-28 21:52:23');
+(36, 14, 'Admission Form', 2, '2021-11-30 20:52:14', '2021-11-30 20:52:18'),
+(51, 6, 'Admission Form', 2, '2021-12-01 01:21:19', '2021-12-01 01:21:19'),
+(50, 6, 'Admission Form', 2, '2021-11-30 22:00:18', '2021-11-30 22:00:18'),
+(49, 2, 'Discharge/death form', 3, '2021-11-30 21:54:08', '2021-11-30 21:54:08'),
+(47, 5, 'Follow-up', 1, '2021-11-30 21:53:30', '2021-11-30 21:53:31'),
+(48, 2, 'Admission Form', 3, '2021-11-30 21:53:58', '2021-11-30 21:53:58'),
+(45, 2, 'Follow-up', 3, '2021-11-30 21:51:26', '2021-11-30 21:51:26'),
+(46, 2, 'Follow-up', 3, '2021-11-30 21:51:26', '2021-11-30 21:51:28'),
+(52, 6, 'Admission Form', 2, '2021-12-01 01:21:21', '2021-12-01 01:21:22'),
+(53, 6, 'Discharge/death form', 2, '2021-12-01 01:28:45', '2021-12-01 01:28:45'),
+(55, 14, 'Follow-up', 2, '2021-12-01 16:50:09', '2021-12-01 16:50:09'),
+(56, 2, '', 1, '2021-12-01 17:36:36', '2021-12-01 17:36:36'),
+(576, 5, 'bla', 2, '2021-12-10 08:29:10', '2021-12-10 08:29:10');
 
 -- --------------------------------------------------------
 
@@ -1406,8 +1438,9 @@ CREATE TABLE `tb_crfformsstatus` (
 --
 
 INSERT INTO `tb_crfformsstatus` (`crfformsStatusID`, `description`, `creationDate`) VALUES
-(1, 'Finalized', '2021-11-17 21:10:58'),
-(2, 'New', '2021-11-17 21:11:08');
+(1, 'Published', '2021-12-01 09:24:51'),
+(2, 'New', '2021-11-17 21:11:08'),
+(3, 'Deprecated', '2021-12-01 09:19:21');
 
 -- --------------------------------------------------------
 
@@ -1417,7 +1450,7 @@ INSERT INTO `tb_crfformsstatus` (`crfformsStatusID`, `description`, `creationDat
 
 CREATE TABLE `tb_formrecord` (
   `formRecordID` int(10) NOT NULL,
-  `participantID` int(10) NOT NULL,
+  `participantID` int(10) DEFAULT NULL,
   `hospitalUnitID` int(10) NOT NULL,
   `questionnaireID` int(10) NOT NULL,
   `crfFormsID` int(10) NOT NULL,
@@ -1683,7 +1716,8 @@ INSERT INTO `tb_formrecord` (`formRecordID`, `participantID`, `hospitalUnitID`, 
 (254, 89, 1, 1, 1, '2021-03-03 21:49:55'),
 (255, 89, 1, 1, 2, '2021-03-03 21:51:33'),
 (256, 89, 1, 1, 2, '2021-03-16 17:02:42'),
-(257, 88, 1, 1, 2, '2021-04-30 18:30:23');
+(257, 88, 1, 1, 2, '2021-04-30 18:30:23'),
+(258, 186, 1, 1, 1, '2021-11-30 20:14:48');
 
 -- --------------------------------------------------------
 
@@ -1755,7 +1789,8 @@ CREATE TABLE `tb_language` (
 --
 
 INSERT INTO `tb_language` (`languageID`, `description`) VALUES
-(1, 'pt-br');
+(1, 'pt-br'),
+(2, 'eng');
 
 -- --------------------------------------------------------
 
@@ -2694,7 +2729,10 @@ INSERT INTO `tb_multilanguage` (`languageID`, `description`, `descriptionLang`) 
 (1, 'Published', 'Publicado'),
 (1, 'Deprecated', 'Deprecado'),
 (1, 'New', 'Novo'),
-(1, 'Finalized', 'Finalizado');
+(1, 'Finalized', 'Finalizado'),
+(2, 'Acompanhamento', 'Follow-up'),
+(2, 'Formulário de alta/óbito', 'Discharge/death form'),
+(2, 'Formulário de Admissão', 'Admission Form');
 
 -- --------------------------------------------------------
 
@@ -2925,7 +2963,137 @@ INSERT INTO `tb_notificationrecord` (`userID`, `profileID`, `hospitalUnitID`, `t
 (20, 1, 1, 'tb_assessmentquestionnaire', 0, '2021-11-16 19:39:33', 'I', 'Inclusão do registro referente ao paciente: 185 para o hospital: 1'),
 (20, 1, 1, 'tb_participant', 185, '2021-11-17 18:38:10', 'A', 'Alteração - Prontuario de: 657567577 para 6575675778'),
 (20, 1, 1, 'tb_participant', 186, '2021-11-27 03:05:37', 'I', 'Inclusão de paciente: 94564563'),
-(20, 1, 1, 'tb_assessmentquestionnaire', 0, '2021-11-27 03:05:37', 'I', 'Inclusão do registro referente ao paciente: 186 para o hospital: 1');
+(20, 1, 1, 'tb_assessmentquestionnaire', 0, '2021-11-27 03:05:37', 'I', 'Inclusão do registro referente ao paciente: 186 para o hospital: 1'),
+(20, 1, 1, 'tb_formRecord', 258, '2021-11-30 20:14:48', 'I', 'Inclusão de Modulo para paciente: 186'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1251, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 29:Não - 15:296'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1252, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 33:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1253, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 34:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1254, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 35:Não - 15:296'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1255, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 36:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1256, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 37:Não - 15:296'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1257, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 38:Não - 15:296'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1258, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 39:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1259, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 47:true'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1260, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 48:false'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1261, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 49:false'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1262, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 50:Não - 15:296'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1263, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 51:Não - 15:296'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1264, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 52:Não - 15:296'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1265, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 53:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1266, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 54:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1267, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 55:Não - 15:296'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1268, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 56:Desconhecido - 15:297'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1269, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 57:Desconhecido - 15:297'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1270, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 58:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1271, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 59:Sim-não toma antivirais - 6:263'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1272, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 60:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1273, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 62:Não - 15:296'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1274, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 63:false'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1275, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 64:false'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1276, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 82:Oral - 4:14'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1277, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 87:100'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1278, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 89:1-5 L/min - 8:271'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1279, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 90:Máscara com reservatório - 7:268'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1280, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 92:Canalizado - 14:289'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1281, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 93:2021-11-09T09:00'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1282, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 94:34'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1283, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 95:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1284, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 96:23'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1285, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 97:2021-11-10T12:00'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1286, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 98:234'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1287, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 100:antimalarium'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1288, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 107:1902-09-09T03:04'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1289, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 108:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1290, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 109:Não - 15:296'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1291, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 110:Não informado - 16:299'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1292, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 111:Feminino - 13:284'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1293, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 114:1'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1294, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 115:23'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1295, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 116:3'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1296, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 117:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1297, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 118:34'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1298, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 119:Não - 15:296'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1299, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 120:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1300, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 127:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1301, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 128:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1302, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 129:Não - 15:296'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1303, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 130:Desconhecido - 15:297'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1304, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 132:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1305, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 133:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1306, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 134:Desconhecido - 15:297'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1307, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 135:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1308, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 136:Desconhecido - 15:297'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1309, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 137:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1310, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 138:Desconhecido - 15:297'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1311, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 139:Desconhecido - 15:297'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1312, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 140:Desconhecido - 15:297'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1313, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 144:24'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1314, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 145:4'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1315, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 146:8'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1316, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 147:7'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1317, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 148:2'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1318, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 149:Não - 15:296'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1319, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 150:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1320, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 151:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1321, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 152:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1322, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 153:Sim - 16:302'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1323, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 154:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1324, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 155:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1325, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 156:3'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1326, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 157:56'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1327, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 158:123'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1328, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 159:4'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1329, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 160:2'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1330, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 161:4'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1331, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 162:3'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1332, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 163:34'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1333, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 164:3'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1334, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 165:45'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1335, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 166:Israel - 5:121'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1336, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 167:2021-11-29T08:00'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1337, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 169:3'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1338, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 170:4'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1339, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 171:6'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1340, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 172:34'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1341, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 174:3'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1342, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 189:Não - 15:296'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1343, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 190:Indiferente - 2:8'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1344, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 191:10'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1345, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 192:5'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1346, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 193:90'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1347, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 194:7'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1348, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 195:6'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1349, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 196:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1350, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 198:15'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1351, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 199:Desconhecido - 15:297'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1352, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 200:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1353, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 201:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1354, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 202:Não - 15:296'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1355, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 203:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1356, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 204:Desconhecido - 15:297'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1357, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 205:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1358, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 206:Não - 15:296'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1359, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 207:Desconhecido - 15:297'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1360, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 208:Desconhecido - 15:297'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1361, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 209:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1362, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 210:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1363, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 211:Não - 15:296'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1364, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 212:19'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1365, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 213:Desconhecido - 15:297'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1366, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 214:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1367, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 215:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1368, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 225:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1369, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 226:34'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1370, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 241:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1371, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 242:Formulario de teste'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1372, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 245:67'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1373, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 246:3'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1374, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 247:3'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1375, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 248:45'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1376, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 249:67'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1377, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 252:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1378, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 253:Sim - 15:298'),
+(20, 1, 1, 'tb_questiongroupformrecord', 1379, '2021-11-30 20:14:48', 'I', 'Inclusão de Resposta da 254:Inibidor de neuraminidase - 1:4');
 
 -- --------------------------------------------------------
 
@@ -4712,7 +4880,136 @@ INSERT INTO `tb_questiongroupformrecord` (`questionGroupFormRecordID`, `formReco
 (1247, 255, 2, 220, 296, ''),
 (1248, 256, 2, 168, NULL, '2021-03-15T18:00'),
 (1249, 257, 2, 168, NULL, '2021-04-28T17:32'),
-(1250, 257, 2, 217, NULL, '43');
+(1250, 257, 2, 217, NULL, '43'),
+(1251, 258, 1, 29, 296, ''),
+(1252, 258, 1, 33, 298, ''),
+(1253, 258, 1, 34, 298, ''),
+(1254, 258, 1, 35, 296, ''),
+(1255, 258, 1, 36, 298, ''),
+(1256, 258, 1, 37, 296, ''),
+(1257, 258, 1, 38, 296, ''),
+(1258, 258, 1, 39, 298, ''),
+(1259, 258, 1, 47, NULL, 'true'),
+(1260, 258, 1, 48, NULL, 'false'),
+(1261, 258, 1, 49, NULL, 'false'),
+(1262, 258, 1, 50, 296, ''),
+(1263, 258, 1, 51, 296, ''),
+(1264, 258, 1, 52, 296, ''),
+(1265, 258, 1, 53, 298, ''),
+(1266, 258, 1, 54, 298, ''),
+(1267, 258, 1, 55, 296, ''),
+(1268, 258, 1, 56, 297, ''),
+(1269, 258, 1, 57, 297, ''),
+(1270, 258, 1, 58, 298, ''),
+(1271, 258, 1, 59, 263, ''),
+(1272, 258, 1, 60, 298, ''),
+(1273, 258, 1, 62, 296, ''),
+(1274, 258, 1, 63, NULL, 'false'),
+(1275, 258, 1, 64, NULL, 'false'),
+(1276, 258, 1, 82, 14, ''),
+(1277, 258, 1, 87, NULL, '100'),
+(1278, 258, 1, 89, 271, ''),
+(1279, 258, 1, 90, 268, ''),
+(1280, 258, 1, 92, 289, ''),
+(1281, 258, 1, 93, NULL, '2021-11-09T09:00'),
+(1282, 258, 1, 94, NULL, '34'),
+(1283, 258, 1, 95, 298, ''),
+(1284, 258, 1, 96, NULL, '23'),
+(1285, 258, 1, 97, NULL, '2021-11-10T12:00'),
+(1286, 258, 1, 98, NULL, '234'),
+(1287, 258, 1, 100, NULL, 'antimalarium'),
+(1288, 258, 1, 107, NULL, '1902-09-09T03:04'),
+(1289, 258, 1, 108, 298, ''),
+(1290, 258, 1, 109, 296, ''),
+(1291, 258, 1, 110, 299, ''),
+(1292, 258, 1, 111, 284, ''),
+(1293, 258, 1, 114, NULL, '1'),
+(1294, 258, 1, 115, NULL, '23'),
+(1295, 258, 1, 116, NULL, '3'),
+(1296, 258, 1, 117, 298, ''),
+(1297, 258, 1, 118, NULL, '34'),
+(1298, 258, 1, 119, 296, ''),
+(1299, 258, 1, 120, 298, ''),
+(1300, 258, 1, 127, 298, ''),
+(1301, 258, 1, 128, 298, ''),
+(1302, 258, 1, 129, 296, ''),
+(1303, 258, 1, 130, 297, ''),
+(1304, 258, 1, 132, 298, ''),
+(1305, 258, 1, 133, 298, ''),
+(1306, 258, 1, 134, 297, ''),
+(1307, 258, 1, 135, 298, ''),
+(1308, 258, 1, 136, 297, ''),
+(1309, 258, 1, 137, 298, ''),
+(1310, 258, 1, 138, 297, ''),
+(1311, 258, 1, 139, 297, ''),
+(1312, 258, 1, 140, 297, ''),
+(1313, 258, 1, 144, NULL, '24'),
+(1314, 258, 1, 145, NULL, '4'),
+(1315, 258, 1, 146, NULL, '8'),
+(1316, 258, 1, 147, NULL, '7'),
+(1317, 258, 1, 148, NULL, '2'),
+(1318, 258, 1, 149, 296, ''),
+(1319, 258, 1, 150, 298, ''),
+(1320, 258, 1, 151, 298, ''),
+(1321, 258, 1, 152, 298, ''),
+(1322, 258, 1, 153, 302, ''),
+(1323, 258, 1, 154, 298, ''),
+(1324, 258, 1, 155, 298, ''),
+(1325, 258, 1, 156, NULL, '3'),
+(1326, 258, 1, 157, NULL, '56'),
+(1327, 258, 1, 158, NULL, '123'),
+(1328, 258, 1, 159, NULL, '4'),
+(1329, 258, 1, 160, NULL, '2'),
+(1330, 258, 1, 161, NULL, '4'),
+(1331, 258, 1, 162, NULL, '3'),
+(1332, 258, 1, 163, NULL, '34'),
+(1333, 258, 1, 164, NULL, '3'),
+(1334, 258, 1, 165, NULL, '45'),
+(1335, 258, 1, 166, 121, ''),
+(1336, 258, 1, 167, NULL, '2021-11-29T08:00'),
+(1337, 258, 1, 169, NULL, '3'),
+(1338, 258, 1, 170, NULL, '4'),
+(1339, 258, 1, 171, NULL, '6'),
+(1340, 258, 1, 172, NULL, '34'),
+(1341, 258, 1, 174, NULL, '3'),
+(1342, 258, 1, 189, 296, ''),
+(1343, 258, 1, 190, 8, ''),
+(1344, 258, 1, 191, NULL, '10'),
+(1345, 258, 1, 192, NULL, '5'),
+(1346, 258, 1, 193, NULL, '90'),
+(1347, 258, 1, 194, NULL, '7'),
+(1348, 258, 1, 195, NULL, '6'),
+(1349, 258, 1, 196, 298, ''),
+(1350, 258, 1, 198, NULL, '15'),
+(1351, 258, 1, 199, 297, ''),
+(1352, 258, 1, 200, 298, ''),
+(1353, 258, 1, 201, 298, ''),
+(1354, 258, 1, 202, 296, ''),
+(1355, 258, 1, 203, 298, ''),
+(1356, 258, 1, 204, 297, ''),
+(1357, 258, 1, 205, 298, ''),
+(1358, 258, 1, 206, 296, ''),
+(1359, 258, 1, 207, 297, ''),
+(1360, 258, 1, 208, 297, ''),
+(1361, 258, 1, 209, 298, ''),
+(1362, 258, 1, 210, 298, ''),
+(1363, 258, 1, 211, 296, ''),
+(1364, 258, 1, 212, NULL, '19'),
+(1365, 258, 1, 213, 297, ''),
+(1366, 258, 1, 214, 298, ''),
+(1367, 258, 1, 215, 298, ''),
+(1368, 258, 1, 225, 298, ''),
+(1369, 258, 1, 226, NULL, '34'),
+(1370, 258, 1, 241, 298, ''),
+(1371, 258, 1, 242, NULL, 'Formulario de teste'),
+(1372, 258, 1, 245, NULL, '67'),
+(1373, 258, 1, 246, NULL, '3'),
+(1374, 258, 1, 247, NULL, '3'),
+(1375, 258, 1, 248, NULL, '45'),
+(1376, 258, 1, 249, NULL, '67'),
+(1377, 258, 1, 252, 298, ''),
+(1378, 258, 1, 253, 298, ''),
+(1379, 258, 1, 254, 4, '');
 
 -- --------------------------------------------------------
 
@@ -4724,9 +5021,10 @@ CREATE TABLE `tb_questionnaire` (
   `questionnaireID` int(255) NOT NULL,
   `description` varchar(255) NOT NULL,
   `questionnaireStatusID` int(10) DEFAULT NULL,
+  `isNewVersionOf` int(11) DEFAULT NULL,
   `IsBasedOn` int(10) DEFAULT NULL,
   `createdBy` int(10) DEFAULT NULL,
-  `version` varchar(50) DEFAULT NULL,
+  `version` varchar(50) NOT NULL,
   `lastModification` timestamp NOT NULL DEFAULT current_timestamp(),
   `creationDate` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -4735,21 +5033,20 @@ CREATE TABLE `tb_questionnaire` (
 -- Dumping data for table `tb_questionnaire`
 --
 
-INSERT INTO `tb_questionnaire` (`questionnaireID`, `description`, `questionnaireStatusID`, `IsBasedOn`, `createdBy`, `version`, `lastModification`, `creationDate`) VALUES
-(1, 'WHO COVID-19 Rapid Version CRF', 1, NULL, NULL, '1.0', '2021-11-17 21:06:57', '2021-11-17 21:08:01'),
-(2, 'Pesquisa de teste 2', 3, NULL, NULL, '0.0', '2021-11-17 23:16:07', '2021-11-19 22:21:11'),
-(3, 'teste', 1, NULL, NULL, '0.0', '2021-11-24 00:23:05', '2021-11-24 00:23:05'),
-(4, 'teste', 1, NULL, NULL, '0.0', '2021-11-24 00:23:05', '2021-11-24 00:23:05'),
-(5, 'nova pesquisa', 1, NULL, NULL, '0.0', '2021-11-24 00:25:22', '2021-11-24 00:25:22'),
-(6, 'Questionário 2', 2, NULL, NULL, '0.0', '2021-11-24 00:31:02', '2021-11-24 00:31:02'),
-(7, 'textao', 2, NULL, NULL, '0.0', '2021-11-24 00:31:46', '2021-11-24 00:31:46'),
-(8, 'Outra pesquisa', 2, NULL, NULL, '0.0', '2021-11-24 00:47:34', '2021-11-24 00:47:34'),
-(0, 'nem', 2, NULL, NULL, '0.0', '2021-11-26 20:29:47', '2021-11-26 20:29:47'),
-(9, 'nova', 2, NULL, NULL, '0.0', '2021-11-27 02:55:01', '2021-11-27 02:55:01'),
-(10, 'nova', 2, NULL, NULL, '0.0', '2021-11-27 02:55:01', '2021-11-27 02:55:01'),
-(11, 'nova', 2, NULL, NULL, '0.0', '2021-11-27 02:55:01', '2021-11-27 02:55:01'),
-(12, 'oi', 2, NULL, NULL, '0.0', '2021-11-27 02:56:21', '2021-11-27 02:56:21'),
-(13, 'pesquisa criada agora', 2, NULL, NULL, '0.0', '2021-11-28 21:51:48', '2021-11-28 21:51:48');
+INSERT INTO `tb_questionnaire` (`questionnaireID`, `description`, `questionnaireStatusID`, `isNewVersionOf`, `IsBasedOn`, `createdBy`, `version`, `lastModification`, `creationDate`) VALUES
+(1, 'WHO COVID-19 Rapid Version CRF', 1, 0, NULL, NULL, '1.0', '2021-11-17 21:06:57', '2021-11-17 21:08:01'),
+(2, 'Pesquisa de teste 2', 3, 0, NULL, NULL, '2.0', '2021-11-17 23:16:07', '2021-12-01 09:28:13'),
+(14, 'teste', 2, 0, NULL, NULL, '0.0', '2021-11-30 20:38:20', '2021-11-30 20:38:20'),
+(5, 'nova pesquisa', 1, 0, NULL, NULL, '0.0', '2021-11-24 00:25:22', '2021-11-24 00:25:22'),
+(6, 'Questionário 2', 2, 0, NULL, NULL, '0.0', '2021-11-24 00:31:02', '2021-11-24 00:31:02'),
+(16, 'teste', 2, 0, NULL, NULL, '0.0', '2021-12-01 02:48:38', '2021-12-01 02:48:38'),
+(8, 'Outra pesquisa', 2, 0, NULL, NULL, '0.0', '2021-11-24 00:47:34', '2021-11-24 00:47:34'),
+(18, 'teste', 2, 0, NULL, NULL, '0.0', '2021-12-01 16:47:24', '2021-12-01 16:47:24'),
+(19, 'trsd', 2, 0, NULL, NULL, '0.0', '2021-12-01 17:33:26', '2021-12-01 17:33:26'),
+(20, 'trsd', 2, 0, NULL, NULL, '0.0', '2021-12-01 17:33:26', '2021-12-01 17:33:26'),
+(13, 'pesquisa criada agora', 2, 0, NULL, NULL, '0.0', '2021-11-28 21:51:48', '2021-11-28 21:51:48'),
+(21, 'petry', 2, NULL, NULL, NULL, '0.0', '2021-12-10 07:45:00', '2021-12-10 07:45:00'),
+(28, 'Maya', 2, NULL, NULL, NULL, '0.0', '2021-12-10 07:52:35', '2021-12-10 07:52:35');
 
 -- --------------------------------------------------------
 
@@ -5576,13 +5873,13 @@ ALTER TABLE `tb_userrole`
 -- AUTO_INCREMENT for table `tb_crfforms`
 --
 ALTER TABLE `tb_crfforms`
-  MODIFY `crfFormsID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `crfFormsID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=577;
 
 --
 -- AUTO_INCREMENT for table `tb_formrecord`
 --
 ALTER TABLE `tb_formrecord`
-  MODIFY `formRecordID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=258;
+  MODIFY `formRecordID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=259;
 
 --
 -- AUTO_INCREMENT for table `tb_grouprole`
@@ -5600,7 +5897,7 @@ ALTER TABLE `tb_hospitalunit`
 -- AUTO_INCREMENT for table `tb_language`
 --
 ALTER TABLE `tb_language`
-  MODIFY `languageID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `languageID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `tb_listofvalues`
@@ -5642,13 +5939,13 @@ ALTER TABLE `tb_questiongroup`
 -- AUTO_INCREMENT for table `tb_questiongroupformrecord`
 --
 ALTER TABLE `tb_questiongroupformrecord`
-  MODIFY `questionGroupFormRecordID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1251;
+  MODIFY `questionGroupFormRecordID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1380;
 
 --
 -- AUTO_INCREMENT for table `tb_questionnaire`
 --
 ALTER TABLE `tb_questionnaire`
-  MODIFY `questionnaireID` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `questionnaireID` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `tb_questionnairepartstable`
