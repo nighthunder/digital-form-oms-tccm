@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useHistory, useLocation } from "react-router-dom";
+import { HashLink } from 'react-router-hash-link';
 import api from '../../services/api';
 import { Button, TextField, CircularProgress, Select, useMediaQuery, useTheme } from '@material-ui/core';
 import { Add, Edit } from '@material-ui/icons';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
 import './styles.css';
 
 import Dialog from '@mui/material/Dialog';
@@ -90,11 +92,14 @@ function ShowSurvey({user}) {
 
 	return (
 
-	  <main className="container containerWider">
+	  <main className="container containerWider" id="topo">
 	    <div className="module">
             <div className="mainNav">
                <h2>{location.state.description}</h2>
                <ArrowBackIcon className="ArrowBack" onClick={handleBackButton}/>
+               <HashLink to='/show-survey#topo'>
+                    <ArrowUpwardIcon className="ArrowUp" />
+               </HashLink>
             </div>
 			<div className="survey-details">
 				<p>Versão: {location.state.version}</p><br/>

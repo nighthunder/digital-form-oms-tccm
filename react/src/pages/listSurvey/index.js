@@ -1,11 +1,14 @@
 // Lista de todas as pesquisas
 
 import React, { useState, useEffect } from 'react';
-import { useHistory, useLocation } from "react-router-dom";
+import { useHistory, useLocation, Link } from "react-router-dom";
+import { HashLink } from 'react-router-hash-link';
 import api from '../../services/api';
 import { Button, TextField, CircularProgress} from '@material-ui/core';
 import { Add, Edit } from '@material-ui/icons';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
+import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import './styles.css';
 
 import { connect } from 'react-redux';
@@ -40,11 +43,15 @@ function ListSurvey({user, hospital}) {
     }
 
 	return (
-            <main className="container containerWider">
+            <main className="container containerWider" id="topo">
+                <a href="#" ></a>
                 <div className="survey">
                     <div className="mainNav">
-				        <h2>Crie e edite pesquisas</h2>
+				        <h2 id="title">Crie e edite pesquisas</h2>
                         <ArrowBackIcon className="ArrowBack" onClick={handleBackButton}/>
+                        <HashLink to='/survey#topo'>
+                            <ArrowUpwardIcon className="ArrowUp" />
+                        </HashLink>
                     </div>
                     <div className="survey-details">
                         Gerencie as pesquisas: : crie, versione, copie, edite e publique.

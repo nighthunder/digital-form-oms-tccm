@@ -1,7 +1,10 @@
 {
   "ExpandedNodes": [
     "",
-    "\\react"
+    "\\react",
+    "\\react\\src",
+    "\\react\\src\\pages"
   ],
+  "SelectedNode": "\\react\\src\\pages\\AddModule",
   "PreviewInSolutionExplorer": false
 }

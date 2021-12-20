@@ -2,8 +2,10 @@
 import React, { useState, useEffect  } from 'react';
 import './styles.css';
 import { useLocation } from "react-router-dom";
+import { HashLink } from 'react-router-hash-link';
 import { TextField, Button, FormLabel, RadioGroup, Radio, FormControlLabel, InputLabel, Select, MenuItem } from '@material-ui/core';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
 import api from '../../services/api';
 import { connect } from 'react-redux';
 import { useHistory } from "react-router-dom";
@@ -185,6 +187,9 @@ function EditPublishedForm({logged, user, participantId}) {
                 <div className="mainNav">
 				    <h2 className="pageTitle">Editar Módulo { location.state.modulo } - { titles[location.state.modulo-1] } - {location.state.moduleStatus}</h2>
                     <ArrowBackIcon className="ArrowBack" onClick={handleBackButton}/>
+                    <HashLink to='/add-survey#topo'>
+                            <ArrowUpwardIcon className="ArrowUp" />
+                    </HashLink>
                 </div>
                  <p className="questionnaireDesc"> Questionário: {location.state.questionnaireDesc} ( {location.state.questionnaireVers} ) {location.state.questionnaireStatus}  </p>
                 <form className="module" onSubmit={submit}>

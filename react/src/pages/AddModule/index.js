@@ -1,10 +1,12 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useHistory, useLocation } from "react-router-dom";
+import { HashLink } from 'react-router-hash-link';
 import api from '../../services/api';
 import ReactDOM from 'react-dom';
 import { TextField, Button, InputLabel, FormLabel, Select, CircularProgress } from '@material-ui/core';
 import { Add, Edit } from '@material-ui/icons';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
 import './styles.css';
 
 import { connect } from 'react-redux';
@@ -114,9 +116,12 @@ function AddModule({user}) {
 
     return (
             <main className="container">
-              <div className="mainNav">
+              <div className="mainNav" id="#topo">
                    <h2>{location.state.description}</h2>
                    <ArrowBackIcon className="ArrowBack" onClick={handleBackButton}/>
+                   <HashLink to='/add-module#topo'>
+                            <ArrowUpwardIcon className="ArrowUp" />
+                   </HashLink>
                 </div>
 			    <div className="survey-details">
 				    <p>Versão: {location.state.version}</p><br/>
