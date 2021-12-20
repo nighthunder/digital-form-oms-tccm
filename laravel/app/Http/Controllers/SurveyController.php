@@ -48,5 +48,16 @@ class SurveyController extends Controller
             return response()->json($e, 500);
         }
     }
+
+    public function searchQuestionnaireDesc(Request $request) {
+        try {
+            $query_msg = DB::select("CALL searchQuestionnaire(
+                                        '{$request->descricao}')");
+            return response()->json($query_msg);
+        } catch(Exception $e) {
+            return response()->json($e, 500);
+        }
+    } 
+
 }
 

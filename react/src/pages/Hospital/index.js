@@ -44,8 +44,6 @@ function Hospital({user}) {
                 ))}
             </div>
         </main>
-       
-           { /*<ListSurvey hospital={hospital}/>*/ }
         </div>
     );
 }

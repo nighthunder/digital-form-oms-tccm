@@ -1,10 +1,8 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState } from 'react';
 import { useHistory, useLocation } from "react-router-dom";
 import { HashLink } from 'react-router-hash-link';
 import api from '../../services/api';
-import ReactDOM from 'react-dom';
-import { TextField, Button, InputLabel, FormLabel, Select, CircularProgress } from '@material-ui/core';
-import { Add, Edit } from '@material-ui/icons';
+import { TextField, Button, InputLabel, CircularProgress } from '@material-ui/core';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
 import './styles.css';

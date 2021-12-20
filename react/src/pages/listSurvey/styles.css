@@ -84,3 +84,19 @@ input.add-based{
 .mainNav, .mainNav h2{
 	display: inline-block;
 }
+.search-options {
+    display: flex;
+    align-items: center;
+    justify-content: left;
+    margin: 40px 0;
+}
+
+.search-options form {
+    padding: 0;
+    flex-direction: row;
+    align-items: center;
+}
+
+.search-options button.add-survey {
+    width: 250px;
+}

@@ -1,4 +1,4 @@
-// Lista de todas as pesquisas
+﻿// Lista de todas as pesquisas
 
 import React, { useState, useEffect } from 'react';
 import { useHistory, useLocation, Link } from "react-router-dom";
@@ -8,7 +8,6 @@ import { Button, TextField, CircularProgress} from '@material-ui/core';
 import { Add, Edit } from '@material-ui/icons';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
-import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import './styles.css';
 
 import { connect } from 'react-redux';
@@ -19,7 +18,11 @@ function ListSurvey({user, hospital}) {
 
     const history = useHistory();
 
+    const [search, setSearch] = useState('');
     const [questionnaires, setQuestionnaires] = useState([]);
+    const [error, setError] = useState('');
+    const [questionnairesLoaded, setQuestionnairesLoaded] = useState(false);
+    const [loadingSearch, setLoadingSearch] = useState(false);
 
     useEffect(() => {
         async function loadQuestionnaires() {
@@ -42,9 +45,45 @@ function ListSurvey({user, hospital}) {
         history.goBack();
     }
 
+    async function handleSearch(e) {
+        e.preventDefault();
+        setError('');
+        setLoadingSearch(true);
+        setQuestionnairesLoaded(false);
+        const response = await api.post('/searchSurvey', {
+            descricao: search,
+        }).catch( function (error) {
+            setLoadingSearch(false);
+            console.log(error)
+            console.log(error.response.data)
+        });
+       
+        if(response.data) {
+            setLoadingSearch(false);
+            setQuestionnairesLoaded(true);
+            if(response.data.length > 0) {
+                if(response.data[0].msgRetorno) {
+                    setError(response.data[0].msgRetorno)
+                } else {
+                    setError('')
+                }
+            }
+
+        }
+
+        setQuestionnaires(response.data)
+        console.log(response.data);
+    }
+    
+    function handleChange(e) {
+        const target = e.target;
+        const value = target.value;
+        console.log(value);
+        setSearch(value);
+    }
+
 	return (
-            <main className="container containerWider" id="topo">
-                <a href="#" ></a>
+            <main className="container containerWider prontuarios" id="topo">
                 <div className="survey">
                     <div className="mainNav">
 				        <h2 id="title">Crie e edite pesquisas</h2>
@@ -56,6 +95,29 @@ function ListSurvey({user, hospital}) {
                     <div className="survey-details">
                         Gerencie as pesquisas: : crie, versione, copie, edite e publique.
                     </div>
+                    <div className="search-options">
+                        <form noValidate autoComplete="off" onSubmit={handleSearch}>
+                            <TextField id="standard-basic" label="Descrição da pesquisa " onChange={handleChange}/>
+                            <Button variant="contained" color="primary" type="submit">
+                                { !loadingSearch &&
+                                    'Buscar'
+                                }
+                                { loadingSearch &&
+                                    <CircularProgress color="white"/>
+                                }
+                            </Button>
+                        </form>
+                        <Button variant="outlined" color="primary" className="add-survey" onClick={ () => {
+                        history.push('/add-survey')
+                        }}>
+                        <Add color="primary" />
+                        Adicionar pesquisa
+                        </Button>    
+                    </div>
+                    { (error) &&
+                        <span className="error">{ error }</span>
+                    }
+                    { !error &&
                     <div className="surveys-list">
                         <table>
                                 <thead>
@@ -95,14 +157,8 @@ function ListSurvey({user, hospital}) {
                                  </tbody>
                             
                         </table>
-                        <Button variant="outlined" color="primary" className="add-survey" onClick={ () => {
-                        history.push('/add-survey')
-                        }}>
-                        <Add color="primary" />
-                        Adicionar nova pesquisa
-                        </Button>
-                        <br/>
                     </div>
+                    }  
 			    </div>
             </main>
      );
