@@ -6,6 +6,7 @@ use App\Http\Controllers\FormController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\ModuleController;
+use App\Http\Controllers\HospitalController;
 use App\Http\Controllers\MedicalRecordController;
 
 /*
@@ -41,6 +42,8 @@ Route::group(['middleware' => 'cors:api'], function() {
     Route::get('modules/{id}', [ModuleController::class, 'search']); // Módulos da pesquisa
     Route::post('module/', [ModuleController::class, 'insert']); 
     Route::post('module/{id}', [ModuleController::class, 'show']); 
+
+    Route::post('searchHospital/', [HospitalController::class, 'searchHospitalDesc']);
 });
 
 
