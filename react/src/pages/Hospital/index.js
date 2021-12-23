@@ -51,7 +51,7 @@ function Hospital({user}) {
     function handleChange(e) {
         const target = e.target;
         const value = target.value;
-        console.log(value);
+        //console.log(value);
         setSearch(value);
     }
 

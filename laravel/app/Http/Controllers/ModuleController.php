@@ -43,5 +43,16 @@ class ModuleController extends Controller
             return response()->json($e, 500);
         }
     }
+
+    public function searchModuleDesc(Request $request) {
+        try {
+            $query_msg = DB::select("CALL searchModule(
+                                        '{$request->descricao}',
+                                        '{$request->questionnaireID}')");
+            return response()->json($query_msg);
+        } catch(Exception $e) {
+            return response()->json($e, 500);
+        }
+    } 
 }
 

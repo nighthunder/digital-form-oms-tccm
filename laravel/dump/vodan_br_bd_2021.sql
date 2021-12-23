@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 20, 2021 at 06:58 PM
+-- Generation Time: Dec 23, 2021 at 08:48 PM
 -- Server version: 10.4.21-MariaDB
 -- PHP Version: 7.3.31
 
@@ -1187,9 +1187,39 @@ DECLARE v_dadosAlterados text;
 		
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `searchQuestionnaire` (IN `p_descricao` VARCHAR(50))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `searchHospital` (IN `p_descricao` VARCHAR(50), IN `p_userID` INT)  BEGIN
+#========================================================================================================================
+#== Procedure criada para pesquisar um hospital usando parte
+#== do nome (descrição)
+#== retorna uma mensagem de retorno
+#== Criada em 23 de dezembro de 2021
+#=======
+Select hospitalUnitID as hospitalunitid, 
+	hospitalUnitName as hospitalName,
+    (Select description from tb_grouprole as t3 where t3.groupRoleID = (Select groupRoleID from tb_userrole as t2 where t2.userID = p_userID and t1.hospitalUnitID = t2.hospitalUnitID)) as userrole
+from tb_hospitalunit as t1 
+where t1.hospitalUnitName like CONCAT('%', p_descricao, '%') AND t1.hospitalUnitID IN (Select hospitalUnitID from tb_userrole as t2 where t2.hospitalUnitID = t1.hospitalUnitID and t2.userID = p_userID );
 
-Select * from tb_questionnaire as t1 where t1.description like CONCAT(p_descricao, '%');
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `searchModule` (IN `p_descricao` VARCHAR(500), IN `p_questionnaireID` INT)  Select crfFormsID, 
+	   translate("pt-br", description) as description,
+       translate('pt-br',
+       (Select description from tb_crfformsstatus as t2 where t2.crfformsStatusID = t1.crfformsStatusID)) as crfFormsStatus,
+       lastModification,
+       creationDate
+from tb_crfforms as t1 where 
+TRANSLATE('pt-br',t1.description) like CONCAT('%',p_descricao, '%') and t1.questionnaireID = p_questionnaireID$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `searchQuestionnaire` (IN `p_descricao` VARCHAR(50))  BEGIN
+#========================================================================================================================
+#== Procedure criada para pesquisar um questionário usando
+#== parte de seu nome (descrição)
+#== retorna uma mensagem de retorno
+#== Criada em 23 de dezembro de 2021
+#=======
+
+Select * from tb_questionnaire as t1 where t1.description like CONCAT('%',p_descricao, '%');
 
 END$$
 
@@ -1418,7 +1448,6 @@ INSERT INTO `tb_crfforms` (`crfFormsID`, `questionnaireID`, `description`, `crff
 (52, 6, 'Admission Form', 2, '2021-12-01 01:21:21', '2021-12-01 01:21:22'),
 (53, 6, 'Discharge/death form', 2, '2021-12-01 01:28:45', '2021-12-01 01:28:45'),
 (55, 14, 'Follow-up', 2, '2021-12-01 16:50:09', '2021-12-01 16:50:09'),
-(56, 2, '', 1, '2021-12-01 17:36:36', '2021-12-01 17:36:36'),
 (576, 5, 'bla', 2, '2021-12-10 08:29:10', '2021-12-10 08:29:10');
 
 -- --------------------------------------------------------

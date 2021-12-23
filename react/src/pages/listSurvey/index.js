@@ -145,7 +145,7 @@ function ListSurvey({user, hospital}) {
                                         })
                                         }}>
                                             <td>{q.description}</td>
-                                            <td>{q.version}</td>
+                                            <td><span className="detail">{q.version}</span></td>
                                             <td>{q.questionnaireStatus}</td>
                                             <td>{getPtBrDate(new Date(q.creationDate))}</td> 
                                             <td>{getPtBrDate(new Date(q.lastModification))}</td> 

@@ -77,3 +77,20 @@ p.padding-10{
 button.publish{
 	margin-top: 10px;
 }
+.detail{
+	padding: 3px;
+	background: #00ff9f;
+	background: #118423;
+	border-radius: 3px;
+	font-weight: bold;
+	color: #fff;
+}
+.bk-published{
+	background: #00ff9f;
+}
+.bk-deprecated{
+	background: #c7ff00;
+}
+.bk-new{
+	background: #00dbff
+}
