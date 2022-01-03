@@ -3,7 +3,7 @@ import { useHistory, useLocation } from "react-router-dom";
 import { HashLink } from 'react-router-hash-link';
 import api from '../../services/api';
 import ReactDOM from 'react-dom';
-import { Button, InputLabel, CircularProgress } from '@material-ui/core';
+import { Button, InputLabel, CircularProgress, TextField } from '@material-ui/core';
 import { Add, Edit } from '@material-ui/icons';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
@@ -27,6 +27,8 @@ function AddBasedSurvey({user}) {
     const [formError, setFormError] = useState('')
 
     const [survey, setSurvey] = useState([]);
+
+    const [surveyDesc, setSurveyDesc] = useState('');
 
     const [selectSurvey, setSelectSurvey] = useState('');
 
@@ -106,6 +108,14 @@ function AddBasedSurvey({user}) {
         console.log("Valor selecionado", selectSurvey);
     }
 
+    function handleChange2(e) {
+        setError('');
+        //console.log(user)
+        console.log("Location pesq", location)
+        setSurveyDesc(e.target.value)
+        //console.log(survey);
+    }
+
     function handleBackButton(){
         history.goBack();
     }
@@ -141,11 +151,15 @@ function AddBasedSurvey({user}) {
                            <option value="based">Como template</option>
                         </select>
                     </div>
+                    <div className="formGroup formGroup2">
+                        <InputLabel>Digite a descrição para sua pesquisa (pt-br): (versão: 0.0) </InputLabel><br/>
+                        <TextField className="inputDescription" name="survey" label="Descrição" onChange={handleChange2} value={surveyDesc} style={styles.TextField} />
+                    </div>
                     <div className="submit-prontuario">
                         <span className="error">{ error }</span>
                         <span className="success">{ success }</span>
                         <br/>
-                        <Button style={styles.Button} variant="contained" type="submit" color="primary" disabled={!survey}>
+                        <Button style={styles.Button} variant="contained" type="submit" color="primary" disabled={!surveyDesc}>
                             { !loading &&
                                 'Salvar'
                             }

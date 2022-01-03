@@ -9,7 +9,6 @@ import { Add, Edit } from '@material-ui/icons';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
 import './styles.css';
-
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -21,7 +20,7 @@ import { connect } from 'react-redux';
 function ShowSurvey({user}) {
 
 	const location = useLocation();
-    console.log("LOCATION", location);
+  console.log("LOCATION", location);
 	const history = useHistory();
 	
 	const [modules, setModules] = useState([]);
@@ -31,32 +30,31 @@ function ShowSurvey({user}) {
   const [error, setError] = useState('');
   const [modulesLoaded, setModulesLoaded] = useState(false);
   const [loadingSearch, setLoadingSearch] = useState(false);
-
   const [popupTitle, setPopupTitle] = useState('');
   const [popupBodyText, setPopupBodyText] = useState('');
 
 	useEffect(() => {
-        async function loadModules() {
-            const response = await api.get('/modules/'+location.state.questionnaireID);
-            setModules(response.data);
-			//console.log("Resposta2", user);
-			//console.log("Resposta4", modules);
-			//console.log("Resposta3", location.state);
-        }                                                                                                                                                                                                       
-        loadModules();
-    }, [])
+      async function loadModules() {
+          const response = await api.get('/modules/'+location.state.questionnaireID);
+          setModules(response.data);
+			    //console.log("Resposta2", user);
+			    //console.log("Resposta4", modules);
+			    //console.log("Resposta3", location.state);
+      }                                                                                                                                                                                                       
+      loadModules();
+  }, [])
 
 	function getPtBrDate(somedate) {
-        //var today = new Date();
-        var dd = String(somedate.getDate()).padStart(2, '0');
-        var mm = String(somedate.getMonth() + 1).padStart(2, '0');
-        var yyyy = somedate.getFullYear();
-        return dd + '/' + mm + '/' + yyyy;
-    }
+      //var today = new Date();
+      var dd = String(somedate.getDate()).padStart(2, '0');
+      var mm = String(somedate.getMonth() + 1).padStart(2, '0');
+      var yyyy = somedate.getFullYear();
+      return dd + '/' + mm + '/' + yyyy;
+  }
 
+  // popup  
 	const [open, setOpen] = React.useState(false);
-
-    const handleClickOpen = (q) => {
+  const handleClickOpen = (q) => {
         setOpen(false);
         setModuleID(q.crfFormsID);
         setModuleStatus(q.crfFormsStatus);
@@ -71,14 +69,12 @@ function ShowSurvey({user}) {
             setOpen(true);
         }
         {location.state.questionnaireStatus === "Novo" &&  history.push('/edit-unpublished-form');}
-    };
+  };
+  const handleClose = () => {
+    setOpen(false);
+  };
 
-
-    const handleClose = () => {
-        setOpen(false);
-    };
-
-    const handleOpenEditPublishedForm = () => {
+  const handleOpenEditPublishedForm = () => {
        console.log(moduleID);
        history.push('/edit-published-form', {
             modulo: moduleID,
@@ -88,13 +84,13 @@ function ShowSurvey({user}) {
             questionnaireDesc: location.state.description,
             questionnaireVers: location.state.version
         });
-    };
+  };
 
-    function handleBackButton(){
-        history.goBack();
-    }
+  function handleBackButton(){
+      history.goBack();
+  }
 
-    async function handleSearch(e) {
+  async function handleSearch(e) {
       e.preventDefault();
       setError('');
       setLoadingSearch(true);
@@ -150,7 +146,7 @@ function ShowSurvey({user}) {
         </div>
         <div className="search-options">
           <form noValidate autoComplete="off" onSubmit={handleSearch}>
-            <TextField id="standard-basic" label="Descrição do módulo" onChange={handleChange}/>
+            <TextField className="inputDescription" id="standard-basic" label="Descrição do módulo" onChange={handleChange}/>
             <Button variant="contained" color="primary" type="submit">
               { !loadingSearch &&
                 'Buscar'
@@ -232,7 +228,7 @@ function ShowSurvey({user}) {
                         </DialogContentText>
                       </DialogContent>
                       <DialogActions>
-                        <Button onClick={handleClose}>Cancelar</Button>
+                        <Button onClick={handleClose}>Fechar [x]</Button>
                         <Button onClick={handleOpenEditPublishedForm} autoFocus>
                           Prosseguir
                         </Button>

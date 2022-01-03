@@ -9,13 +9,17 @@ import { Add, Edit } from '@material-ui/icons';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
 import './styles.css';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
 
 import { connect } from 'react-redux';
 
 function ListSurvey({user, hospital}) {
 
     const location = useLocation();
-
     const history = useHistory();
 
     const [search, setSearch] = useState('');
@@ -23,6 +27,8 @@ function ListSurvey({user, hospital}) {
     const [error, setError] = useState('');
     const [questionnairesLoaded, setQuestionnairesLoaded] = useState(false);
     const [loadingSearch, setLoadingSearch] = useState(false);
+    const [popupTitle, setPopupTitle] = useState('');
+    const [popupBodyText, setPopupBodyText] = useState('');
 
     useEffect(() => {
         async function loadQuestionnaires() {
@@ -82,6 +88,24 @@ function ListSurvey({user, hospital}) {
         setSearch(value);
     }
 
+    // popup
+    const [open, setOpen] = React.useState(false);
+    const handleClickOpen = () => {
+        setOpen(false);
+        setPopupTitle("Como deseja criar seu questionário ? ");
+        setPopupBodyText("");
+        setOpen(true);
+    };
+    const handleAddSurvey = () => {
+        history.push('/add-survey');
+    };
+    const handleAddBasedSurvey = () => {
+        history.push('/add-based-survey');
+    };
+    const handleClose = () => {
+        setOpen(false);
+    };
+
 	return (
             <main className="container containerWider prontuarios" id="topo">
                 <div className="survey">
@@ -107,13 +131,32 @@ function ListSurvey({user, hospital}) {
                                 }
                             </Button>
                         </form>
-                        <Button variant="outlined" color="primary" className="add-survey" onClick={ () => {
-                        history.push('/add-survey')
-                        }}>
+                        <Button variant="outlined" color="primary" className="add-survey" onClick={handleClickOpen}>
                         <Add color="primary" />
                         Adicionar pesquisa
                         </Button>    
                     </div>
+                    <Dialog key={Math.random()}
+                            open={open}
+                            onClose={handleClose}
+                            aria-labelledby="alert-dialog-title"
+                            aria-describedby="alert-dialog-description"
+                            >
+                            <DialogTitle id="alert-dialog-title">
+                                {popupTitle}
+                            </DialogTitle>
+                            <DialogContent>
+                                <DialogContentText id="alert-dialog-description">
+                                {popupBodyText}
+                                </DialogContentText>
+                            </DialogContent>
+                            <DialogActions>
+                                <Button onClick={handleClose}>Fechar [x]</Button>
+                                <Button onClick={handleAddSurvey}>Do zero</Button>
+                                <Button onClick={handleAddBasedSurvey} autoFocus> Por derivação
+                                </Button>
+                            </DialogActions>
+                    </Dialog>
                     { (error) &&
                         <span className="error">{ error }</span>
                     }
