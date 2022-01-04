@@ -7,3 +7,6 @@ form.module{
 .formGroup2{
 	margin-top: 25px;
 }
+.inputDescription{
+	width: 65%;
+}

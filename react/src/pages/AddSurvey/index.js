@@ -106,7 +106,7 @@ function AddSurvey({user}) {
                  <form className="module" onSubmit={handleSubmit}>
                     <div className="formGroup">
                         <InputLabel>Digite a descrição para sua pesquisa (pt-br): (versão: 0.0) </InputLabel>
-                        <TextField name="survey" label="Descrição" onChange={handleChange} value={survey} style={styles.TextField} />
+                        <TextField className="inputDescription" name="survey" label="Descrição" onChange={handleChange} value={survey} style={styles.TextField} />
                     </div>
                     <div className="submit-prontuario">
                         <span className="error">{ error }</span>
