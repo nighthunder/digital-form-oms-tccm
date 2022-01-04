@@ -22,6 +22,7 @@ function ShowSurvey({user}) {
 	const location = useLocation();
   console.log("LOCATION", location);
 	const history = useHistory();
+  const [description, setDescription] = useState('');
 	
 	const [modules, setModules] = useState([]);
   const [moduleID, setModuleID] = useState(''); // ID do módulo clicado

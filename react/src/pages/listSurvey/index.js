@@ -107,7 +107,7 @@ function ListSurvey({user, hospital}) {
     };
 
 	return (
-            <main className="container containerWider prontuarios" id="topo">
+            <main className="container containerWider prontuarios">
                 <div className="survey">
                     <div className="mainNav">
 				        <h2 id="title">Crie e edite pesquisas</h2>

@@ -96,7 +96,7 @@ function AddSurvey({user}) {
 
     return (
         <div>
-            <main className="container add-survey" id="topo">
+            <main className="container add-survey">
                 <div className="mainNav">
 				    <h2>Adicione uma nova pesquisa clínica:</h2>
                     <ArrowBackIcon className="ArrowBack" onClick={handleBackButton}/>

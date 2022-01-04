@@ -30,6 +30,8 @@ function EditPublishedForm({logged, user, participantId}) {
     const [questions, setQuestions] = useState([]);
     const [loadedResponses, setLoadedResponses] = useState(false);
 
+    const [hospitalName, setHospitalName] = useState('');
+
     useEffect(() => {
         async function loadForm() {
             const response = await api.get('/form/' + location.state.modulo);
@@ -41,6 +43,7 @@ function EditPublishedForm({logged, user, participantId}) {
             }
         }
         loadForm();
+        setHospitalName(user[location.state.hospitalIndex].hospitalName);
     }, [])
 
     async function getRecordedResponses(formRecordId) {
@@ -182,7 +185,7 @@ function EditPublishedForm({logged, user, participantId}) {
         <main className="container">
             <div>
                 <header className="index ">
-                    { user[location.state.hospitalIndex].hospitalName } > <b>{ titles[location.state.modulo-1] }</b>
+                    { hospitalName } > <b>{ titles[location.state.modulo-1] }</b>
                 </header>
                 <div className="mainNav">
 				    <h2 className="pageTitle">Editar Módulo { location.state.modulo } - { titles[location.state.modulo-1] } - {location.state.moduleStatus}</h2>
