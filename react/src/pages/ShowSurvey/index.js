@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useHistory, useLocation } from "react-router-dom";
-import { HashLink } from 'react-router-hash-link';
+import { Scrollchor } from 'react-scrollchor';
 import api from '../../services/api';
 import { Button, TextField, CircularProgress } from '@material-ui/core';
 import { Add, Edit } from '@material-ui/icons';
@@ -133,14 +133,12 @@ function ShowSurvey({user}) {
 
 	return (
 
-	  <main className="container containerWider" id="topo">
+	  <main className="container containerWider">
 	    <div className="module">
         <div className="mainNav">
           <h2>{location.state.description}</h2>
           <ArrowBackIcon className="ArrowBack" onClick={handleBackButton}/>
-          <HashLink to='/show-survey#topo'>
-            <ArrowUpwardIcon className="ArrowUp" />
-          </HashLink>
+          <Scrollchor to="#vodan_br"><ArrowUpwardIcon className="ArrowUp" /></Scrollchor>
         </div>
         <div className="survey-details">
           <p>Versão: <span className="detail">{location.state.version}</span></p><br/>

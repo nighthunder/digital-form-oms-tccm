@@ -36,7 +36,7 @@ function Navbar({ onSubmit, state, dispatch }) {
     }*/
 
     return (
-        <nav>
+        <nav id="vodan_br">
             <div className="navContent">
                 <div className="leftItems">
                    <a href="/" ><img src="assets/logo-icon.png" /></a>

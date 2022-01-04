@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useHistory, useLocation } from "react-router-dom";
-import { HashLink } from 'react-router-hash-link';
+import { Scrollchor } from 'react-scrollchor';
 import api from '../../services/api';
 import ReactDOM from 'react-dom';
 import { Button, InputLabel, CircularProgress } from '@material-ui/core';
@@ -119,9 +119,7 @@ function AddBasedSurvey({user}) {
                 <div className="mainNav">
                     <h2>Adicionar pesquisa derivada</h2>
                     <ArrowBackIcon className="ArrowBack" onClick={handleBackButton}/>
-                    <HashLink to='/add-based-survey#topo'>
-                         <ArrowUpwardIcon className="ArrowUp" />
-                    </HashLink>
+                    <Scrollchor to="#vodan_br"><ArrowUpwardIcon className="ArrowUp" /></Scrollchor>
                 </div>
                 <form className="module" onSubmit={handleSubmit}>
                     <div className="formGroup formGroup1">

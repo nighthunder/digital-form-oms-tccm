@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useHistory, useLocation } from "react-router-dom";
-import { HashLink } from 'react-router-hash-link';
+import { Scrollchor } from 'react-scrollchor';
 import api from '../../services/api';
 import { Button, InputLabel, CircularProgress } from '@material-ui/core';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -117,9 +117,7 @@ function AddModule({user}) {
               <div className="mainNav" id="#topo">
                    <h2>{location.state.description}</h2>
                    <ArrowBackIcon className="ArrowBack" onClick={handleBackButton}/>
-                   <HashLink to='/add-module#topo'>
-                            <ArrowUpwardIcon className="ArrowUp" />
-                   </HashLink>
+                   <Scrollchor to="#vodan_br"><ArrowUpwardIcon className="ArrowUp" /></Scrollchor>
                 </div>
 			    <div className="survey-details">
 				    <p>Versão: {location.state.version}</p><br/>

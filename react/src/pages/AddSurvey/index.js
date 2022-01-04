@@ -1,6 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { useHistory, useLocation } from "react-router-dom";
-import { HashLink } from 'react-router-hash-link';
+import { Scrollchor } from 'react-scrollchor';
 import api from '../../services/api';
 import { TextField, Button, InputLabel, CircularProgress } from '@material-ui/core';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -100,9 +100,7 @@ function AddSurvey({user}) {
                 <div className="mainNav">
 				    <h2>Adicione uma nova pesquisa clínica:</h2>
                     <ArrowBackIcon className="ArrowBack" onClick={handleBackButton}/>
-                    <HashLink to='/add-survey#topo'>
-                            <ArrowUpwardIcon className="ArrowUp" />
-                    </HashLink>
+                    <Scrollchor to="#vodan_br"><ArrowUpwardIcon className="ArrowUp" /></Scrollchor>
                 </div>
                 <div>
                  <form className="module" onSubmit={handleSubmit}>

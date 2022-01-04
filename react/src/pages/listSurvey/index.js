@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useHistory, useLocation, Link } from "react-router-dom";
-import { HashLink } from 'react-router-hash-link';
+import { Scrollchor } from 'react-scrollchor';
 import api from '../../services/api';
 import { Button, TextField, CircularProgress} from '@material-ui/core';
 import { Add, Edit } from '@material-ui/icons';
@@ -88,9 +88,7 @@ function ListSurvey({user, hospital}) {
                     <div className="mainNav">
 				        <h2 id="title">Crie e edite pesquisas</h2>
                         <ArrowBackIcon className="ArrowBack" onClick={handleBackButton}/>
-                        <HashLink to='/survey#topo'>
-                            <ArrowUpwardIcon className="ArrowUp" />
-                        </HashLink>
+                        <Scrollchor to="#vodan_br"><ArrowUpwardIcon className="ArrowUp" /></Scrollchor>
                     </div>
                     <div className="survey-details">
                         Gerencie as pesquisas: : crie, versione, copie, edite e publique.
