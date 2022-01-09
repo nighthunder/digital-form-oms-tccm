@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 23, 2021 at 08:48 PM
+-- Generation Time: Jan 09, 2022 at 08:32 PM
 -- Server version: 10.4.21-MariaDB
 -- PHP Version: 7.3.31
 
@@ -492,13 +492,12 @@ sp:BEGIN
     
     INSERT INTO tb_crfforms (
 			crfformsID, questionnaireID, description, crfformsStatusID, lastModification,creationDate )
-            values (DEFAULT, p_questionnaireID, translate('eng', p_moduleDescription), p_moduleStatusID, p_lastModification ,NOW());
-
-
+            values (DEFAULT, p_questionnaireID, translate('eng', p_moduleDescription), p_moduleStatusID, NOW() ,NOW());
+            
     # registrando a informação de notificação para a inclusao do modulo 
     INSERT INTO tb_notificationrecord (
 			userid, profileid, hospitalunitid, tablename, rowdid, changedon, operation, log)
-            values (p_userid, p_grouproleid, p_hospitalunitid, 'tb_module', 1, now(), 'I', CONCAT('Criação de módulo: ', p_moduleDescription));
+            values (p_userid, p_grouproleid, p_hospitalunitid, 'tb_crfforms', 1, now(), 'I', CONCAT('Criação de módulo: ', p_moduleDescription));
     
 	COMMIT;
 
@@ -686,6 +685,7 @@ sp:BEGIN
         leave sp;   
     end if;
 
+
 	
    START TRANSACTION;
 	# Inserindo nova pesquisa       
@@ -696,7 +696,7 @@ sp:BEGIN
             values (DEFAULT, p_questionnaireDescription, p_questionnaireStatusID, NULL, NULL, NULL, p_questionnaireVersion, p_questionnaireLastModification, p_questionnaireCreationDate);
 
 
-    # registrando a informação de notificação para a inclusao do modulo 
+    # registrando a informação de notificação para a inclusao de questionário 
     INSERT INTO tb_notificationrecord (
 			userid, profileid, hospitalunitid, tablename, rowdid, changedon, operation, log)
             values (p_userid, p_grouproleid, p_hospitalunitid, 'tb_questionnaire', 1, now(), 'I', CONCAT('Criação de pesquisa: ', p_questionnaireDescription));
@@ -1122,6 +1122,64 @@ END;
 		
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `putQuestionnaire` (IN `p_userID` INT, IN `p_groupRoleID` INT, IN `p_hospitalUnitID` INT, IN `p_questionnaireDescription` VARCHAR(500), IN `p_questionnaireVersion` VARCHAR(50), IN `p_questionnaireStatusID` INT, IN `p_questionnaireLastModification` DATETIME, IN `p_questionnaireCreationDate` DATETIME)  BEGIN
+#========================================================================================================================
+#== Procedure criada para atualizar um questionário
+#== Atualiza um registro na tb_questionnaire
+#== retorna um registro contendo o participantId e a msg de retorno
+#== Alterada em 10 01 2021
+#== Criada em 07 01 2021
+#========================================================================================================================
+
+DECLARE p_userID integer;
+DECLARE p_msg_retorno varchar(500);
+
+sp:BEGIN 
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+	set p_questionnaireDescription = rtrim(ltrim(p_questionnaireDescription));
+
+	if (p_questionnaireDescription is null) or ( p_questionnaireDescription = '')  then
+ 	    set p_msg_retorno = 'Informe uma descrição para a pesquisa. ';
+        leave sp;   
+    end if;
+
+
+	
+   START TRANSACTION;
+	# Atualizando a pesquisa
+    
+   UPDATE tb_questionnaire
+            SET description = p_questionnaireDescription, 
+            questionnaireStatusID = p_questionnaireStatusID,
+            isNewVersionOf = p_isNewVersionOf, 
+            isBasedOn = p_isBasedOn, 
+            version = p_questionnaireVersion, 
+            lastModification = p_questionnaireLastModification, 
+            creationDate = p_questionnaireCreationDate
+	WHERE questionnaireID = p_questionnaireID;
+
+    # registrando a informação de notificação para a inclusao de questionário 
+    INSERT INTO tb_notificationrecord (
+			userid, profileid, hospitalunitid, tablename, rowdid, changedon, operation, log)
+            values (p_userid, p_grouproleid, p_hospitalunitid, 'tb_questionnaire', 1, now(), 'U', CONCAT('Atualização de pesquisa: ', p_questionnaireDescription));
+    
+	COMMIT;
+
+    set p_msg_retorno = 'Questionário atualizado com sucesso';
+
+END sp;	
+
+ ## select inserido para tratar limitaçao do retorno de procedures no Laravel	
+select p_msg_retorno as msgRetorno from DUAL;
+  
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `putuser` (`p_adminid` INTEGER, `p_adminGroupRoleid` INTEGER, `p_adminHospitalUnitid` INTEGER, `p_userid` INTEGER, `p_login` VARCHAR(255), `p_firstname` VARCHAR(100), `p_lastname` VARCHAR(100), `p_regionalcouncilcode` VARCHAR(255), `p_password` VARCHAR(255), `p_email` VARCHAR(255), `p_fonenumber` VARCHAR(255), OUT `p_msg_retorno` VARCHAR(500))  sp:BEGIN
 #========================================================================================================================
 #== Procedure criada para realizar a alteração de dados do usuário no sistema
@@ -1219,8 +1277,18 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `searchQuestionnaire` (IN `p_descric
 #== Criada em 23 de dezembro de 2021
 #=======
 
-Select * from tb_questionnaire as t1 where t1.description like CONCAT('%',p_descricao, '%');
-
+SELECT questionnaireID,
+	   description,
+       (Select TRANSLATE('pt-br',description)
+        	   from tb_questionnairestatus as t2
+        	   where t1.questionnaireStatusID = t2.questionnaireStatusID) as questionnaireStatus,
+       isNewVersionOf,
+       isBasedOn,
+       version,
+       lastModification,
+       creationDate
+FROM tb_questionnaire as t1 
+WHERE t1.description like CONCAT('%',p_descricao, '%');
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `teste` (`p_teste` VARCHAR(255))  BEGIN
@@ -1448,7 +1516,16 @@ INSERT INTO `tb_crfforms` (`crfFormsID`, `questionnaireID`, `description`, `crff
 (52, 6, 'Admission Form', 2, '2021-12-01 01:21:21', '2021-12-01 01:21:22'),
 (53, 6, 'Discharge/death form', 2, '2021-12-01 01:28:45', '2021-12-01 01:28:45'),
 (55, 14, 'Follow-up', 2, '2021-12-01 16:50:09', '2021-12-01 16:50:09'),
-(576, 5, 'bla', 2, '2021-12-10 08:29:10', '2021-12-10 08:29:10');
+(577, 14, 'Discharge/death form', 2, '2022-01-03 20:51:58', '2022-01-03 20:51:58'),
+(576, 5, 'bla', 2, '2021-12-10 08:29:10', '2021-12-10 08:29:10'),
+(578, 14, 'Admission Form', 2, '2022-01-03 20:54:48', '2022-01-03 20:54:48'),
+(579, 14, 'Follow-up', 2, '2022-01-03 21:07:01', '2022-01-03 21:07:01'),
+(0, 2, 'Discharge/death form', 2, '2022-01-07 23:53:04', '2022-01-07 23:53:04'),
+(580, 0, 'Admission Form', 2, '2022-01-09 19:26:58', '2022-01-09 19:26:58'),
+(581, 30, 'Admission Form', 2, '2022-01-09 19:28:23', '2022-01-09 19:28:23'),
+(582, 30, 'Admission Form', 2, '2022-01-09 19:28:28', '2022-01-09 19:28:28'),
+(583, 30, 'Follow-up', 2, '2022-01-09 19:31:01', '2022-01-09 19:31:01'),
+(584, 31, 'Admission Form', 2, '2022-01-09 19:31:52', '2022-01-09 19:31:52');
 
 -- --------------------------------------------------------
 
@@ -1746,7 +1823,10 @@ INSERT INTO `tb_formrecord` (`formRecordID`, `participantID`, `hospitalUnitID`, 
 (255, 89, 1, 1, 2, '2021-03-03 21:51:33'),
 (256, 89, 1, 1, 2, '2021-03-16 17:02:42'),
 (257, 88, 1, 1, 2, '2021-04-30 18:30:23'),
-(258, 186, 1, 1, 1, '2021-11-30 20:14:48');
+(258, 186, 1, 1, 1, '2021-11-30 20:14:48'),
+(1293, NULL, 1, 28, 3, '2021-12-29 20:11:45'),
+(1292, NULL, 1, 28, 2, '2021-12-29 20:11:45'),
+(1291, NULL, 1, 28, 1, '2021-12-29 20:11:45');
 
 -- --------------------------------------------------------
 
@@ -5038,7 +5118,208 @@ INSERT INTO `tb_questiongroupformrecord` (`questionGroupFormRecordID`, `formReco
 (1376, 258, 1, 249, NULL, '67'),
 (1377, 258, 1, 252, 298, ''),
 (1378, 258, 1, 253, 298, ''),
-(1379, 258, 1, 254, 4, '');
+(1379, 258, 1, 254, 4, ''),
+(2156, 0, 1, 215, 298, NULL),
+(2155, 0, 1, 213, 297, NULL),
+(2154, 0, 1, 212, NULL, NULL),
+(2153, 0, 1, 211, 296, NULL),
+(2152, 0, 1, 210, 298, NULL),
+(2151, 0, 1, 208, 297, NULL),
+(2150, 0, 1, 207, 297, NULL),
+(2149, 0, 1, 206, 296, NULL),
+(2148, 0, 1, 205, 298, NULL),
+(2147, 0, 1, 204, 297, NULL),
+(2146, 0, 1, 202, 296, NULL),
+(2145, 0, 1, 201, 298, NULL),
+(2144, 0, 1, 200, 298, NULL),
+(2143, 0, 1, 199, 297, NULL),
+(2142, 0, 1, 198, NULL, NULL),
+(2141, 0, 1, 196, 298, NULL),
+(2140, 0, 1, 195, NULL, NULL),
+(2139, 0, 1, 194, NULL, NULL),
+(2138, 0, 1, 193, NULL, NULL),
+(2137, 0, 1, 192, NULL, NULL),
+(2136, 0, 1, 191, NULL, NULL),
+(2135, 0, 1, 190, 8, NULL),
+(2134, 0, 1, 189, 296, NULL),
+(2133, 0, 1, 174, NULL, NULL),
+(2132, 0, 1, 172, NULL, NULL),
+(2131, 0, 1, 171, NULL, NULL),
+(2130, 0, 1, 170, NULL, NULL),
+(2129, 0, 1, 169, NULL, NULL),
+(2128, 0, 1, 166, 121, NULL),
+(2127, 0, 1, 165, NULL, NULL),
+(2126, 0, 1, 164, NULL, NULL),
+(2125, 0, 1, 163, NULL, NULL),
+(2124, 0, 1, 162, NULL, NULL),
+(2123, 0, 1, 161, NULL, NULL),
+(2122, 0, 1, 160, NULL, NULL),
+(2121, 0, 1, 159, NULL, NULL),
+(2120, 0, 1, 158, NULL, NULL),
+(2119, 0, 1, 157, NULL, NULL),
+(2118, 0, 1, 156, NULL, NULL),
+(2117, 0, 1, 155, 298, NULL),
+(2116, 0, 1, 154, 298, NULL),
+(2115, 0, 1, 153, 302, NULL),
+(2114, 0, 1, 152, 298, NULL),
+(2113, 0, 1, 151, 298, NULL),
+(2112, 0, 1, 150, 298, NULL),
+(2111, 0, 1, 149, 296, NULL),
+(2110, 0, 1, 148, NULL, NULL),
+(2109, 0, 1, 147, NULL, NULL),
+(2108, 0, 1, 146, NULL, NULL),
+(2107, 0, 1, 145, NULL, NULL),
+(2106, 0, 1, 140, 297, NULL),
+(2105, 0, 1, 139, 297, NULL),
+(2104, 0, 1, 138, 297, NULL),
+(2103, 0, 1, 137, 298, NULL),
+(2102, 0, 1, 136, 297, NULL),
+(2101, 0, 1, 135, 298, NULL),
+(2100, 0, 1, 134, 297, NULL),
+(2099, 0, 1, 133, 298, NULL),
+(2098, 0, 1, 132, 298, NULL),
+(2097, 0, 1, 130, 297, NULL),
+(2096, 0, 1, 129, 296, NULL),
+(2095, 0, 1, 128, 298, NULL),
+(2094, 0, 1, 127, 298, NULL),
+(2093, 0, 1, 120, 298, NULL),
+(2092, 0, 1, 119, 296, NULL),
+(2091, 0, 1, 118, NULL, NULL),
+(2090, 0, 1, 117, 298, NULL),
+(2089, 0, 1, 116, NULL, NULL),
+(2088, 0, 1, 115, NULL, NULL),
+(2087, 0, 1, 114, NULL, NULL),
+(2086, 0, 1, 110, 299, NULL),
+(2085, 0, 1, 108, 298, NULL),
+(2084, 0, 1, 100, NULL, NULL),
+(2083, 0, 1, 98, NULL, NULL),
+(2082, 0, 1, 97, NULL, NULL),
+(2081, 0, 1, 96, NULL, NULL),
+(2080, 0, 1, 95, 298, NULL),
+(2079, 0, 1, 94, NULL, NULL),
+(2078, 0, 1, 93, NULL, NULL),
+(2077, 0, 1, 92, 289, NULL),
+(2076, 0, 1, 90, 268, NULL),
+(2075, 0, 1, 89, 271, NULL),
+(2074, 0, 1, 87, NULL, NULL),
+(2073, 0, 1, 82, 14, NULL),
+(2072, 0, 1, 59, 263, NULL),
+(2071, 0, 1, 58, 298, NULL),
+(2070, 0, 1, 57, 297, NULL),
+(2069, 0, 1, 56, 297, NULL),
+(2068, 0, 1, 55, 296, NULL),
+(2067, 0, 1, 54, 298, NULL),
+(2066, 0, 1, 53, 298, NULL),
+(2065, 0, 1, 52, 296, NULL),
+(2064, 0, 1, 51, 296, NULL),
+(2063, 0, 1, 50, 296, NULL),
+(2062, 0, 1, 39, 298, NULL),
+(2061, 0, 1, 38, 296, NULL),
+(2060, 0, 1, 37, 296, NULL),
+(2059, 0, 1, 36, 298, NULL),
+(2058, 0, 1, 35, 296, NULL),
+(2057, 0, 1, 34, 298, NULL),
+(2056, 0, 1, 33, 298, NULL),
+(2055, 0, 1, 29, 296, NULL),
+(2054, 0, 1, 109, 298, NULL),
+(2053, 0, 2, 187, 297, NULL),
+(2052, 0, 2, 28, 297, NULL),
+(2051, 0, 1, 109, 296, NULL),
+(2050, 0, 1, 108, 296, NULL),
+(2049, 0, 1, 60, 298, NULL),
+(2048, 0, 1, 52, 297, NULL),
+(2047, 0, 1, 253, 298, NULL),
+(2046, 0, 1, 252, 298, NULL),
+(2045, 0, 1, 214, 298, NULL),
+(2044, 0, 1, 209, 298, NULL),
+(2043, 0, 1, 140, 296, NULL),
+(2042, 0, 1, 137, 296, NULL),
+(2041, 0, 1, 134, 296, NULL),
+(2040, 0, 1, 129, 298, NULL),
+(2039, 0, 1, 203, 298, NULL),
+(2038, 0, 1, 202, 298, NULL),
+(2037, 0, 1, 62, 296, NULL),
+(2036, 0, 1, 61, 296, NULL),
+(2035, 0, 1, 51, 297, NULL),
+(2034, 0, 1, 204, 298, NULL),
+(2033, 0, 1, 203, 296, NULL),
+(2032, 0, 1, 48, NULL, NULL),
+(2031, 0, 1, 63, NULL, NULL),
+(2030, 0, 1, 59, 262, NULL),
+(2029, 0, 1, 55, 297, NULL),
+(2028, 0, 1, 54, 297, NULL),
+(2027, 0, 2, 220, 296, NULL),
+(2026, 0, 2, 218, 296, NULL),
+(2025, 0, 2, 154, 297, NULL),
+(2024, 0, 2, 153, 301, NULL),
+(2023, 0, 2, 151, 296, NULL),
+(2022, 0, 2, 149, 296, NULL),
+(2021, 0, 1, 64, NULL, NULL),
+(2020, 0, 2, 197, 296, NULL),
+(2019, 0, 2, 183, 296, NULL),
+(2018, 0, 3, 32, 296, NULL),
+(2017, 0, 3, 31, 296, NULL),
+(2016, 0, 1, 49, NULL, NULL),
+(2015, 0, 1, 47, NULL, NULL),
+(2014, 0, 2, 155, 296, NULL),
+(2013, 0, 2, 36, 296, NULL),
+(2012, 0, 2, 35, 296, NULL),
+(2011, 0, 2, 251, 296, NULL),
+(2010, 0, 2, 250, 296, NULL),
+(2009, 0, 2, 241, 298, NULL),
+(2008, 0, 2, 220, 297, NULL),
+(2007, 0, 2, 218, 297, NULL),
+(2006, 0, 2, 185, 298, NULL),
+(2005, 0, 2, 184, 298, NULL),
+(2004, 0, 2, 183, 297, NULL),
+(2003, 0, 2, 177, 298, NULL),
+(2002, 0, 2, 156, NULL, NULL),
+(2001, 0, 2, 119, 296, NULL),
+(2000, 0, 2, 83, 296, NULL),
+(1999, 0, 2, 216, 9, NULL),
+(1998, 0, 2, 199, 298, NULL),
+(1997, 0, 2, 197, 298, NULL),
+(1996, 0, 2, 183, 298, NULL),
+(1995, 0, 2, 152, 298, NULL),
+(1994, 0, 2, 39, 296, NULL),
+(1993, 0, 2, 33, 297, NULL),
+(1992, 0, 2, 217, NULL, NULL),
+(1991, 0, 2, 154, 296, NULL),
+(1990, 0, 2, 120, 298, NULL),
+(1989, 0, 2, 117, 296, NULL),
+(1988, 0, 1, 242, NULL, NULL),
+(1987, 0, 3, 101, 3, NULL),
+(1986, 0, 2, 101, 3, NULL),
+(1985, 0, 2, 150, 300, NULL),
+(1984, 0, 1, 111, 285, NULL),
+(1983, 0, 3, 123, 275, NULL),
+(1982, 0, 2, 228, NULL, NULL),
+(1981, 0, 2, 150, 298, NULL),
+(1980, 0, 3, 124, NULL, NULL),
+(1979, 0, 3, 123, 276, NULL),
+(1978, 0, 3, 101, 306, NULL),
+(1977, 0, 3, 101, 305, NULL),
+(1976, 0, 3, 35, 298, NULL),
+(1975, 0, 2, 168, NULL, NULL),
+(1974, 0, 2, 150, 296, NULL);
+INSERT INTO `tb_questiongroupformrecord` (`questionGroupFormRecordID`, `formRecordID`, `crfFormsID`, `questionID`, `listOfValuesID`, `answer`) VALUES
+(1973, 0, 2, 101, 305, NULL),
+(1972, 0, 2, 101, 306, NULL),
+(1971, 0, 2, 35, 298, NULL),
+(1970, 0, 1, 167, NULL, NULL),
+(1969, 0, 1, 166, 45, NULL),
+(1968, 0, 1, 144, NULL, NULL),
+(1967, 0, 1, 111, 284, NULL),
+(1966, 0, 1, 107, NULL, NULL),
+(2157, 0, 1, 225, 298, NULL),
+(2158, 0, 1, 226, NULL, NULL),
+(2159, 0, 1, 241, 298, NULL),
+(2160, 0, 1, 245, NULL, NULL),
+(2161, 0, 1, 246, NULL, NULL),
+(2162, 0, 1, 247, NULL, NULL),
+(2163, 0, 1, 248, NULL, NULL),
+(2164, 0, 1, 249, NULL, NULL),
+(2165, 0, 1, 254, 4, NULL);
 
 -- --------------------------------------------------------
 
@@ -5075,7 +5356,10 @@ INSERT INTO `tb_questionnaire` (`questionnaireID`, `description`, `questionnaire
 (20, 'trsd', 2, 0, NULL, NULL, '0.0', '2021-12-01 17:33:26', '2021-12-01 17:33:26'),
 (13, 'pesquisa criada agora', 2, 0, NULL, NULL, '0.0', '2021-11-28 21:51:48', '2021-11-28 21:51:48'),
 (21, 'petry', 2, NULL, NULL, NULL, '0.0', '2021-12-10 07:45:00', '2021-12-10 07:45:00'),
-(28, 'Maya', 2, NULL, NULL, NULL, '0.0', '2021-12-10 07:52:35', '2021-12-10 07:52:35');
+(28, 'Maya', 2, NULL, NULL, NULL, '0.0', '2021-12-10 07:52:35', '2021-12-10 07:52:35'),
+(31, 'ota pequisar', 2, NULL, NULL, NULL, '0.0', '2022-01-09 19:31:44', '2022-01-09 19:31:44'),
+(29, 'essa é uma nova', 2, NULL, NULL, NULL, '0.0', '2022-01-09 19:11:45', '2022-01-09 19:11:45'),
+(30, 'criei essa agora', 2, NULL, NULL, NULL, '0.0', '2022-01-09 19:23:44', '2022-01-09 19:23:44');
 
 -- --------------------------------------------------------
 
@@ -5902,13 +6186,13 @@ ALTER TABLE `tb_userrole`
 -- AUTO_INCREMENT for table `tb_crfforms`
 --
 ALTER TABLE `tb_crfforms`
-  MODIFY `crfFormsID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=577;
+  MODIFY `crfFormsID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=585;
 
 --
 -- AUTO_INCREMENT for table `tb_formrecord`
 --
 ALTER TABLE `tb_formrecord`
-  MODIFY `formRecordID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=259;
+  MODIFY `formRecordID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1294;
 
 --
 -- AUTO_INCREMENT for table `tb_grouprole`
@@ -5968,13 +6252,13 @@ ALTER TABLE `tb_questiongroup`
 -- AUTO_INCREMENT for table `tb_questiongroupformrecord`
 --
 ALTER TABLE `tb_questiongroupformrecord`
-  MODIFY `questionGroupFormRecordID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1380;
+  MODIFY `questionGroupFormRecordID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2166;
 
 --
 -- AUTO_INCREMENT for table `tb_questionnaire`
 --
 ALTER TABLE `tb_questionnaire`
-  MODIFY `questionnaireID` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `questionnaireID` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `tb_questionnairepartstable`

@@ -64,7 +64,7 @@ function AddSurvey({user}) {
             lastModification: creationDate
        }
        console.log("request", param);
-       const response = await api.post('/survey', param).catch( function (error) {
+       const response = await api.post('survey/', param).catch( function (error) {
             setLoading(false);
             console.log(error)
             if(error.response.data.Message) {
@@ -77,16 +77,16 @@ function AddSurvey({user}) {
         if(response) {
             setLoading(false);
             setSuccess(response.data.msgRetorno);
-            history.push("hospital/");
+            history.push("survey/");
         }
     }
 
     function handleChange(e) {
         setError('');
         //console.log(user)
-        console.log("Location pesq", location)
-        setSurvey(e.target.value)
-        //console.log(survey);
+        //console.log("Location pesq", location)
+        setSurvey(e.target.value);
+        console.log("Valor digitado"+ survey);
         setCreationDate(convertToDate(new Date()));
     }
     
