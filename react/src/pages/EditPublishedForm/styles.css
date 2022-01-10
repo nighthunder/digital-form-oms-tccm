@@ -7,6 +7,7 @@
 	background: #2ac14c;
 	border-radius: 3px;
 	width: fit-content;
+	margin-bottom: 25px;
 }
 h4.questionDesc{
 	margin-bottom: 15px;
@@ -30,3 +31,95 @@ h2.pageTitle, h3.groupName{
 	width: fit-content;
 	border-radius: 3px;
 }
+.inputQst2{
+	width: calc(100% - 25px) !important;
+	font-size: 0.75rem !important;
+}
+.MuiTextField-root2{
+	width: 100% !important;
+}
+.qst2{
+	width: 100%;
+}
+.qst2 > .MuiInputBase-Input{
+	font-size: 0.75rem;
+}
+.group{
+	margin-top: 60px;
+}
+.groupHeader{
+	margin-top: 60px;
+	padding: 15px;
+	border: 2px solid;
+	border-radius: 5px;
+	border-color: #eee1d7;
+	border-style: dotted;
+	margin-bottom: 25px;
+}
+.groupBody{
+	margin-left: 25px;
+}
+.groupType{
+	background-color: #2a50c1;
+	float: right;
+	font-weight: bold;
+}
+.qstTag{
+	margin-bottom: -15px;
+	background: #c8bd13;
+	font-weight: bold;
+	margin: 25px 0px -20px;
+}
+.qstLabel{
+	margin-bottom: -15px;
+}
+.MuiFormLabel-root{
+	margin-bottom:  -15px;
+}
+aside{
+	position: fixed;
+    left: 0;
+    top: 0px;
+    background: #fff;
+    margin-top: 20px;
+    margin: 60px 10px 10px;
+    width: 330px;
+	margin-top: 7%;
+	border-radius: 10px;
+	box-shadow: 3px 2px 1px #d7d0d0;
+}
+.anchor{
+	padding: 0px 10px;
+	text-align: left;
+}
+.anchorLink{
+	display: initial;
+	text-decoration: none;
+	text-transform: uppercase;
+	font-size: 10px;
+	color: #000;
+	background: #d2f7b9;
+	color: #fff;
+	background: #2ac14c;
+	padding: 5px;
+	border-radius: 2px;
+	cursor: pointer;
+	margin: 15px;
+	padding: 5px;
+	line-height: 40px;
+	letter-spacing: 0.02em;
+}
+.sidebarTitle{
+	text-align: center;
+	text-transform: uppercase;
+	padding: 20px;
+	color: #000;
+	padding-bottom: 15px;
+	border-bottom: 0.5px solid;
+	margin-bottom: 30px;
+	font-size: 14px;
+	background: #f0e8e8;
+}
+
+
+

@@ -1,4 +1,4 @@
-﻿// View do formulário quando � preenchido.
+﻿// View do formulário quando é preenchido.
 import React, { useState, useEffect  } from 'react';
 import './styles.css';
 import { useLocation } from "react-router-dom";
@@ -6,14 +6,25 @@ import { Scrollchor } from 'react-scrollchor';
 import { TextField, Button, FormLabel, RadioGroup, Radio, FormControlLabel, InputLabel, Select, MenuItem } from '@material-ui/core';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
+import { makeStyles } from '@material-ui/styles';
 import api from '../../services/api';
 import { connect } from 'react-redux';
 import { useHistory } from "react-router-dom";
 import validFormDate from '../../utils/methods/validFormDate';
+import { Label } from '@material-ui/icons';
+
+const useStyles = makeStyles({
+    root: {
+      '& input': {
+          fontSize: '0.75rem',
+      }
+    },
+});
 
 function EditPublishedForm({logged, user, participantId}) {
 
-    const location = useLocation();
+    const location = useLocation();  
+    const classes = useStyles();
 
     console.log("Location Formulario", location);
 
@@ -94,7 +105,7 @@ function EditPublishedForm({logged, user, participantId}) {
         });
     }
 
-    function checkTitle(index, question) {
+    function checkTitle(index, question) { // tratamento da repetição de grupos
         if(index-1 < 0) {
             return true;
         }
@@ -140,7 +151,7 @@ function EditPublishedForm({logged, user, participantId}) {
 
         // Caso seja uma atualização de formulário
         if(location.state.formRecordId) {
-            console.log('ATUALIZA��O DO FORM ', location.state.formRecordId);
+            console.log('ATUALIZAÇÃO DO FORM ', location.state.formRecordId);
 
             request = {
                 respostas: JSON.stringify(form),
@@ -167,7 +178,6 @@ function EditPublishedForm({logged, user, participantId}) {
     
             response = await api.post('/form/' + location.state.modulo, request);
         }
-        
 
         console.log('response',response);
 
@@ -181,6 +191,21 @@ function EditPublishedForm({logged, user, participantId}) {
         history.goBack();
     }
 
+    function handleChange(e) {
+        const target = e.target;
+        const value = target.value;
+        const name = target.name;
+
+        console.log('idQuestão: ' + target.name, 'value: ' + target.value);
+
+        if(target.name == getIdFromDateQuestion() && formError)
+            setFormError('')
+
+        setForm({
+            ...form,
+            [name]: value,
+        });
+    }
     return (
         <main className="container">
             <div>
@@ -201,18 +226,24 @@ function EditPublishedForm({logged, user, participantId}) {
                         </div>
                     }
                     {questions.map((question, index) => (
-                        <div className="qst" key={question.qstId}>
-
+                        <div className="qst qst2" key={question.qstId}>
+                            
                             {/* Se for um novo grupo de questões*/}
-                            { (question.dsc_qst_grp !== "" && checkTitle(index, question)) &&
-                            <h3 className="groupName">Grupo de questões: {question.dsc_qst_grp}</h3>
+                            { (question.dsc_qst_grp !== ""  && checkTitle(index, question)) &&
+                            <div className="groupHeader">
+                               <TextField  name={String(question.qstId)} className="inputQst" value={question.dsc_qst_grp} onChange={ handleChange }>{question.dsc_qst_grp}</TextField>
+                                <p className="questionType groupType">Grupo de questões</p>
+                            </div>
                             }
+                            <div className="groupBody">
+                            
 
                             {/* Se for do tipo Date question*/}
                             { (question.qst_type === "Date question") && 
                                 ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
                             <div>
-                                <TextField className="inputQst" value={question.dsc_qst} fullWidth>{question.dsc_qst}</TextField>
+                                <InputLabel className="qstLabel">Questão</InputLabel>
+                                <TextField name={String(question.qstId)} className={classes.root} className="inputQst inputQst2" value={question.dsc_qst ? question.dsc_qst : ''} fullWidth multiline>{question.dsc_qst}</TextField>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                             </div>
                             }
@@ -221,8 +252,9 @@ function EditPublishedForm({logged, user, participantId}) {
                             { (question.qst_type === "Number question") && 
                                 ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
                             <div>
-                            {/*<TextField type="number" name={String(question.qstId)} label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' } />*/}
-                            <TextField className="inputQst" value={question.dsc_qst} fullWidth>{question.dsc_qst}</TextField>
+                            {/*<TextField  type="number" name={String(question.qstId)} label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' } />*/}
+                            <InputLabel>Questão:</InputLabel>
+                            <TextField className="inputQst inputQst2" value={question.dsc_qst} fullWidth multiline>{question.dsc_qst}</TextField>
                             <p className="questionType">Tipo da questão: {question.qst_type}</p>
                             </div>
                             }
@@ -230,8 +262,9 @@ function EditPublishedForm({logged, user, participantId}) {
                             {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha menos de 6 opções */}
                             { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length < 6 ) &&
                                 ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
-                            <div className="MuiTextField-root MuiForm">
-                                <TextField className="inputQst" value={question.dsc_qst} fullWidth>{question.dsc_qst}</TextField>
+                            <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
+                                <InputLabel>Questão:</InputLabel>
+                                <TextField  className="inputQst inputQst2" value={question.dsc_qst} fullWidth multiline>{question.dsc_qst}</TextField>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                 <p className="subQstDesc">Respostas padronizadas</p>
                                 <Select multiple native label={question.dsc_qst} value={form[String(question.qstId)] || ''} aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
@@ -245,8 +278,9 @@ function EditPublishedForm({logged, user, participantId}) {
                             {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha 6 ou mais opções */}
                             { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length >= 6 ) &&
                                 ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
-                            <div className="MuiTextField-root MuiForm">
-                                <TextField className="inputQst" value={question.dsc_qst} fullWidth>{question.dsc_qst}</TextField>
+                            <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
+                                <InputLabel>Questão:</InputLabel>
+                                <TextField  className="inputQst inputQst2" value={question.dsc_qst} fullWidth multiline>{question.dsc_qst}</TextField>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                 <p className="subQstDesc">Respostas padronizadas</p>
                                 <Select multiple native label={question.dsc_qst} value={form[String(question.qstId)] || ''} aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
@@ -262,8 +296,9 @@ function EditPublishedForm({logged, user, participantId}) {
                             { (question.qst_type === "Text_Question" || question.qst_type === "Laboratory question" || question.qst_type === "Ventilation question") && 
                                 ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
                             <div>
-                            {/*<TextField name={String(question.qstId)} label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }/>*/}
-                            <TextField className="inputQst" value={question.dsc_qst} fullWidth>{question.dsc_qst}</TextField>
+                            {/*<TextField  name={String(question.qstId)} label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }/>*/}
+                            <InputLabel>Questão:</InputLabel>
+                            <TextField  className="inputQst inputQst2" value={question.dsc_qst} fullWidth multiline>{question.dsc_qst}</TextField>
                             <p className="questionType">Tipo da questão: {question.qst_type}</p>
                             </div>
                             }
@@ -271,8 +306,9 @@ function EditPublishedForm({logged, user, participantId}) {
                             {/* Se for do tipo Boolean_Question*/}
                             { (question.qst_type === "Boolean_Question") && 
                                 ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
-                            <div className="MuiTextField-root MuiForm">
-                                <TextField className="inputQst" value={question.dsc_qst} fullWidth>{question.dsc_qst}</TextField>
+                            <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
+                                <InputLabel>Questão:</InputLabel>
+                                <TextField  className="inputQst inputQst2" value={question.dsc_qst} fullWidth multiline>{question.dsc_qst}</TextField>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                 <p className="subQstDesc">Respostas padronizadas</p>
                                  <Select multiple native label={question.dsc_qst} aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange}>
@@ -282,7 +318,7 @@ function EditPublishedForm({logged, user, participantId}) {
                                
                             </div>
                             } 
-
+                            </div>    
                         </div>
                     ))}
                     </div>
@@ -292,6 +328,16 @@ function EditPublishedForm({logged, user, participantId}) {
                         <Button variant="contained" type="submit" color="primary">Salvar</Button>
                     </div>
                 </form>
+                <aside> 
+                    <p className="sidebarTitle">Menu de navegação</p>
+                    {questions.map((question, index) => (
+                        (question.dsc_qst_grp !== ""  && checkTitle(index, question)) && 
+                            <div className="anchors">
+                                <a className="anchorLink" href="#" arial-label={question.dsc_qst_grp}>{question.dsc_qst_grp}</a>
+                            </div>
+                    ))}    
+                </aside>
+                
             </div>
         </main>
     );
