@@ -230,8 +230,8 @@ function EditPublishedForm({logged, user, participantId}) {
                             
                             {/* Se for um novo grupo de questões*/}
                             { (question.dsc_qst_grp !== ""  && checkTitle(index, question)) &&
-                            <div className="groupHeader">
-                               <TextField  name={String(question.qstId)} className="inputQst" value={question.dsc_qst_grp} onChange={ handleChange }>{question.dsc_qst_grp}</TextField>
+                            <div className="groupHeader" id={question.qstId}>
+                               <TextField name={String(question.qstId)} className="inputQst" value={question.dsc_qst_grp} onChange={ handleChange }>{question.dsc_qst_grp}</TextField>
                                 <p className="questionType groupType">Grupo de questões</p>
                             </div>
                             }
@@ -332,9 +332,9 @@ function EditPublishedForm({logged, user, participantId}) {
                     <p className="sidebarTitle">Menu de navegação</p>
                     {questions.map((question, index) => (
                         (question.dsc_qst_grp !== ""  && checkTitle(index, question)) && 
-                            <div className="anchors">
-                                <a className="anchorLink" href="#" arial-label={question.dsc_qst_grp}>{question.dsc_qst_grp}</a>
-                            </div>
+                            <Scrollchor className="scrollchorlink" to={'#' + question.qstId} >
+                                <div className="anchorLink" arial-label={question.dsc_qst_grp}>{question.dsc_qst_grp}</div>
+                            </Scrollchor>
                     ))}    
                 </aside>
                 

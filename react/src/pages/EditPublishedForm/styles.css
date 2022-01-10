@@ -83,8 +83,8 @@ aside{
     background: #fff;
     margin-top: 20px;
     margin: 60px 10px 10px;
-    width: 330px;
-	margin-top: 7%;
+    width: 350px;
+	margin-top: 90px;
 	border-radius: 10px;
 	box-shadow: 3px 2px 1px #d7d0d0;
 }
@@ -93,21 +93,13 @@ aside{
 	text-align: left;
 }
 .anchorLink{
-	display: initial;
-	text-decoration: none;
-	text-transform: uppercase;
-	font-size: 10px;
-	color: #000;
+	font-size: 0.90rem;
+    color: #6a6969;
 	background: #d2f7b9;
-	color: #fff;
-	background: #2ac14c;
-	padding: 5px;
-	border-radius: 2px;
+	padding: 10px 10px;
+	border-radius: 3px;
 	cursor: pointer;
-	margin: 15px;
-	padding: 5px;
-	line-height: 40px;
-	letter-spacing: 0.02em;
+	margin: 10px;
 }
 .sidebarTitle{
 	text-align: center;
@@ -116,9 +108,12 @@ aside{
 	color: #000;
 	padding-bottom: 15px;
 	border-bottom: 0.5px solid;
-	margin-bottom: 30px;
+	/* margin-bottom: 30px; */
 	font-size: 14px;
 	background: #f0e8e8;
+}
+.scrollchorlink{
+	text-decoration: none;
 }
 
 
