@@ -96,7 +96,7 @@ function AddModule({user}) {
        if(response) {
             setLoading(false);
             setSuccess(response.data.msgRetorno);
-            //history.goBack();
+            history.goBack();
        }
     }
 
