@@ -50,6 +50,8 @@ function EditPublishedForm({logged, user, participantId}) {
             const response = await api.get('/form/' + location.state.modulo);
             setQuestions(response.data);
 
+            console.log("QUESTOES", questions);
+
             // Caso seja uma atualização de formulário
             if(location.state.formRecordId) {
                 getRecordedResponses(location.state.formRecordId)
@@ -86,6 +88,7 @@ function EditPublishedForm({logged, user, participantId}) {
         }
 
         setForm(formWithResponse);
+        console.log("FORM AQUI", form);
         setLoadedResponses(true)
     }
 
@@ -301,7 +304,6 @@ function EditPublishedForm({logged, user, participantId}) {
                                             <option key={item} value={item}>{ item }</option>
                                         ))}
                                 </Select>
-                                
                             </div>
                             } 
 
@@ -324,8 +326,8 @@ function EditPublishedForm({logged, user, participantId}) {
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                 <p className="subQstDesc">Respostas padronizadas</p>
                                  <Select multiple native label={question.dsc_qst} aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange}>
-                                       <option value='true' label='Sim'/>
-                                       <option value='false' label='Não'/>
+                                       <option label='Sim'/>
+                                       <option label='Não'/>
                                 </Select>
                                
                             </div>

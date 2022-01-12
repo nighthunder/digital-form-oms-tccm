@@ -161,7 +161,7 @@ function ShowSurvey({user}) {
           {questionnaireID: location.state.questionnaireID, 
                     description : location.state.description,
                                     version : location.state.version,
-                                    questionnaireStatus : location.state.questionnarieStatus,
+                                    questionnaireStatus : location.state.questionnaireStatus,
                                     lastModification: location.state.lastModification,
                                     creationDate: location.state.creationDate
                   })

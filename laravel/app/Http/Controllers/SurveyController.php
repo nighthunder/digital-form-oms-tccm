@@ -49,6 +49,37 @@ class SurveyController extends Controller
         }
     }
 
+    public function update(Request $request)  
+    {
+        try {
+            $query_msg = DB::select("CALL putQuestionnaire('{$request->userid}',
+                                                            '{$request->grouproleid}',
+                                                            '{$request->hospitalunitid}',
+                                                            '{$request->questionnaireid}',
+                                                            '{$request->description}',
+                                                            '{$request->version}',
+                                                            '{$request->status}',
+                                                            '{$request->lastModification}',
+                                                            '{$request->creationDate}')");
+            /*$query_msg = $query_msg[0];
+            if($query_msg->msgRetorno == 'Informe uma descrição para a pesquisa. '
+            || $query_msg->msgRetorno == 'Usuário não identificado. Verifique'
+            || $query_msg->msgRetorno == 'Hospital não identificado no cadastro. Verifique.') {
+                return response()->json($query_msg, 404);
+            }
+
+            if($query_msg->msgRetorno) {
+                if($query_msg->msgRetorno == 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!') {
+                    return response()->json($query_msg, 404);
+                }
+            }    */
+
+            return response()->json($query_msg);
+        } catch(Exception $e) {
+            return response()->json($e, 500);
+        }
+    }
+
     public function searchQuestionnaireDesc(Request $request) {
         try {
             $query_msg = DB::select("CALL searchQuestionnaire(

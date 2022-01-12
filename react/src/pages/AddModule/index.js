@@ -60,7 +60,7 @@ function AddModule({user}) {
        }
        console.log("request", param);
        
-       const response = await api.post('/module/', param).catch( function (error) {
+        const response = await api.post('/module/', param).catch( function (error) {
             setLoading(false);
             console.log(error)
             if(error.response.data.Message) {
@@ -70,10 +70,33 @@ function AddModule({user}) {
             }
         });
 
+        const param2 = {
+            userid : user[0].userid,    
+            grouproleid : user[0].grouproleid,    
+            hospitalunitid : user[0].hospitalunitid,    
+            questionnaireID: location.state.questionnaireID,
+            description: location.state.description,
+            status: location.state.questionnaireStatus, // New
+            lastModification: convertToDate(new Date()),
+            creationDate: location.state.creationDate
+        }
+
+        console.log("param2", param2);
+
+        /*const response = await api.post('/survey/', param2).catch( function (error) {
+            setLoading(false);
+            console.log(error)
+            if(error.response.data.Message) {
+                setError(error.response.data.Message);
+            } else {
+                setError(error.response.data.msgRetorno);
+            }
+        });*/
+
        if(response) {
             setLoading(false);
             setSuccess(response.data.msgRetorno);
-            history.goBack();
+            //history.goBack();
        }
     }
 
