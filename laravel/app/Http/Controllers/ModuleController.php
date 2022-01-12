@@ -54,5 +54,11 @@ class ModuleController extends Controller
             return response()->json($e, 500);
         }
     } 
+
+    public function getQuestionTypeAltText($id) 
+    {
+        return response()->json(DB::select("CALL getQuestionTypeAltText({$id})"));
+    }
+
 }
 

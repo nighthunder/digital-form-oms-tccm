@@ -27,6 +27,8 @@ function ListSurvey({user, hospital}) {
     const [error, setError] = useState('');
     const [questionnairesLoaded, setQuestionnairesLoaded] = useState(false);
     const [loadingSearch, setLoadingSearch] = useState(false);
+
+    // popup
     const [popupTitle, setPopupTitle] = useState('');
     const [popupBodyText, setPopupBodyText] = useState('');
 

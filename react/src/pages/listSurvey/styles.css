@@ -63,7 +63,7 @@ input.add-based{
 .mainNav{
 	width: 100%;
 }
-.ArrowBack, .ArrowUp{
+.ArrowBack, .ArrowUp, .ArrowInfo{
 	color: #fff;
 	background: #0052d2;
 	border-radius: 20px;

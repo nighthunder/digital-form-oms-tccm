@@ -43,6 +43,7 @@ Route::group(['middleware' => 'cors:api'], function() {
     Route::post('searchModules/', [ModuleController::class, 'searchModuleDesc']); // Campo de busca
     Route::post('module/', [ModuleController::class, 'insert']); 
     Route::post('module/{id}', [ModuleController::class, 'show']); 
+    Route::get('questiontype/{id}', [ModuleController::class, 'getQuestionTypeAltText']); 
 
     Route::post('searchHospital/', [HospitalController::class, 'searchHospitalDesc']);
 });
