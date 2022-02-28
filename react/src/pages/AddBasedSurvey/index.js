@@ -55,8 +55,8 @@ function AddBasedSurvey({user}) {
             userid : user[0].userid,    
             grouproleid : user[0].grouproleid,    
             hospitalunitid : user[0].hospitalunitid,    
-            isNewVersionOf: isNewVersionOf,
-            isBasedOn: isBasedOn,
+            isversionof: isNewVersionOf,
+            isbasedon: isBasedOn,
             description: surveyDesc,
             version: "0.0",
             questionnaireStatusID: "2", // New
@@ -69,7 +69,7 @@ function AddBasedSurvey({user}) {
         console.log("IsNewVersionOf", isNewVersionOf);
         console.log("IsBasedOn", isBasedOn);
         console.log("======================");
-        /*const response = await api.post('survey/', param).catch( function (error) {
+        const response = await api.post('survey/', param).catch( function (error) {
             setLoading(false);
             console.log(error)
             if(error.response.data.Message) {
@@ -83,7 +83,7 @@ function AddBasedSurvey({user}) {
             setLoading(false);
             setSuccess(response.data.msgRetorno);
             history.push("survey/");
-        }*/
+        }
     }
 
     useEffect(() => {
@@ -110,6 +110,11 @@ function AddBasedSurvey({user}) {
         //console.log(user);
         setSelectSurvey(e.target.value);
         refSurvey.current = e.target.value;
+        setIsNewVersionOf('0');  
+        setIsBasedOn('0');
+        refIsNewVersionOf.current = 0;
+        refIsBasedOn.current = 0;
+        refMethod.current === "Nova versão" ? refIsNewVersionOf.current = refSurvey && setIsNewVersionOf(refSurvey.current) : refIsBasedOn.current = refSurvey && setIsBasedOn(refSurvey.current) ;
         console.log("Valor selecionado", selectSurvey);
         setCreationDate(convertToDate(new Date()));
         console.log("SelectSurvey", refSurvey);
