@@ -5,9 +5,10 @@ import { useHistory, useLocation, Link } from "react-router-dom";
 import { Scrollchor } from 'react-scrollchor';
 import api from '../../services/api';
 import { Button, TextField, CircularProgress} from '@material-ui/core';
-import { Add, Edit } from '@material-ui/icons';
+import { Add, Edit, Visibility } from '@material-ui/icons';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import './styles.css';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -112,17 +113,17 @@ function ListSurvey({user, hospital}) {
             <main className="container containerWider prontuarios">
                 <div className="survey">
                     <div className="mainNav">
-				        <h2 id="title">Crie e edite pesquisas</h2>
+				        <h2 id="title">Gerenciamento de Pesquisas Clínicas</h2>
                         <ArrowBackIcon className="ArrowBack" onClick={handleBackButton}/>
                         <Scrollchor to="#vodan_br"><ArrowUpwardIcon className="ArrowUp" /></Scrollchor>
                     </div>
                     <div className="survey-details">
-                        Gerencie as pesquisas: : crie, versione, copie, edite e publique.
+                        Lista de todas as pesquisas clínicas
                     </div>
                     <div className="search-options">
                         <form noValidate autoComplete="off" onSubmit={handleSearch}>
                             <TextField id="standard-basic" label="Descrição da pesquisa " onChange={handleChange}/>
-                            <Button variant="contained" color="primary" type="submit">
+                            <Button className =" search" variant="contained" color="primary" type="submit">
                                 { !loadingSearch &&
                                     'Buscar'
                                 }
@@ -165,12 +166,12 @@ function ListSurvey({user, hospital}) {
                         <table>
                                 <thead>
                                     <tr>
-                                        <th>PESQUISA</th>
-                                        <th>VER.</th> 
+                                        <th>PESQUISA CLÍNICA</th>
+                                        <th>VERSÃO</th> 
                                         <th>STATUS</th>
                                         <th>CRIADO EM</th> 
                                         <th>MODIFICADO EM</th> 
-                                        <th>EDITAR</th> 
+                                        <th>VER</th> 
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -192,7 +193,7 @@ function ListSurvey({user, hospital}) {
                                             <td>{q.questionnaireStatus}</td>
                                             <td>{getPtBrDate(new Date(q.creationDate))}</td> 
                                             <td>{getPtBrDate(new Date(q.lastModification))}</td> 
-                                            <td><Edit /></td>
+                                            <td><VisibilityIcon className="editIcon" /></td>
                                         </tr>
                             
                                      ))

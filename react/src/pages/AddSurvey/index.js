@@ -22,12 +22,10 @@ const styles = {
 function AddSurvey({user}) {
 
     const history = useHistory();
-
     //console.log("history addsurvey", history);
-
     const location = useLocation();
-
     //console.log("history addsurvey", location);
+    console.log("Usuario", user);
 
     const [formError, setFormError] = useState('')
 
@@ -57,11 +55,14 @@ function AddSurvey({user}) {
             userid : user[0].userid,    
             grouproleid : user[0].grouproleid,    
             hospitalunitid : user[0].hospitalunitid,    
+            questionnaireID: "3",
+            isNewVersionOf: 0,
+            isBasedOn: 0,
             description: survey,
             version: "0.0",
             questionnaireStatusID: "2", // New
-            creationDate: creationDate,
-            lastModification: creationDate
+            lastModification: creationDate,
+            creationDate: creationDate
        }
        console.log("request", param);
        const response = await api.post('survey/', param).catch( function (error) {
@@ -86,7 +87,7 @@ function AddSurvey({user}) {
         //console.log(user)
         //console.log("Location pesq", location)
         setSurvey(e.target.value);
-        console.log("Valor digitado"+ survey);
+        //console.log("Valor digitado"+ survey);
         setCreationDate(convertToDate(new Date()));
     }
     

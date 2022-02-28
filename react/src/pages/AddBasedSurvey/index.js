@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { useHistory, useLocation } from "react-router-dom";
 import { Scrollchor } from 'react-scrollchor';
 import api from '../../services/api';
@@ -21,21 +21,20 @@ const styles = {
 function AddBasedSurvey({user}) {
 
     const history = useHistory();
-
-    const location = useLocation();
+    const refSurvey = useRef("1"); 
+    const refMethod = useRef("version");
+    const refIsNewVersionOf = useRef("1");
+    const refIsBasedOn = useLocation("0");
 
     const [formError, setFormError] = useState('')
-
     const [survey, setSurvey] = useState([]);
-
     const [surveyDesc, setSurveyDesc] = useState('');
-
     const [selectSurvey, setSelectSurvey] = useState('');
-
+    const [selectMethod, setSelectMethod] = useState('');
+    const [isNewVersionOf, setIsNewVersionOf] = useState('');
+    const [isBasedOn, setIsBasedOn] = useState('');
     const [creationDate, setCreationDate] = useState('');
-
     const [loading, setLoading] = useState(false);
-
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
@@ -49,22 +48,28 @@ function AddBasedSurvey({user}) {
     }
 
     async function handleSubmit(e) {
-       e.preventDefault();
-       setLoading(true);
-       setCreationDate(convertToDate(new Date()));
-       const param = {
+        e.preventDefault();
+        setLoading(true);
+        setCreationDate(convertToDate(new Date()));
+        const param = {
             userid : user[0].userid,    
             grouproleid : user[0].grouproleid,    
             hospitalunitid : user[0].hospitalunitid,    
-            questionnaireID: location.state.questionnaireID,
-            description: selectSurvey,
-            moduleStatusID: "2", // New
-            lastModification: convertToDate(new Date()),
-            creationDate: convertToDate(new Date())
-       }
-       console.log("request", param);
-       
-       const response = await api.post('/module/', param).catch( function (error) {
+            isNewVersionOf: isNewVersionOf,
+            isBasedOn: isBasedOn,
+            description: surveyDesc,
+            version: "0.0",
+            questionnaireStatusID: "2", // New
+            lastModification: creationDate,
+            creationDate: creationDate
+        }
+        console.log("request", param);
+        console.log("SelectedSurvey", selectSurvey);
+        console.log("SelectedMethod", selectMethod);
+        console.log("IsNewVersionOf", isNewVersionOf);
+        console.log("IsBasedOn", isBasedOn);
+        console.log("======================");
+        /*const response = await api.post('survey/', param).catch( function (error) {
             setLoading(false);
             console.log(error)
             if(error.response.data.Message) {
@@ -74,11 +79,11 @@ function AddBasedSurvey({user}) {
             }
         });
 
-       if(response) {
+        if(response) {
             setLoading(false);
             setSuccess(response.data.msgRetorno);
-            history.goBack();
-       }
+            history.push("survey/");
+        }*/
     }
 
     useEffect(() => {
@@ -102,16 +107,44 @@ function AddBasedSurvey({user}) {
 
     function handleChange(e) {
         setError('');
-        //console.log(user)
-        //this.setState({ defaultModule: e.target.value});
+        //console.log(user);
         setSelectSurvey(e.target.value);
+        refSurvey.current = e.target.value;
         console.log("Valor selecionado", selectSurvey);
+        setCreationDate(convertToDate(new Date()));
+        console.log("SelectSurvey", refSurvey);
+        console.log("SelectMethod", refMethod.current);
+        console.log("IsNewVersionOf", isNewVersionOf);
+        console.log("IsBasedOn", isBasedOn);
+        console.log("======================");
     }
+
+
+    function handleChange1(e) {
+        setError('');
+        refMethod.current = e.target.value;
+        setSelectMethod(refMethod.current);
+        setCreationDate(convertToDate(new Date()));
+        setIsNewVersionOf('0');  
+        setIsBasedOn('0');
+        refIsNewVersionOf.current = 0;
+        refIsBasedOn.current = 0;
+        refMethod.current === "Nova versão" ? refIsNewVersionOf.current = refSurvey && setIsNewVersionOf(refSurvey.current) : refIsBasedOn.current = refSurvey && setIsBasedOn(refSurvey.current) ;
+        console.log("SelectSurvey", refSurvey);
+        console.log("SelectMethod", refMethod.current);
+        console.log("IsNewVersionOf", isNewVersionOf);
+        console.log("IsBasedOn", isBasedOn);
+        console.log("======================");
+    }
+
+    useEffect(() => {
+       
+    }, [])    
 
     function handleChange2(e) {
         setError('');
         //console.log(user)
-        console.log("Location pesq", location)
+        //console.log("Location pesq", location)
         setSurveyDesc(e.target.value)
         //console.log(survey);
     }
@@ -121,7 +154,12 @@ function AddBasedSurvey({user}) {
     }
 
     {
-        selectSurvey === '' && setSelectSurvey("WHO COVID-19 Rapid Version CRF")
+        selectSurvey === '' && setSelectSurvey(1);
+        selectMethod === '' && setSelectMethod("Nova versão");
+        isNewVersionOf === '' && setIsNewVersionOf("1") && setIsBasedOn("0");
+        isBasedOn === '' && setIsBasedOn("0");
+        creationDate == '' &&  setCreationDate(convertToDate(new Date()));
+        
     }
 
     return (
@@ -137,16 +175,16 @@ function AddBasedSurvey({user}) {
                         <select name="selectSurvey" className="sel1" value={selectSurvey} onChange={handleChange}>
                            {
                                 survey.map(q => ( 
-                                        <option key={q.questionnaireID} value={q.description}>{q.description}</option>
+                                        <option key={q.questionnaireID} value={q.questionnaireID}>{q.description}</option>
                                  ))
                              }
                         </select>
                     </div>
                     <div className="formGroup formGroup2">
                         <InputLabel>Selecione o tipo de derivação:</InputLabel><br/>
-                        <select name="selectSurvey" className="sel1" value={selectSurvey} onChange={handleChange}>
-                           <option value="version">Nova Versão</option>
-                           <option value="based">Como template</option>
+                        <select name="selectMethod" className="sel1" value={selectMethod} onChange={handleChange1}>
+                           <option key="1" value="Nova versão">Nova Versão</option>
+                           <option key="2" value="Como template">Como template</option>
                         </select>
                     </div>
                     <div className="formGroup formGroup2">

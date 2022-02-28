@@ -50,14 +50,15 @@ h2.pageTitle, h3.groupName{
 .groupHeader{
 	margin-top: 60px;
 	padding: 15px;
-	border: 2px solid;
+	border: 3px dotted #d2cecb;
 	border-radius: 5px;
-	border-color: #eee1d7;
-	border-style: dotted;
 	margin-bottom: 25px;
 }
-.groupBody{
-	margin-left: 25px;
+.qstBody{
+	border: 2px dotted #d2cecb;
+	border-radius: 5px;
+	padding: 10px;
+	margin: 10px 0px 10px 20px;
 }
 .groupType{
 	background-color: #2a50c1;

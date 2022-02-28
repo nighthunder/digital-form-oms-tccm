@@ -20,6 +20,7 @@ table{
 	box-shadow: 5px 5px 5px #eeeded;
 	margin-bottom: 25px;
 	border: 1px solid #eeeded;
+	overflow: hidden;
 }
 thead{
 	background: #0052d2;
@@ -27,7 +28,7 @@ thead{
 }
 th{
 	padding: 6px;
-	font-size: 0.8em;
+	font-size: 0.75em;
 	letter-spacing: 0.03em;
 	font-weight: lighter;
 	line-height: 2.05em;
@@ -35,8 +36,19 @@ th{
 thead tr{
 	box-shadow: 0px 3px 1px -2px rgba(0,0,0,0.2),0px 2px 2px 0px rgba(0,0,0,0.14),0px 1px 5px 0px rgba(0,0,0,0.12);
 }
+tr td:first-child{
+	width:25%;
+	line-height: 1.1em;
+}
+tr td, tr th{
+	text-align: center;
+	vertical-align: middle;
+}
 tr:nth-child(even){
 	background-color: #f4dfb6;
+}
+tr td:first-child, tr th:first-child{
+	text-align: left;
 }
 tr:hover{
 	cursor: pointer;
@@ -49,6 +61,10 @@ td{
 }
 button.add-based{
 	margin-top: 15px;
+}
+.search{
+	margin-left: 10px !important;
+	margin-top: 10px !important;
 }
 .surveys-list{
 	padding-top: 25px;
@@ -99,4 +115,8 @@ input.add-based{
 
 .search-options button.add-survey {
     width: 250px;
+}
+
+.editIcon{
+	vertical-align: middle;
 }

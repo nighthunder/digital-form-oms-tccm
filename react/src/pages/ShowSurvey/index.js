@@ -24,9 +24,12 @@ function ShowSurvey({user}) {
 	const history = useHistory();
   const [description, setDescription] = useState('');
 	
+  const [survey, setSurvey] = useState([]);
 	const [modules, setModules] = useState([]);
   const [moduleID, setModuleID] = useState(''); // ID do módulo clicado
-  const [moduleStatus, setModuleStatus] = useState(''); 
+  const [moduleStatus, setModuleStatus] = useState('');
+  const [motherID, setMotherID] = useState(''); // ID do mãe, se houver 
+  const [motherModulesID, setMotherModulesID] = useState(''); // Módulos das mãe, se houver
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
   const [modulesLoaded, setModulesLoaded] = useState(false);
@@ -43,6 +46,20 @@ function ShowSurvey({user}) {
 			    //console.log("Resposta3", location.state);
       }                                                                                                                                                                                                       
       loadModules();
+      // obtem informações da mãe da pesquisa (versão anterior ou seu template)
+      async function loadMotherInfo() {
+        const response = await api.get('/survey/'+location.state.questionnaireID);
+        setSurvey(response.data);
+
+        survey.map(q =>{
+            console.log("teste",q.isNewVersionOf);
+            console.log("teste2",q.isBasedOn);
+           ( !(q.isNewVersionOf === "0" || q.isNewVersionOf === null) || !(q.isBasedOn === "0" || q.isBasedOn === null)   ) &&
+            !(q.isNewVersionOf === "0" || q.isNewVersionOf === null) ? setMotherID(q.isNewVersionOf) : setMotherID(q.isBasedOn)
+        })
+        console.log("É baseado ou versão de", motherID);
+      }                                                                                                                                                                                                       
+      loadMotherInfo();
   }, [])
 
 	function getPtBrDate(somedate) {
@@ -133,7 +150,7 @@ function ShowSurvey({user}) {
 	  <main className="container containerWider">
 	    <div className="module">
         <div className="mainNav">
-          <h2>{location.state.description}</h2>
+          <span className="descDesc">Pesquisa:</span><h2>{location.state.description}</h2>
           <ArrowBackIcon className="ArrowBack" onClick={handleBackButton}/>
           <Scrollchor to="#vodan_br"><ArrowUpwardIcon className="ArrowUp" /></Scrollchor>
         </div>

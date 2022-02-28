@@ -56,6 +56,8 @@ class SurveyController extends Controller
                                                             '{$request->grouproleid}',
                                                             '{$request->hospitalunitid}',
                                                             '{$request->questionnaireid}',
+                                                            '{$request->isNewVersionOf}',
+                                                            '{$request->isBasedOn}',
                                                             '{$request->description}',
                                                             '{$request->version}',
                                                             '{$request->status}',

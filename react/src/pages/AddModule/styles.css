@@ -38,3 +38,6 @@ select.sel1{
 	width: 70%;
 	text-align: center;
 }
+.MuiFormLabel-root{
+	padding-bottom: 15px;
+}

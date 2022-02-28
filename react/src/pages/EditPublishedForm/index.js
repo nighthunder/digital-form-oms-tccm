@@ -106,7 +106,7 @@ function EditPublishedForm({logged, user, participantId}) {
         const value = target.value;
         const name = target.name;
 
-        console.log('idQuestão: ' + target.name, 'value: ' + target.value);
+        //console.log('idQuestão: ' + target.name, 'value: ' + target.value);
 
         if(target.name == getIdFromDateQuestion() && formError)
             setFormError('')
@@ -228,7 +228,7 @@ function EditPublishedForm({logged, user, participantId}) {
                     { hospitalName } > <b>{ titles[location.state.modulo-1] }</b>
                 </header>
                 <div className="mainNav">
-				    <h2 className="pageTitle">Editar Módulo { location.state.modulo } - { titles[location.state.modulo-1] } - {location.state.moduleStatus}</h2>
+				    <h2 className="pageTitle">Módulo { location.state.modulo } - { titles[location.state.modulo-1] } - {location.state.moduleStatus} [Edição]</h2>
                     <ArrowBackIcon className="ArrowBack" onClick={handleBackButton}/>
                     <Scrollchor to="#vodan_br"><ArrowUpwardIcon className="ArrowUp" /></Scrollchor>
                 </div>
@@ -243,7 +243,6 @@ function EditPublishedForm({logged, user, participantId}) {
                     }
                     {questions.map((question, index) => (
                         <div className="qst qst2" key={question.qstId}>
-                            
                             {/* Se for um novo grupo de questões*/}
                             { (question.dsc_qst_grp !== ""  && checkTitle(index, question)) &&
                             <div className="groupHeader" id={question.qstId}>
@@ -251,9 +250,8 @@ function EditPublishedForm({logged, user, participantId}) {
                                 <p className="questionType groupType">Grupo de questões</p>
                             </div>
                             }
-                            <div className="groupBody">
+                            <div className="qstBody">
                             
-
                             {/* Se for do tipo Date question*/}
                             { (question.qst_type === "Date question") && 
                                 ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
@@ -283,7 +281,7 @@ function EditPublishedForm({logged, user, participantId}) {
                                 <TextField  className="inputQst inputQst2" onChange={handleChange} name={String(question.qstId)} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst }  fullWidth multiline>{question.dsc_qst}</TextField>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                 <p className="subQstDesc">Respostas padronizadas</p>
-                                <Select multiple native label={question.dsc_qst} aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst }>
+                                <Select multiple native label={question.dsc_qst} aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
                                         {question.rsp_pad.split(',').map((item) => (
                                             <option key={item} value={item}>{ item }</option>
                                         ))}
@@ -299,7 +297,7 @@ function EditPublishedForm({logged, user, participantId}) {
                                 <TextField  className="inputQst inputQst2" onChange={handleChange} name={String(question.qstId)} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst }  fullWidth multiline>{question.dsc_qst}</TextField>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                 <p className="subQstDesc">Respostas padronizadas</p>
-                                <Select multiple native label={question.dsc_qst} aria-label={question.dsc_qst}>
+                                <Select multiple native label={question.dsc_qst} label={question.dsc_qst} aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
                                         {question.rsp_pad.split(',').map((item) => (
                                             <option key={item} value={item}>{ item }</option>
                                         ))}
@@ -325,7 +323,7 @@ function EditPublishedForm({logged, user, participantId}) {
                                 <TextField  className="inputQst inputQst2" name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } fullWidth multiline>{question.dsc_qst}</TextField>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                 <p className="subQstDesc">Respostas padronizadas</p>
-                                 <Select multiple native label={question.dsc_qst} aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange}>
+                                <Select multiple native label={question.dsc_qst} aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange}>
                                        <option label='Sim'/>
                                        <option label='Não'/>
                                 </Select>

@@ -159,6 +159,12 @@ function AddModule({user}) {
                              }
                         </select>
                     </div>
+                    <br/>
+                    <br/>
+                    <br/>
+                    <br/>
+                    <br/>
+                    <br/>
                     <div className="submit-prontuario">
                         <span className="error">{ error }</span>
                         <span className="success">{ success }</span>
