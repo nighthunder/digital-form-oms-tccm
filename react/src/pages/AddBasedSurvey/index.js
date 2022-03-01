@@ -25,7 +25,6 @@ function AddBasedSurvey({user}) {
     const refMethod = useRef("version");
     const refIsNewVersionOf = useRef("1");
     const refIsBasedOn = useLocation("0");
-
     const [formError, setFormError] = useState('')
     const [survey, setSurvey] = useState([]);
     const [surveyDesc, setSurveyDesc] = useState('');
@@ -55,7 +54,7 @@ function AddBasedSurvey({user}) {
             userid : user[0].userid,    
             grouproleid : user[0].grouproleid,    
             hospitalunitid : user[0].hospitalunitid,    
-            isversionof: isNewVersionOf,
+            isnewversionof: isNewVersionOf,
             isbasedon: isBasedOn,
             description: surveyDesc,
             version: "0.0",

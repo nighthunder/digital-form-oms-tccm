@@ -25,7 +25,7 @@ class SurveyController extends Controller
             $query_msg = DB::select("CALL postQuestionnaire('{$request->userid}',
                                                             '{$request->grouproleid}',
                                                             '{$request->hospitalunitid}',
-                                                            '{$request->isversionof}',
+                                                            '{$request->isnewversionof}',
                                                             '{$request->isbasedon}',
                                                             '{$request->description}',
                                                             '{$request->version}',

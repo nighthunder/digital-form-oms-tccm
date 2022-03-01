@@ -22,19 +22,10 @@ const styles = {
 function AddSurvey({user}) {
 
     const history = useHistory();
-    //console.log("history addsurvey", history);
-    const location = useLocation();
-    //console.log("history addsurvey", location);
-    console.log("Usuario", user);
-
     const [formError, setFormError] = useState('')
-
     const [survey, setSurvey] = useState('');
-
     const [creationDate, setCreationDate] = useState('');
-
     const [loading, setLoading] = useState(false);
-
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
@@ -50,20 +41,19 @@ function AddSurvey({user}) {
     async function handleSubmit(e) {
         e.preventDefault();
         setLoading(true);
-       
-       const param = {
+        setCreationDate(convertToDate(new Date()));
+        const param = {
             userid : user[0].userid,    
             grouproleid : user[0].grouproleid,    
             hospitalunitid : user[0].hospitalunitid,    
-            questionnaireID: "3",
-            isNewVersionOf: 0,
-            isBasedOn: 0,
+            isnewversionof: "0",
+            isbasedon: "0",
             description: survey,
             version: "0.0",
             questionnaireStatusID: "2", // New
             lastModification: creationDate,
             creationDate: creationDate
-       }
+        }
        console.log("request", param);
        const response = await api.post('survey/', param).catch( function (error) {
             setLoading(false);
