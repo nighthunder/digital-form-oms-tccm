@@ -60,5 +60,9 @@ class ModuleController extends Controller
         return response()->json(DB::select("CALL getQuestionTypeAltText({$id})"));
     }
 
+    public function getquestionnaireMotherModules($id){
+        return response()->json(DB::select("CALL getQuestionnaireMotherModules({$id})"));
+    }
+
 }
 

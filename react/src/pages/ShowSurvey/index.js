@@ -29,7 +29,7 @@ function ShowSurvey({user}) {
   const [moduleID, setModuleID] = useState(''); // ID do módulo clicado
   const [moduleStatus, setModuleStatus] = useState('');
   const [motherID, setMotherID] = useState(''); // ID do mãe, se houver 
-  const [motherModulesID, setMotherModulesID] = useState(''); // Módulos das mãe, se houver
+  const [motherModules, setMotherModules] = useState([]); // Módulos das mãe, se houver
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
   const [modulesLoaded, setModulesLoaded] = useState(false);
@@ -38,28 +38,33 @@ function ShowSurvey({user}) {
   const [popupBodyText, setPopupBodyText] = useState('');
 
 	useEffect(() => {
+
       async function loadModules() {
+          setModulesLoaded(false);
           const response = await api.get('/modules/'+location.state.questionnaireID);
-          setModules(response.data);
-			    //console.log("Resposta2", user);
-			    //console.log("Resposta4", modules);
-			    //console.log("Resposta3", location.state);
+          if(response.data) {
+            setModules(response.data);
+            setModulesLoaded(true);
+          }  
+			    console.log("Modules", modules.length);
       }                                                                                                                                                                                                       
       loadModules();
-      // obtem informações da mãe da pesquisa (versão anterior ou seu template)
-      async function loadMotherInfo() {
+      // obtem informações da pesquisa
+      async function loadSurveyInfo() {
         const response = await api.get('/survey/'+location.state.questionnaireID);
-        setSurvey(response.data);
-
-        survey.map(q =>{
-            console.log("teste",q.isNewVersionOf);
-            console.log("teste2",q.isBasedOn);
-           ( !(q.isNewVersionOf === "0" || q.isNewVersionOf === null) || !(q.isBasedOn === "0" || q.isBasedOn === null)   ) &&
-            !(q.isNewVersionOf === "0" || q.isNewVersionOf === null) ? setMotherID(q.isNewVersionOf) : setMotherID(q.isBasedOn)
-        })
-        console.log("É baseado ou versão de", motherID);
+        if(response.data){
+          setSurvey(response.data);
+        }
       }                                                                                                                                                                                                       
-      loadMotherInfo();
+      loadSurveyInfo();
+      // módulos da mãe da pesquisa
+      async function loadMotherModules() {
+        const response = await api.get('/mothermodules/'+location.state.questionnaireID);
+        if(response.data){
+          setMotherModules(response.data);
+        }
+      }                                                                                                                                                                                                       
+      loadMotherModules();
   }, [])
 
 	function getPtBrDate(somedate) {
@@ -160,6 +165,13 @@ function ShowSurvey({user}) {
           <p>Data de criação: {location.state.creationDate}</p><br/>
           <p className="padding-10">Última modificação: {location.state.lastModification}</p><br/>
         </div>
+        <div className="mother-details">
+          {  !(modules.length > 0 && modulesLoaded) &&
+              survey.map(q =>(
+               <p>Esta pesquisa é {q.motherRelationship} de {q.motherDescription}.</p>
+              ))   
+          } 
+        </div>
         <div className="search-options">
           <form noValidate autoComplete="off" onSubmit={handleSearch}>
             <TextField className="inputDescription" id="standard-basic" label="Descrição do módulo" onChange={handleChange}/>
@@ -214,7 +226,7 @@ function ShowSurvey({user}) {
               </tr>
             </thead>
             <tbody>
-            {
+            {  modules.length > 0 &&
                                 modules.map(q => ( 
                                       <tr value={q.description} key={q.crfFormsID} data-key={q.description} onClick={() => handleClickOpen(q)}>
                                           <td>{q.description}</td>
@@ -224,7 +236,18 @@ function ShowSurvey({user}) {
                                           <td><Edit /></td>
                                       </tr>
                                 ))
-                      }
+            }
+            { !(modules.length > 0) &&
+                   motherModules.map(q => ( 
+                      <tr value={q.description} key={q.crfFormsID} data-key={q.description} onClick={() => handleClickOpen(q)}>
+                          <td>{q.description}</td>
+                          <td>{q.crfFormsStatus}</td>
+                          <td>{getPtBrDate(new Date(q.creationDate))}</td> 
+                          <td>{getPtBrDate(new Date(q.lastModification))}</td> 
+                          <td><Edit /></td>
+                      </tr>
+                    ))
+            }
             </tbody>
                     <Dialog key={location.state.questionnaireStatus}
                       open={open}

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 01, 2022 at 05:14 AM
+-- Generation Time: Mar 02, 2022 at 06:43 AM
 -- Server version: 10.4.21-MariaDB
 -- PHP Version: 7.3.31
 
@@ -247,8 +247,35 @@ select   tb_Qst.crfformsid as modId, tb_Qst.questionid as qstId,
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `getQuestionnaire` (IN `p_questionnaireID` INT)   BEGIN
-Select * from tb_questionnaire;
+Select 	questionnaireID,
+	   	description,
+       	questionnaireStatusID,
+       	isNewVersionOf,
+       	isBasedOn,
+       	version,
+       	creationDate,
+       	lastModification,
+       (Select questionnaireID from tb_questionnaire as t2
+      	where t2.questionnaireID = t1.isNewVersionOf or t2.questionnaireID = t1.isBasedOn) as motherID,
+       (Select description from tb_questionnaire as t2
+        where t2.questionnaireID = t1.isNewVersionOf or t2.questionnaireID = t1.isBasedOn) as motherDescription,
+        (SELECT 
+        IF(isNewVersionOf > 0, 'uma versão',  IF(IsBasedOn > 0,'uma derivação', 'none')) 'motherRelationship'
+		FROM tb_questionnaire 
+        WHERE questionnaireID = p_questionnaireID) as motherRelationship     
+from tb_questionnaire as t1
+where questionnaireID = p_questionnaireID;
 END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getQuestionnaireMotherModules` (IN `p_questionnaireID` INT)   Select 	crfFormsID,
+        questionnaireID,
+        translate('pt-br',description) as description,
+        (Select translate('pt-br',description) from tb_crfformsstatus as t3 where t3.crfformsStatusID = t1.crfformsStatusID) as crfFormsStatus,
+        lastModification,
+        creationDate
+from tb_crfforms as t1 
+WHERE questionnaireID IN (Select isNewVersionOf from tb_questionnaire as t2 where t2.questionnaireID = p_questionnaireID) or
+ questionnaireID IN (Select isBasedOn from tb_questionnaire as t2 where t2.questionnaireID = p_questionnaireID)$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `getuser` (`p_login` VARCHAR(255), `p_password` VARCHAR(255))   BEGIN
 #========================================================================================================================
@@ -1511,7 +1538,6 @@ INSERT INTO `tb_crfforms` (`crfFormsID`, `questionnaireID`, `description`, `crff
 (51, 6, 'Admission Form', 2, '2021-12-01 01:21:19', '2021-12-01 01:21:19'),
 (50, 6, 'Admission Form', 2, '2021-11-30 22:00:18', '2021-11-30 22:00:18'),
 (49, 2, 'Discharge/death form', 3, '2021-11-30 21:54:08', '2021-11-30 21:54:08'),
-(47, 5, 'Follow-up', 1, '2021-11-30 21:53:30', '2021-11-30 21:53:31'),
 (48, 2, 'Admission Form', 3, '2021-11-30 21:53:58', '2021-11-30 21:53:58'),
 (45, 2, 'Follow-up', 3, '2021-11-30 21:51:26', '2021-11-30 21:51:26'),
 (46, 2, 'Follow-up', 3, '2021-11-30 21:51:26', '2021-11-30 21:51:28'),
@@ -1519,11 +1545,9 @@ INSERT INTO `tb_crfforms` (`crfFormsID`, `questionnaireID`, `description`, `crff
 (53, 6, 'Discharge/death form', 2, '2021-12-01 01:28:45', '2021-12-01 01:28:45'),
 (55, 14, 'Follow-up', 2, '2021-12-01 16:50:09', '2021-12-01 16:50:09'),
 (577, 14, 'Discharge/death form', 2, '2022-01-03 20:51:58', '2022-01-03 20:51:58'),
-(576, 5, 'bla', 2, '2021-12-10 08:29:10', '2021-12-10 08:29:10'),
 (578, 14, 'Admission Form', 2, '2022-01-03 20:54:48', '2022-01-03 20:54:48'),
 (579, 14, 'Follow-up', 2, '2022-01-03 21:07:01', '2022-01-03 21:07:01'),
 (0, 2, 'Discharge/death form', 2, '2022-01-07 23:53:04', '2022-01-07 23:53:04'),
-(580, 0, 'Admission Form', 2, '2022-01-09 19:26:58', '2022-01-09 19:26:58'),
 (581, 30, 'Admission Form', 2, '2022-01-09 19:28:23', '2022-01-09 19:28:23'),
 (582, 30, 'Admission Form', 2, '2022-01-09 19:28:28', '2022-01-09 19:28:28'),
 (583, 30, 'Follow-up', 2, '2022-01-09 19:31:01', '2022-01-09 19:31:01'),
@@ -5697,7 +5721,7 @@ CREATE TABLE `tb_questionnaire` (
 
 INSERT INTO `tb_questionnaire` (`questionnaireID`, `description`, `questionnaireStatusID`, `isNewVersionOf`, `IsBasedOn`, `version`, `lastModification`, `creationDate`) VALUES
 (1, 'WHO COVID-19 Rapid Version CRF', 1, 0, 0, '1.0', '2021-11-17 21:06:57', '2022-02-28 22:20:37'),
-(2, 'Pesquisa de teste 2', 3, 0, NULL, '2.0', '2021-11-17 23:16:07', '2021-12-01 09:28:13'),
+(2, 'Pesquisa de teste 2', 3, 0, 1, '2.0', '2021-11-17 23:16:07', '2022-03-02 00:35:35'),
 (3, 'Nova Pesquisa', 2, NULL, NULL, '0.0', '2022-02-14 17:45:19', '2022-02-14 17:45:56'),
 (5, 'WHO COVID-19 Full Version CRF', 2, 1, 0, '0.0', '2022-02-28 22:05:39', '2022-02-28 22:15:52');
 
