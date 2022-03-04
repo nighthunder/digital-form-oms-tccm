@@ -1,5 +1,5 @@
 ﻿// View do formulário quando é preenchido.
-import React, { useState, useEffect  } from 'react';
+import React, { useState, useEffect, useRef  } from 'react';
 import './styles.css';
 import { useLocation } from "react-router-dom";
 import { Scrollchor } from 'react-scrollchor';
@@ -31,7 +31,7 @@ function EditPublishedForm({logged, user, participantId}) {
     const location = useLocation();  
     const classes = useStyles();
     //console.log("Location Formulario", location);
-
+    const sim = useRef();
     const titles = ['Admissão','Acompanhamento','Desfecho']
     const [form, setForm] = useState({});
     const [formError, setFormError] = useState('')
@@ -50,7 +50,8 @@ function EditPublishedForm({logged, user, participantId}) {
             const response = await api.get('/form/' + location.state.modulo);
             setQuestions(response.data);
 
-            console.log("QUESTOES", questions);
+            //console.log("QUESTOES", questions);
+            //console.log("formRecordId", location.state.formRecordId);
 
             // Caso seja uma atualização de formulário
             if(location.state.formRecordId) {
@@ -115,6 +116,9 @@ function EditPublishedForm({logged, user, participantId}) {
             ...form,
             [name]: value,
         });
+
+        console.log("form", form);
+
     }
 
     function checkTitle(index, question) { // tratamento da repetição dos nomes dos grupos
@@ -221,6 +225,10 @@ function EditPublishedForm({logged, user, participantId}) {
         history.goBack();
     }
 
+    function handleSimYNUN(e){
+        console.log("EXECUTEI");
+    }
+
     return (
         <main className="container">
             <div>
@@ -241,6 +249,9 @@ function EditPublishedForm({logged, user, participantId}) {
                             <img src="assets/loading.svg" alt="Carregando"/>
                         </div>
                     }
+                    {
+                        console.log("QUESTIONS2", questions)
+                    }
                     {questions.map((question, index) => (
                         <div className="qst qst2" key={question.qstId}>
                             {/* Se for um novo grupo de questões*/}
@@ -254,80 +265,91 @@ function EditPublishedForm({logged, user, participantId}) {
                             
                             {/* Se for do tipo Date question*/}
                             { (question.qst_type === "Date question") && 
-                                ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
                             <div>
                                 <InputLabel className="qstLabel">Questão</InputLabel>
                                 <TextField className={classes.root} className="inputQst inputQst2" name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } fullWidth multiline>{question.dsc_qst}</TextField>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
+                                { question.sub_qst !== '' &&
+                                 <p className="subQstInfo"> É um subquestão de {question.sub_qst} que aparece quando a opção Sim é selecionada.</p>      
+                                }
                             </div>
                             }
 
                             {/* Se for do tipo Number question*/}
                             { (question.qst_type === "Number question") && 
-                                ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
                             <div>
                             {/*<TextField  type="number" name={String(question.qstId)} label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } />*/}
                             <InputLabel>Questão:</InputLabel>
                             <TextField className="inputQst inputQst2" value={form[question.qstId] ? form[question.qstId] : question.dsc_qst }  fullWidth multiline>{question.dsc_qst}</TextField>
                             <p className="questionType">Tipo da questão: {question.qst_type}</p>
+                            { question.sub_qst !== '' &&
+                               <p className="subQstInfo"> É um subquestão de {question.sub_qst} que aparece quando a opção Sim é selecionada.</p>      
+                            }
                             </div>
                             }
 
                             {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha menos de 6 opções */}
                             { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length < 6 ) &&
-                                ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
                             <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
                                 <InputLabel>Questão:</InputLabel>
                                 <TextField  className="inputQst inputQst2" onChange={handleChange} name={String(question.qstId)} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst }  fullWidth multiline>{question.dsc_qst}</TextField>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                 <p className="subQstDesc">Respostas padronizadas</p>
-                                <Select multiple native label={question.dsc_qst} aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
+                                <Select multiple native label={question.dsc_qst} aria-label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
                                         {question.rsp_pad.split(',').map((item) => (
                                             <option key={item} value={item}>{ item }</option>
                                         ))}
                                 </Select>
+                                { question.sub_qst !== '' &&
+                                 <p className="subQstInfo"> É um subquestão de {question.sub_qst} que aparece quando a opção Sim é selecionada.</p>      
+                                }
                             </div>
                             } 
 
                             {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha 6 ou mais opções */}
                             { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length >= 6 ) &&
-                                ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
                             <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
                                 <InputLabel>Questão:</InputLabel>
                                 <TextField  className="inputQst inputQst2" onChange={handleChange} name={String(question.qstId)} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst }  fullWidth multiline>{question.dsc_qst}</TextField>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                 <p className="subQstDesc">Respostas padronizadas</p>
-                                <Select multiple native label={question.dsc_qst} label={question.dsc_qst} aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
+                                <Select multiple native label={question.dsc_qst} label={question.dsc_qst} aria-label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
                                         {question.rsp_pad.split(',').map((item) => (
                                             <option key={item} value={item}>{ item }</option>
                                         ))}
                                 </Select>
+                                { question.sub_qst !== '' &&
+                                 <p className="subQstInfo"> É um subquestão de {question.sub_qst} que aparece quando a opção Sim é selecionada.</p>      
+                                }
                             </div>
                             } 
 
                             {/* Se for do tipo Text_Question ou Laboratory question ou Ventilation question*/}
                             { (question.qst_type === "Text_Question" || question.qst_type === "Laboratory question" || question.qst_type === "Ventilation question") && 
-                                ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
                             <div>
                             <InputLabel>Questão:</InputLabel>
                             <TextField  className="inputQst inputQst2" name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } fullWidth multiline>{question.dsc_qst}</TextField>
                             <p className="questionType">Tipo da questão: {question.qst_type}</p>
+                            { question.sub_qst !== '' &&
+                               <p className="subQstInfo"> É um subquestão de {question.sub_qst} que aparece quando a opção Sim é selecionada.</p>      
+                            }
                             </div>
                             }
 
                             {/* Se for do tipo Boolean_Question*/}
                             { (question.qst_type === "Boolean_Question") && 
-                                ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
                             <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
                                 <InputLabel>Questão:</InputLabel>
                                 <TextField  className="inputQst inputQst2" name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } fullWidth multiline>{question.dsc_qst}</TextField>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                 <p className="subQstDesc">Respostas padronizadas</p>
-                                <Select multiple native label={question.dsc_qst} aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange}>
+                                <Select multiple native label={question.dsc_qst} aria-label={question.dsc_qst} onChange={handleChange}>
                                        <option label='Sim'/>
                                        <option label='Não'/>
                                 </Select>
-                               
+                                { question.sub_qst !== '' &&
+                                  <p className="subQstInfo"> É um subquestão de {question.sub_qst} que aparece quando a opção Sim é selecionada.</p>      
+                                }
                             </div>
                             } 
                             </div>    

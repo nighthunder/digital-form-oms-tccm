@@ -1,4 +1,4 @@
-.questionType{
+.questionType, .subQstInfo{
 	font-size: 0.85rem;
 	color: #515050;
 	color: #fff;
@@ -8,6 +8,9 @@
 	border-radius: 3px;
 	width: fit-content;
 	margin-bottom: 25px;
+}
+.subQstInfo{
+	background: #2a97c1;
 }
 h4.questionDesc{
 	margin-bottom: 15px;
@@ -61,7 +64,7 @@ h2.pageTitle, h3.groupName{
 	margin: 10px 0px 10px 20px;
 }
 .groupType{
-	background-color: #2a50c1;
+	background-color: #2dadc1;
 	float: right;
 	font-weight: bold;
 }
@@ -96,7 +99,7 @@ aside{
 .anchorLink{
 	font-size: 0.90rem;
     color: #6a6969;
-	background: #d2f7b9;
+	background: #ffd7d5;
 	padding: 10px 10px;
 	border-radius: 3px;
 	cursor: pointer;
