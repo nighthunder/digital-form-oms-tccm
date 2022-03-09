@@ -97,6 +97,11 @@ function Hospital({user}) {
                                     history.push('/survey', { hospitalId: hospital.hospitalunitid, hospitalIndex: index})
                                 }}>Gerenciar pesquisas</Button>
                             }
+                            { !(hospital.userrole === "Administrador") && 
+                                <Button variant="contained" color="primary"  onClick={ () => {
+                                    history.push('/prontuario', { hospitalName: hospital.hospitalName, hospitalIndex: index })
+                                }}>Cadastrar prontuários</Button>
+                            }
                         </div>
                     ))}
                 </div>
@@ -120,6 +125,11 @@ function Hospital({user}) {
                                 <Button variant="contained" color="primary" onClick={ () => {
                                     history.push('/survey', { hospitalId: hospital.hospitalunitid, hospitalIndex: index})
                                 }}>Gerenciar pesquisas</Button>
+                            }
+                            { !(hospital.userrole === "Administrador") && 
+                                <Button variant="contained" color="primary"  onClick={ () => {
+                                    history.push('/prontuario', { hospitalName: hospital.hospitalName, hospitalIndex: index })
+                                }}>Cadastrar prontuários</Button>
                             }
                         </div>
                     ))}

@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.1.3
+-- version 5.1.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 02, 2022 at 06:43 AM
--- Server version: 10.4.21-MariaDB
--- PHP Version: 7.3.31
+-- Generation Time: Mar 09, 2022 at 06:41 PM
+-- Server version: 10.4.22-MariaDB
+-- PHP Version: 7.4.27
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,14 +18,14 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `vodan_br_bd_2021`
+-- Database: `vodan_bd_br_2021`
 --
 
 DELIMITER $$
 --
 -- Procedures
 --
-CREATE DEFINER=`root`@`localhost` PROCEDURE `CreateUserAdmin` (OUT `p_msg_retorno` VARCHAR(500))   sp:BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `CreateUserAdmin` (OUT `p_msg_retorno` VARCHAR(500))  sp:BEGIN
 
 declare v_userid integer;
 
@@ -60,7 +60,7 @@ COMMIT;
 
  END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `getAllModules` (IN `p_surveyid` INT)   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getAllModules` (IN `p_surveyid` INT)  BEGIN
 Select crfFormsID,
 	   questionnaireID,
        translate('pt-br',description) as description,
@@ -71,7 +71,7 @@ Select crfFormsID,
 from tb_crfforms as t2 where questionnaireID = p_surveyid;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `getAllQuestionnaires` ()   select t1.questionnaireID, 	
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getAllQuestionnaires` ()  select t1.questionnaireID, 	
 	   t1.description,
        t1.version,
        t1.lastModification,
@@ -81,7 +81,7 @@ from tb_questionnaire as t1,
 	 tb_questionnairestatus as t2
 where t1.questionnaireStatusID = t2.questionnaireStatusID$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `getcrfForms` (IN `p_questionnaireID` INT)   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getcrfForms` (IN `p_questionnaireID` INT)  BEGIN
 #========================================================================================================================
 #== Procedure criada para retornar os modulos associados a um Questionario de Avaliação (Pesquisa Clinica)
 #== Criada em 25 jan 2021
@@ -92,7 +92,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `getcrfForms` (IN `p_questionnaireID
         t2.questionnaireID = p_questionnaireID;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `getModulesMedicalRecord` (`p_MedicalRecord` VARCHAR(255), `p_hospitalUnitId` INTEGER)   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getModulesMedicalRecord` (`p_MedicalRecord` VARCHAR(255), `p_hospitalUnitId` INTEGER)  BEGIN
 #========================================================================================================================
 #== Procedure criada para retornos os modulos existentes para um paciente no sistema
 #== Alterada em 23 Fev de 2021
@@ -140,7 +140,7 @@ END; # fim do sp:
 
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `getqst_rsp_modulo` (`p_crfformid` INTEGER)   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getqst_rsp_modulo` (`p_crfformid` INTEGER)  BEGIN
 #========================================================================================================================
 #== Procedure criada para retornar todas as questoes de um modulo 
 #== As questões podem estar associadas diretamente ao modulo ou a um agrupamento
@@ -186,7 +186,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `getqst_rsp_modulo` (`p_crfformid` I
 			Order by crfformsid, questionorder;	
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `getqst_rsp_modulo_medicalRecord` (`p_formRecordId` INTEGER)   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getqst_rsp_modulo_medicalRecord` (`p_formRecordId` INTEGER)  BEGIN
 #========================================================================================================================
 #== Procedure criada para retornar as respostas de um módulo já inserido no sistema
 #== Atençao ao retorno das questões respondidas. Importante verificar se a resposta esta associada a uma list type ou não
@@ -246,7 +246,7 @@ select   tb_Qst.crfformsid as modId, tb_Qst.questionid as qstId,
 					Order by tb_qst.crfformsid, tb_qst.questionorder;	
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `getQuestionnaire` (IN `p_questionnaireID` INT)   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getQuestionnaire` (IN `p_questionnaireID` INT)  BEGIN
 Select 	questionnaireID,
 	   	description,
        	questionnaireStatusID,
@@ -255,10 +255,8 @@ Select 	questionnaireID,
        	version,
        	creationDate,
        	lastModification,
-       (Select questionnaireID from tb_questionnaire as t2
-      	where t2.questionnaireID = t1.isNewVersionOf or t2.questionnaireID = t1.isBasedOn) as motherID,
-       (Select description from tb_questionnaire as t2
-        where t2.questionnaireID = t1.isNewVersionOf or t2.questionnaireID = t1.isBasedOn) as motherDescription,
+       ( Select questionnaireID from tb_questionnaire as t2 where t2.questionnaireID IN (Select isNewVersionOf from tb_questionnaire where questionnaireID=p_questionnaireID) or t2.questionnaireID IN (Select isBasedOn from tb_questionnaire where questionnaireID=p_questionnaireID) ) as motherID,
+       ( Select description from tb_questionnaire as t2 where t2.questionnaireID IN (Select isNewVersionOf from tb_questionnaire where questionnaireID=p_questionnaireID) or t2.questionnaireID IN (Select isBasedOn from tb_questionnaire where questionnaireID=p_questionnaireID) ) as motherDescription,
         (SELECT 
         IF(isNewVersionOf > 0, 'uma versão',  IF(IsBasedOn > 0,'uma derivação', 'none')) 'motherRelationship'
 		FROM tb_questionnaire 
@@ -267,7 +265,7 @@ from tb_questionnaire as t1
 where questionnaireID = p_questionnaireID;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `getQuestionnaireMotherModules` (IN `p_questionnaireID` INT)   Select 	crfFormsID,
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getQuestionnaireMotherModules` (IN `p_questionnaireID` INT)  Select 	crfFormsID,
         questionnaireID,
         translate('pt-br',description) as description,
         (Select translate('pt-br',description) from tb_crfformsstatus as t3 where t3.crfformsStatusID = t1.crfformsStatusID) as crfFormsStatus,
@@ -277,7 +275,7 @@ from tb_crfforms as t1
 WHERE questionnaireID IN (Select isNewVersionOf from tb_questionnaire as t2 where t2.questionnaireID = p_questionnaireID) or
  questionnaireID IN (Select isBasedOn from tb_questionnaire as t2 where t2.questionnaireID = p_questionnaireID)$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `getuser` (`p_login` VARCHAR(255), `p_password` VARCHAR(255))   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getuser` (`p_login` VARCHAR(255), `p_password` VARCHAR(255))  BEGIN
 #========================================================================================================================
 #== Procedure criada para validar um usuário no sistema
 #== Se Login e password estiverem corretas retorna
@@ -304,7 +302,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `getuser` (`p_login` VARCHAR(255), `
 				   t1.password = p_password;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `postgrouproleforuserhospital` (`p_adminid` INTEGER, `p_adminGroupRoleid` INTEGER, `p_adminHospitalUnitid` INTEGER, `p_userid` INTEGER, `p_groupRole` VARCHAR(255), OUT `p_msg_retorno` VARCHAR(500))   sp:BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `postgrouproleforuserhospital` (`p_adminid` INTEGER, `p_adminGroupRoleid` INTEGER, `p_adminHospitalUnitid` INTEGER, `p_userid` INTEGER, `p_groupRole` VARCHAR(255), OUT `p_msg_retorno` VARCHAR(500))  sp:BEGIN
 #========================================================================================================================
 #== Procedure criada para a inclusão/alteração de roles para usuários no sistema
 #== Cria a associação de um usuário a um hospital exercendo um papel
@@ -404,7 +402,7 @@ DECLARE v_alteracao text;
 		
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `postMedicalRecord` (IN `p_userid` INT, IN `p_groupRoleid` INT, IN `p_hospitalUnitid` INT, IN `p_questionnaireId` INT, IN `p_medicalRecord` VARCHAR(255))   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `postMedicalRecord` (IN `p_userid` INT, IN `p_groupRoleid` INT, IN `p_hospitalUnitid` INT, IN `p_questionnaireId` INT, IN `p_medicalRecord` VARCHAR(255))  BEGIN
 #========================================================================================================================
 #== Procedure criada para o registro de um participant associado a um hospital para futuro lançamento dos modulos do formulario
 #== Cria o registro na tb_participant e na tb_AssessmentQuestionnaire
@@ -486,7 +484,7 @@ END sp;
   
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `postModule` (IN `p_userID` INT, IN `p_groupRuleID` INT, IN `p_hospitalUnityID` INT, IN `p_moduleDescription` VARCHAR(500), IN `p_moduleStatusID` INT, IN `p_questionnaireID` INT, IN `p_lastModification` TIMESTAMP, IN `p_creationDate` TIMESTAMP)   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `postModule` (IN `p_userID` INT, IN `p_groupRuleID` INT, IN `p_hospitalUnityID` INT, IN `p_moduleDescription` VARCHAR(500), IN `p_moduleStatusID` INT, IN `p_questionnaireID` INT, IN `p_lastModification` TIMESTAMP, IN `p_creationDate` TIMESTAMP)  BEGIN
 #========================================================================================================================
 #== Procedure criada para registrar um novo módulo em uma pesquisa
 #== Cria o registro na tb_crfforms 
@@ -537,7 +535,7 @@ select p_msg_retorno as msgRetorno from DUAL;
   
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `postqstmoduloMedicalRecord` (`p_userid` INTEGER, `p_groupRoleid` INTEGER, `p_hospitalUnitid` INTEGER, `p_participantid` INTEGER, `p_questionnaireId` INTEGER, `p_crfFormId` INTEGER, `p_stringquestions` TEXT, OUT `p_formRecordId` INTEGER, OUT `p_msg_retorno` VARCHAR(500))   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `postqstmoduloMedicalRecord` (`p_userid` INTEGER, `p_groupRoleid` INTEGER, `p_hospitalUnitid` INTEGER, `p_participantid` INTEGER, `p_questionnaireId` INTEGER, `p_crfFormId` INTEGER, `p_stringquestions` TEXT, OUT `p_formRecordId` INTEGER, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
 #========================================================================================================================
 #== Procedure criada para incluir um modulo e registrar suas questoes e respostas de um módulo de um formulario no sistema para um participante
 #== Criada em 21 dez 2020
@@ -685,7 +683,7 @@ END;
 		
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `postQuestionnaire` (IN `p_userID` INT, IN `p_groupRoleID` INT, IN `p_hospitalUnitID` INT, IN `p_isVersionOf` INT, IN `p_isBasedOn` INT, IN `p_questionnaireDescription` VARCHAR(255), IN `p_questionnaireVersion` VARCHAR(255), IN `p_questionnaireStatusID` INT, IN `p_questionnaireLastModification` TIMESTAMP, IN `p_questionnaireCreationDate` TIMESTAMP)   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `postQuestionnaire` (IN `p_userID` INT, IN `p_groupRoleID` INT, IN `p_hospitalUnitID` INT, IN `p_isVersionOf` INT, IN `p_isBasedOn` INT, IN `p_questionnaireDescription` VARCHAR(255), IN `p_questionnaireVersion` VARCHAR(255), IN `p_questionnaireStatusID` INT, IN `p_questionnaireLastModification` TIMESTAMP, IN `p_questionnaireCreationDate` TIMESTAMP)  BEGIN
 #========================================================================================================================
 #== Procedure criada para o registro de um participant associado a um hospital para futuro lançamento dos modulos do formulario
 #== Cria o registro na tb_participant e na tb_AssessmentQuestionnaire
@@ -740,7 +738,7 @@ select p_msg_retorno as msgRetorno from DUAL;
   
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `postuser` (`p_adminid` INTEGER, `p_adminGroupRoleid` INTEGER, `p_adminHospitalUnitid` INTEGER, `p_login` VARCHAR(255), `p_firstname` VARCHAR(100), `p_lastname` VARCHAR(100), `p_regionalcouncilcode` VARCHAR(255), `p_password` VARCHAR(255), `p_email` VARCHAR(255), `p_fonenumber` VARCHAR(255), `p_groupRole` VARCHAR(255), OUT `p_userid` INTEGER, OUT `p_msg_retorno` VARCHAR(500))   sp:BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `postuser` (`p_adminid` INTEGER, `p_adminGroupRoleid` INTEGER, `p_adminHospitalUnitid` INTEGER, `p_login` VARCHAR(255), `p_firstname` VARCHAR(100), `p_lastname` VARCHAR(100), `p_regionalcouncilcode` VARCHAR(255), `p_password` VARCHAR(255), `p_email` VARCHAR(255), `p_fonenumber` VARCHAR(255), `p_groupRole` VARCHAR(255), OUT `p_userid` INTEGER, OUT `p_msg_retorno` VARCHAR(500))  sp:BEGIN
 #========================================================================================================================
 #== Procedure criada para a inclusão de usuários no sistema
 #== Durante a inclusão realiza a associação do usuário a um Hospital, definindo o papel que ele exercerá
@@ -837,7 +835,7 @@ DECLARE v_hospitalUnitName varchar(500);
 		
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `putMedicalRecord` (IN `p_userid` INT, IN `p_groupRoleid` INT, IN `p_hospitalUnitid` INT, IN `p_questionnaireId` INT, IN `p_participantId` INT, IN `p_medicalRecordNew` VARCHAR(255), OUT `p_msg_retorno` VARCHAR(500))   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `putMedicalRecord` (IN `p_userid` INT, IN `p_groupRoleid` INT, IN `p_hospitalUnitid` INT, IN `p_questionnaireId` INT, IN `p_participantId` INT, IN `p_medicalRecordNew` VARCHAR(255), OUT `p_msg_retorno` VARCHAR(500))  BEGIN
 #========================================================================================================================
 #== Procedure criada para o atualizar o registro de um participant associado a um hospital para futuro lançamento dos modulos do formulario
 #== Altera o numero do Prontuario na tb_participant
@@ -910,7 +908,7 @@ Select p_participantid as participantId, p_msg_retorno as msgRetorno FROM DUAL;
 		
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `putmoduloMedicalRecord` (`p_userid` INTEGER, `p_groupRoleid` INTEGER, `p_hospitalUnitid` INTEGER, `p_participantid` INTEGER, `p_questionnaireId` INTEGER, `p_crfFormId` INTEGER, `p_dataEvento` DATE, OUT `p_formRecordId` INTEGER, OUT `p_msg_retorno` VARCHAR(500))   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `putmoduloMedicalRecord` (`p_userid` INTEGER, `p_groupRoleid` INTEGER, `p_hospitalUnitid` INTEGER, `p_participantid` INTEGER, `p_questionnaireId` INTEGER, `p_crfFormId` INTEGER, `p_dataEvento` DATE, OUT `p_formRecordId` INTEGER, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
 #========================================================================================================================
 #== Procedure criada para a inclusão de um módulo de um formulario no sistema para um participante
 #== Cria o registro base do formulario e notifica o responsavel por essa inclusão
@@ -1002,7 +1000,7 @@ select p_formrecordid as formRecordId, p_msg_retorno as msgRetorno from DUAL;
 		
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `putqstmoduloMedicalRecord` (`p_userid` INTEGER, `p_groupRoleid` INTEGER, `p_hospitalUnitid` INTEGER, `p_participantid` INTEGER, `p_questionnaireId` INTEGER, `p_crfFormId` INTEGER, `p_formRecordId` INTEGER, `p_stringquestions` TEXT, OUT `p_msg_retorno` VARCHAR(500))   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `putqstmoduloMedicalRecord` (`p_userid` INTEGER, `p_groupRoleid` INTEGER, `p_hospitalUnitid` INTEGER, `p_participantid` INTEGER, `p_questionnaireId` INTEGER, `p_crfFormId` INTEGER, `p_formRecordId` INTEGER, `p_stringquestions` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
 #========================================================================================================================
 #== Procedure criada para o registro das questoes e respostas de um módulo de um formulario no sistema para um participante
 #== Criada em 21 dez 2020
@@ -1150,7 +1148,7 @@ END;
 		
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `putQuestionnaire` (IN `p_userID` INT, IN `p_groupRoleID` INT, IN `p_hospitalUnitID` INT, IN `p_questionnaireDescription` VARCHAR(500), IN `p_questionnaireVersion` VARCHAR(50), IN `p_questionnaireStatusID` INT, IN `p_questionnaireLastModification` DATETIME, IN `p_questionnaireCreationDate` DATETIME)   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `putQuestionnaire` (IN `p_userID` INT, IN `p_groupRoleID` INT, IN `p_hospitalUnitID` INT, IN `p_questionnaireDescription` VARCHAR(500), IN `p_questionnaireVersion` VARCHAR(50), IN `p_questionnaireStatusID` INT, IN `p_questionnaireLastModification` DATETIME, IN `p_questionnaireCreationDate` DATETIME)  BEGIN
 #========================================================================================================================
 #== Procedure criada para atualizar um questionário
 #== Atualiza um registro na tb_questionnaire
@@ -1208,7 +1206,7 @@ select p_msg_retorno as msgRetorno from DUAL;
   
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `putuser` (`p_adminid` INTEGER, `p_adminGroupRoleid` INTEGER, `p_adminHospitalUnitid` INTEGER, `p_userid` INTEGER, `p_login` VARCHAR(255), `p_firstname` VARCHAR(100), `p_lastname` VARCHAR(100), `p_regionalcouncilcode` VARCHAR(255), `p_password` VARCHAR(255), `p_email` VARCHAR(255), `p_fonenumber` VARCHAR(255), OUT `p_msg_retorno` VARCHAR(500))   sp:BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `putuser` (`p_adminid` INTEGER, `p_adminGroupRoleid` INTEGER, `p_adminHospitalUnitid` INTEGER, `p_userid` INTEGER, `p_login` VARCHAR(255), `p_firstname` VARCHAR(100), `p_lastname` VARCHAR(100), `p_regionalcouncilcode` VARCHAR(255), `p_password` VARCHAR(255), `p_email` VARCHAR(255), `p_fonenumber` VARCHAR(255), OUT `p_msg_retorno` VARCHAR(500))  sp:BEGIN
 #========================================================================================================================
 #== Procedure criada para realizar a alteração de dados do usuário no sistema
 #== Alterada em 09 dez 2020
@@ -1273,7 +1271,7 @@ DECLARE v_dadosAlterados text;
 		
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `searchHospital` (IN `p_descricao` VARCHAR(50), IN `p_userID` INT)   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `searchHospital` (IN `p_descricao` VARCHAR(50), IN `p_userID` INT)  BEGIN
 #========================================================================================================================
 #== Procedure criada para pesquisar um hospital usando parte
 #== do nome (descrição)
@@ -1288,7 +1286,7 @@ where t1.hospitalUnitName like CONCAT('%', p_descricao, '%') AND t1.hospitalUnit
 
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `searchModule` (IN `p_descricao` VARCHAR(500), IN `p_questionnaireID` INT)   Select crfFormsID, 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `searchModule` (IN `p_descricao` VARCHAR(500), IN `p_questionnaireID` INT)  Select crfFormsID, 
 	   translate("pt-br", description) as description,
        translate('pt-br',
        (Select description from tb_crfformsstatus as t2 where t2.crfformsStatusID = t1.crfformsStatusID)) as crfFormsStatus,
@@ -1297,7 +1295,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `searchModule` (IN `p_descricao` VAR
 from tb_crfforms as t1 where 
 TRANSLATE('pt-br',t1.description) like CONCAT('%',p_descricao, '%') and t1.questionnaireID = p_questionnaireID$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `searchQuestionnaire` (IN `p_descricao` VARCHAR(50))   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `searchQuestionnaire` (IN `p_descricao` VARCHAR(50))  BEGIN
 #========================================================================================================================
 #== Procedure criada para pesquisar um questionário usando
 #== parte de seu nome (descrição)
@@ -1319,7 +1317,7 @@ FROM tb_questionnaire as t1
 WHERE t1.description like CONCAT('%',p_descricao, '%');
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `teste` (`p_teste` VARCHAR(255))   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `teste` (`p_teste` VARCHAR(255))  BEGIN
 
 declare p_userid integer;
 declare p_msg_retorno varchar(500);
@@ -1336,7 +1334,7 @@ select p_teste, p_msg_retorno;
 --
 -- Functions
 --
-CREATE DEFINER=`root`@`localhost` FUNCTION `getTotalMedicalRecordHospitalUnit` (`p_hospitalUnitid` INTEGER, `p_questionnaireid` INTEGER) RETURNS INT(11)  BEGIN
+CREATE DEFINER=`root`@`localhost` FUNCTION `getTotalMedicalRecordHospitalUnit` (`p_hospitalUnitid` INTEGER, `p_questionnaireid` INTEGER) RETURNS INT(11) BEGIN
 #========================================================================================================================
 #== Função criada para verificar se já existem prontuários/registros associados a um determinado hospital
 #== Retornar o total de questionários lançados até a data
@@ -1356,7 +1354,7 @@ declare v_totalRecord integer;
 	RETURN v_totalRecord;
 END$$
 
-CREATE DEFINER=`root`@`localhost` FUNCTION `ontologyuri` (`ontologyacronym` VARCHAR(500), `tablename` VARCHAR(500), `identifier` INTEGER) RETURNS VARCHAR(500) CHARSET utf8  BEGIN
+CREATE DEFINER=`root`@`localhost` FUNCTION `ontologyuri` (`ontologyacronym` VARCHAR(500), `tablename` VARCHAR(500), `identifier` INTEGER) RETURNS VARCHAR(500) CHARSET utf8 BEGIN
    declare v_ontologyURI character varying (255);
    
 	  
@@ -1377,7 +1375,7 @@ CREATE DEFINER=`root`@`localhost` FUNCTION `ontologyuri` (`ontologyacronym` VARC
     RETURN v_ontologyURI;
 END$$
 
-CREATE DEFINER=`root`@`localhost` FUNCTION `translate` (`lng` VARCHAR(255), `val` VARCHAR(500)) RETURNS VARCHAR(500) CHARSET utf8  BEGIN
+CREATE DEFINER=`root`@`localhost` FUNCTION `translate` (`lng` VARCHAR(255), `val` VARCHAR(500)) RETURNS VARCHAR(500) CHARSET utf8 BEGIN
    declare descriptionLNG varchar (500);
  
 	
@@ -1560,7 +1558,7 @@ INSERT INTO `tb_crfforms` (`crfFormsID`, `questionnaireID`, `description`, `crff
 (590, 35, 'Discharge/death form', 2, '2022-01-10 19:13:57', '2022-01-10 19:13:57'),
 (593, 2, 'Follow-up', 2, '2022-01-12 14:39:15', '2022-01-12 14:39:15'),
 (595, 2, 'Discharge/death form', 2, '2022-02-14 16:52:44', '2022-02-14 16:52:44'),
-(596, 3, 'Admission Form', 2, '2022-02-26 21:18:24', '2022-02-26 21:18:24');
+(0, 3, 'Admission Form', 2, '2022-03-09 17:41:15', '2022-03-09 17:41:15');
 
 -- --------------------------------------------------------
 
@@ -5722,7 +5720,7 @@ CREATE TABLE `tb_questionnaire` (
 INSERT INTO `tb_questionnaire` (`questionnaireID`, `description`, `questionnaireStatusID`, `isNewVersionOf`, `IsBasedOn`, `version`, `lastModification`, `creationDate`) VALUES
 (1, 'WHO COVID-19 Rapid Version CRF', 1, 0, 0, '1.0', '2021-11-17 21:06:57', '2022-02-28 22:20:37'),
 (2, 'Pesquisa de teste 2', 3, 0, 1, '2.0', '2021-11-17 23:16:07', '2022-03-02 00:35:35'),
-(3, 'Nova Pesquisa', 2, NULL, NULL, '0.0', '2022-02-14 17:45:19', '2022-02-14 17:45:56'),
+(3, 'Nova Pesquisa', 2, 0, 5, '0.0', '2022-02-14 17:45:19', '2022-03-09 17:35:44'),
 (5, 'WHO COVID-19 Full Version CRF', 2, 1, 0, '0.0', '2022-02-28 22:05:39', '2022-02-28 22:15:52');
 
 -- --------------------------------------------------------
@@ -6162,9 +6160,10 @@ INSERT INTO `tb_userrole` (`userID`, `groupRoleID`, `hospitalUnitID`, `creationD
 (17, 6, 1, '2021-03-16 18:20:12', NULL),
 (18, 6, 1, '2021-03-16 18:24:26', NULL),
 (19, 6, 1, '2021-04-30 18:24:42', NULL),
-(20, 1, 1, '2021-10-12 21:24:24', NULL),
+(20, 3, 1, '2022-03-09 17:09:59', NULL),
 (21, 7, 1, '2021-10-15 08:33:36', NULL),
-(22, 6, 1, '2021-10-15 08:34:34', NULL);
+(22, 6, 1, '2021-10-15 08:34:34', NULL),
+(20, 3, 2, '2022-03-09 17:09:59', '2022-03-09 17:09:01');
 
 -- --------------------------------------------------------
 

@@ -1,9 +1,9 @@
 ﻿// View do formulário quando é preenchido.
-import React, { useState, useEffect, useRef  } from 'react';
+import React, { useState, useEffect } from 'react';
 import './styles.css';
 import { useLocation } from "react-router-dom";
 import { Scrollchor } from 'react-scrollchor';
-import { TextField, Button, FormLabel, RadioGroup, Radio, FormControlLabel, InputLabel, Select, MenuItem } from '@material-ui/core';
+import { TextField, Button, InputLabel, Select } from '@material-ui/core';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
 import InfoIcon from '@mui/icons-material/InfoRounded';
@@ -31,7 +31,6 @@ function EditPublishedForm({logged, user, participantId}) {
     const location = useLocation();  
     const classes = useStyles();
     //console.log("Location Formulario", location);
-    const sim = useRef();
     const titles = ['Admissão','Acompanhamento','Desfecho']
     const [form, setForm] = useState({});
     const [formError, setFormError] = useState('')
@@ -223,10 +222,6 @@ function EditPublishedForm({logged, user, participantId}) {
 
     function handleBackButton(){
         history.goBack();
-    }
-
-    function handleSimYNUN(e){
-        console.log("EXECUTEI");
     }
 
     return (
