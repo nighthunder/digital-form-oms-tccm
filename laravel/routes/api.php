@@ -35,7 +35,7 @@ Route::group(['middleware' => 'cors:api'], function() {
     Route::post('form/{id}', [FormController::class, 'store']);
     Route::put('form/{id}', [FormController::class, 'update']);
 
-    Route::put('formquestionsdesc/{id}', [FormStructureController::class, 'updateUnpublishedFormQuestions']);
+    Route::put('formquestionsdesc/{id}', [FormStructureController::class, 'updatePublishedFormQuestions']);
 
     Route::get('survey/{id}', [SurveyController::class, 'show']); //Pesquisa
     Route::get('survey/', [SurveyController::class, 'search']);

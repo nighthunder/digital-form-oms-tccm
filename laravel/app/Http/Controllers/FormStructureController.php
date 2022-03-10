@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 class FormStructureController extends Controller
 {
 
-    public function updateUnpublishedFormQuestions (Request $request)
+    public function updatePublishedFormQuestions (Request $request)
     {
         try {
           //dd($request->questionsdescriptions);
@@ -17,8 +17,9 @@ class FormStructureController extends Controller
           $respostas = str_replace("}", "", $respostas);
           $respostas = str_replace('"', "", $respostas);
 
-          $query_response = DB::select("CALL putQstModuleDescription('{$request->modulo}','{$respostas}')");
-          return response()->json($query_response);
+          $query_msg = DB::select("CALL putQstModuleDescription('{$request->modulo}','{$respostas}', @p_msg_retorno)");
+        
+          return response()->json($query_msg);
 
        } catch (Exception $e) {
          return response()->json($e, 500);

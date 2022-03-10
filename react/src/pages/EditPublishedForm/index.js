@@ -132,6 +132,8 @@ function EditPublishedForm({logged, user, participantId}) {
 
         response = await api.put('/formquestionsdesc/' + location.state.modulo, request);
 
+        setFormError(response.data[0].msgRetorno);
+
         /*if(location.state.formRecordId)
             history.go(-1);
         else
