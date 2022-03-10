@@ -51,11 +51,6 @@ function EditPublishedForm({logged, user, participantId}) {
 
             //console.log("QUESTOES", questions);
             //console.log("formRecordId", location.state.formRecordId);
-
-            // Caso seja uma atualização de formulário
-            if(location.state.formRecordId) {
-                getRecordedResponses(location.state.formRecordId)
-            }
         }
         loadForm();
         setHospitalName(user[location.state.hospitalIndex].hospitalName);
@@ -65,41 +60,8 @@ function EditPublishedForm({logged, user, participantId}) {
             setQuestionsType(response.data);    
 
         }
-        loadQuestionTypeAltText();
+        //loadQuestionTypeAltText();
     }, [])
-
-    async function getRecordedResponses(formRecordId) {
-        const response = await api.get(`/formResponses/${formRecordId}`);
-        console.log('RESPOSTAS', response.data);
-        if(response.data) {
-            fillForm(response.data);
-        }
-    }
-
-    function fillForm(responses) {
-        let formWithResponse = { }
-        for(let response of responses) {
-            if(response.answer != null) {
-                if(response.rsp_listofvalue)
-                    formWithResponse[response.qstId] = response.rsp_listofvalue
-                else
-                    formWithResponse[response.qstId] = response.answer
-            }
-        }
-
-        setForm(formWithResponse);
-        console.log("FORM AQUI", form);
-        setLoadedResponses(true)
-    }
-
-    function getCurrentDate() {
-        var today = new Date();
-        var dd = String(today.getDate()).padStart(2, '0');
-        var mm = String(today.getMonth() + 1).padStart(2, '0');
-        var yyyy = today.getFullYear();
-
-        return yyyy + '-' + mm + '-' + dd;
-    }
 
     function handleChange(e) {
         const target = e.target;
@@ -107,9 +69,6 @@ function EditPublishedForm({logged, user, participantId}) {
         const name = target.name;
 
         //console.log('idQuestão: ' + target.name, 'value: ' + target.value);
-
-        if(target.name == getIdFromDateQuestion() && formError)
-            setFormError('')
 
         setForm({
             ...form,
@@ -132,18 +91,6 @@ function EditPublishedForm({logged, user, participantId}) {
             }
         } else {
             return true;
-        }
-    }
-
-    function getIdFromDateQuestion() {
-        switch (location.state.modulo) {
-            case 1:
-                return 167
-            case 2:
-                return 168
-            case 3:
-                return 124
-            
         }
     }
 
@@ -171,53 +118,24 @@ function EditPublishedForm({logged, user, participantId}) {
         console.log(form);
 
         let request;
-        let dateQuestionId = getIdFromDateQuestion();
         let response;
+        let param;
 
-        let validationDate = validFormDate(location.state.registeredModules, location.state.modulo, form[dateQuestionId], location.state.formRecordId ? true : false)
-        console.log(validationDate);
+        console.log('ATUALIZAÇÃO DO FORM ', location.state.formRecordId);
 
-        if(!validationDate.isValid) {
-            setFormError(validationDate.message);
-            return;
+        request = {
+            questionsdescriptions: JSON.stringify(form),  
+            modulo: location.state.modulo
         }
 
-        // Caso seja uma atualização de formulário
-        if(location.state.formRecordId) {
-            console.log('ATUALIZAÇÃO DO FORM ', location.state.formRecordId);
+        //console.log( [ request.info['userid'], request.info['grouproleid'], request.info['hospitalunitid'], request.modulo, request.questionsdescriptions ]);
 
-            request = {
-                respostas: JSON.stringify(form),
-                info: user[location.state.hospitalIndex],
-                participantId: participantId,
-                dataAcompanhamento: form[dateQuestionId],
-                modulo: location.state.modulo,
-                formRecordId: location.state.formRecordId
-            }
+        response = await api.put('/formquestionsdesc/' + location.state.modulo, request);
 
-
-            console.log( [ request.info['userid'], request.info['grouproleid'], request.info['hospitalunitid'], request.participantId, 1, request.modulo, request.formRecordId, request.respostas ]);
-
-            response = await api.put('/form/' + location.state.modulo, request);
-            
-        } else { // Caso seja um novo formulário
-            request = {
-                respostas: JSON.stringify(form),
-                info: user[location.state.hospitalIndex],
-                participantId: participantId,
-                dataAcompanhamento: form[dateQuestionId],
-                modulo: location.state.modulo
-            }
-    
-            response = await api.post('/form/' + location.state.modulo, request);
-        }
-
-        console.log('response',response);
-
-        if(location.state.formRecordId)
+        /*if(location.state.formRecordId)
             history.go(-1);
         else
-            history.go(-2);
+            history.go(-2);*/
     }
 
     function handleBackButton(){
@@ -367,9 +285,10 @@ function EditPublishedForm({logged, user, participantId}) {
                             </DialogTitle>
                             <DialogContent>
                                 <DialogContentText id="alert-dialog-description">
-                                {popupBodyText.map((questiontype, index) => (
-                                    <div>{questiontype.description} - {questiontype.altText}<br/></div>
-                                )) } 
+                                {//popupBodyText.map((questiontype, index) => (
+                                   // <div>{questiontype.description} - {questiontype.altText}<br/></div>
+                                //)) 
+                                } 
                                 </DialogContentText>
                             </DialogContent>
                             <DialogActions>

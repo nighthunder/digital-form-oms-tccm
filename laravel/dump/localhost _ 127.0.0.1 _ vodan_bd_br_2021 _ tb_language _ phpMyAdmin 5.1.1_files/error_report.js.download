@@ -140,8 +140,7 @@ var ErrorReport = {
     buttonHtml += Functions.getImage('b_close', Messages.strIgnore);
     buttonHtml += '</a>';
     $buttons.html(buttonHtml);
-    $div.append($buttons); // eslint-disable-next-line compat/compat
-
+    $div.append($buttons);
     $div.appendTo(document.body);
     $(document).on('click', '#change_error_settings', ErrorReport.redirectToSettings);
     $(document).on('click', '#show_error_report', ErrorReport.createReportDialog);

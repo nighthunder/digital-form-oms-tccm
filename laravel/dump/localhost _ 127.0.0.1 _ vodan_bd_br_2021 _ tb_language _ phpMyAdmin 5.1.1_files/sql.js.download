@@ -382,13 +382,10 @@ AJAX.registerOnload('sql.js', function () {
     textArea.value += '\n';
     $('.table_results tbody tr').each(function () {
       $(this).find('.data span').each(function () {
-        // Extract <em> tag for NULL values before converting to string to not mess up formatting
-        var data = $(this).find('em').length !== 0 ? $(this).find('em')[0] : this;
-        textArea.value += $(data).text() + '\t';
+        textArea.value += $(this).text() + '\t';
       });
       textArea.value += '\n';
-    }); // eslint-disable-next-line compat/compat
-
+    });
     document.body.appendChild(textArea);
     textArea.select();
 
@@ -396,8 +393,7 @@ AJAX.registerOnload('sql.js', function () {
       document.execCommand('copy');
     } catch (err) {
       alert('Sorry! Unable to copy');
-    } // eslint-disable-next-line compat/compat
-
+    }
 
     document.body.removeChild(textArea);
   }); // end of Copy to Clipboard action
@@ -934,9 +930,7 @@ Sql.browseForeignDialog = function ($thisA) {
       } // Set selected value as input value
 
 
-      $input.val($(this).data('key')); // Unchecks the Ignore checkbox for the current row
-
-      $input.trigger('change');
+      $input.val($(this).data('key'));
       $dialog.dialog('close');
     });
     $(formId).on('click', showAllId, function () {

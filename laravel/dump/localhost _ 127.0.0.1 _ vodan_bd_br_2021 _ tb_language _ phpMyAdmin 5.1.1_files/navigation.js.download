@@ -163,7 +163,7 @@ Navigation.loadChildNodes = function (isNode, $expandElem, callback) {
     };
   }
 
-  $.post('index.php?route=/navigation&ajax_request=1', params, function (data) {
+  $.get('index.php?route=/navigation&ajax_request=1', params, function (data) {
     if (typeof data !== 'undefined' && data.success === true) {
       $destination.find('div.list_container').remove(); // FIXME: Hack, there shouldn't be a list container there
 
@@ -1032,14 +1032,16 @@ Navigation.selectCurrentDatabase = function () {
 Navigation.treePagination = function ($this) {
   var $msgbox = Functions.ajaxShowMessage();
   var isDbSelector = $this.closest('div.pageselector').is('.dbselector');
-  var url = 'index.php?route=/navigation';
-  var params = 'ajax_request=true';
+  var url;
+  var params;
 
   if ($this[0].tagName === 'A') {
-    params += CommonParams.get('arg_separator') + $this.getPostData();
+    url = $this.attr('href');
+    params = 'ajax_request=true';
   } else {
     // tagName === 'SELECT'
-    params += CommonParams.get('arg_separator') + $this.closest('form').serialize();
+    url = 'index.php?route=/navigation';
+    params = $this.closest('form').serialize() + CommonParams.get('arg_separator') + 'ajax_request=true';
   }
 
   var searchClause = Navigation.FastFilter.getSearchClause();

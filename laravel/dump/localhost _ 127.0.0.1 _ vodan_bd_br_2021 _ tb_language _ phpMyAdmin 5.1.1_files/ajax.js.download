@@ -258,7 +258,7 @@ var AJAX = {
     // or leave an existing ajax event handler present elsewhere deal with it
     var href = $(this).attr('href');
 
-    if (typeof event !== 'undefined' && (event.shiftKey || event.ctrlKey || event.metaKey)) {
+    if (typeof event !== 'undefined' && (event.shiftKey || event.ctrlKey)) {
       return true;
     } else if ($(this).attr('target')) {
       return true;

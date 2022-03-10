@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FormController;
+use App\Http\Controllers\FormStructureController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\ModuleController;
@@ -33,6 +34,8 @@ Route::group(['middleware' => 'cors:api'], function() {
     Route::get('form/', [FormController::class, 'search']);
     Route::post('form/{id}', [FormController::class, 'store']);
     Route::put('form/{id}', [FormController::class, 'update']);
+
+    Route::put('formquestionsdesc/{id}', [FormStructureController::class, 'updateUnpublishedFormQuestions']);
 
     Route::get('survey/{id}', [SurveyController::class, 'show']); //Pesquisa
     Route::get('survey/', [SurveyController::class, 'search']);

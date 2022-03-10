@@ -12,18 +12,16 @@ class FormStructureController extends Controller
     public function updateUnpublishedFormQuestions (Request $request)
     {
         try {
-          $respostas = str_replace("{", "", $request->questiondesc);
+          //dd($request->questionsdescriptions);
+          $respostas = str_replace("{", "", $request->questionsdescriptions);
           $respostas = str_replace("}", "", $respostas);
           $respostas = str_replace('"', "", $respostas);
 
-          //dd($request);
-
-          $query_response = DB::select("CALL putQstModuleDescription(
-                                                            '{$respostas}')");
+          $query_response = DB::select("CALL putQstModuleDescription('{$request->modulo}','{$respostas}')");
           return response()->json($query_response);
 
        } catch (Exception $e) {
-         //return response()->json($e, 500);
+         return response()->json($e, 500);
        }
     }
 

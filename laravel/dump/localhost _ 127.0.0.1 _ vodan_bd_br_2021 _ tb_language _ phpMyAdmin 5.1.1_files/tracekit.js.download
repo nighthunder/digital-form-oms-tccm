@@ -128,7 +128,6 @@ TraceKit.report = (function reportModuleWrapper() {
      */
     function subscribe(handler) {
         installGlobalHandler();
-        installGlobalUnhandledRejectionHandler();
         handlers.push(handler);
     }
 
@@ -145,8 +144,8 @@ TraceKit.report = (function reportModuleWrapper() {
         }
 
         if (handlers.length === 0) {
-            uninstallGlobalHandler();
-            uninstallGlobalUnhandledRejectionHandler();
+            window.onerror = _oldOnerrorHandler;
+            _onErrorHandlerInstalled = false;
         }
     }
 
@@ -179,7 +178,6 @@ TraceKit.report = (function reportModuleWrapper() {
     }
 
     var _oldOnerrorHandler, _onErrorHandlerInstalled;
-    var _oldOnunhandledrejectionHandler, _onUnhandledRejectionHandlerInstalled;
 
     /**
      * Ensures all global unhandled exceptions are recorded.
@@ -237,18 +235,6 @@ TraceKit.report = (function reportModuleWrapper() {
     }
 
     /**
-     * Ensures all unhandled rejections are recorded.
-     * @param {PromiseRejectionEvent} e event.
-     * @memberof TraceKit.report
-     * @see https://developer.mozilla.org/en-US/docs/Web/API/WindowEventHandlers/onunhandledrejection
-     * @see https://developer.mozilla.org/en-US/docs/Web/API/PromiseRejectionEvent
-     */
-    function traceKitWindowOnUnhandledRejection(e) {
-        var stack = TraceKit.computeStackTrace(e.reason);
-        notifyHandlers(stack, true, e.reason);
-    }
-
-    /**
      * Install a global onerror handler
      * @memberof TraceKit.report
      */
@@ -260,42 +246,6 @@ TraceKit.report = (function reportModuleWrapper() {
         _oldOnerrorHandler = window.onerror;
         window.onerror = traceKitWindowOnError;
         _onErrorHandlerInstalled = true;
-    }
-
-    /**
-     * Uninstall the global onerror handler
-     * @memberof TraceKit.report
-     */
-    function uninstallGlobalHandler() {
-        if (_onErrorHandlerInstalled) {
-            window.onerror = _oldOnerrorHandler;
-            _onErrorHandlerInstalled = false;
-        }
-    }
-
-    /**
-     * Install a global onunhandledrejection handler
-     * @memberof TraceKit.report
-     */
-    function installGlobalUnhandledRejectionHandler() {
-        if (_onUnhandledRejectionHandlerInstalled === true) {
-            return;
-        }
-
-        _oldOnunhandledrejectionHandler = window.onunhandledrejection;
-        window.onunhandledrejection = traceKitWindowOnUnhandledRejection;
-        _onUnhandledRejectionHandlerInstalled = true;
-    }
-
-    /**
-     * Uninstall the global onunhandledrejection handler
-     * @memberof TraceKit.report
-     */
-    function uninstallGlobalUnhandledRejectionHandler() {
-        if (_onUnhandledRejectionHandlerInstalled) {
-            window.onunhandledrejection = _oldOnunhandledrejectionHandler;
-            _onUnhandledRejectionHandlerInstalled = false;
-        }
     }
 
     /**
