@@ -144,10 +144,15 @@ function EditPublishedForm({logged, user, participantId}) {
 
         setFormError(response.data[0].msgRetorno);
 
-        /*if(location.state.formRecordId)
-            history.go(-1);
-        else
-            history.go(-2);*/
+        request = {
+            questionsgroups: JSON.stringify(questionsgroups),  
+            modulo: location.state.modulo
+        }
+
+        response = await api.put('/formgroupsdesc/' + location.state.modulo, request);
+
+        setFormError(response.data[0].msgRetorno);
+
     }
 
     function handleBackButton(){

@@ -25,4 +25,20 @@ class FormStructureController extends Controller
        }
     }
 
+    public function updatePublishedFormQuestionsGroups (Request $request)
+    {
+        try {
+          $respostas = str_replace("{", "", $request->questionsgroups);
+          $respostas = str_replace("}", "", $respostas);
+          $respostas = str_replace('"', "", $respostas);
+
+          $query_msg = DB::select("CALL putQstGroupModuleDescription('{$request->modulo}','{$respostas}', @p_msg_retorno)");
+        
+          return response()->json($query_msg);
+
+       } catch (Exception $e) {
+         return response()->json($e, 500);
+       }
+    }
+
 }
