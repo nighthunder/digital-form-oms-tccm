@@ -1,16 +1,14 @@
 .questionType, .subQstInfo{
 	font-size: 0.85rem;
 	color: #515050;
-	color: #fff;
 	padding: 3px 10px 5px 10px;
-	background: #9aeaad;
-	background: #2ac14c;
+	background: #ffd7d5;
 	border-radius: 3px;
 	width: fit-content;
 	margin-bottom: 25px;
 }
 .subQstInfo{
-	background: #2a97c1;
+	background: #ffd7d5;
 }
 h4.questionDesc{
 	margin-bottom: 15px;
@@ -64,9 +62,8 @@ h2.pageTitle, h3.groupName{
 	margin: 10px 0px 10px 20px;
 }
 .groupType{
-	background-color: #2dadc1;
+	background:#ffd7d5;
 	float: right;
-	font-weight: bold;
 }
 .qstTag{
 	margin-bottom: -15px;

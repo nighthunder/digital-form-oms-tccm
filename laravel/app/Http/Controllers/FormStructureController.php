@@ -12,7 +12,6 @@ class FormStructureController extends Controller
     public function updatePublishedFormQuestions (Request $request)
     {
         try {
-          //dd($request->questionsdescriptions);
           $respostas = str_replace("{", "", $request->questionsdescriptions);
           $respostas = str_replace("}", "", $respostas);
           $respostas = str_replace('"', "", $respostas);

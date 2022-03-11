@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 10, 2022 at 09:15 PM
+-- Generation Time: Mar 11, 2022 at 07:50 PM
 -- Server version: 10.4.22-MariaDB
 -- PHP Version: 7.4.27
 
@@ -140,7 +140,7 @@ END; # fim do sp:
 
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `getqst_rsp_modulo` (`p_crfformid` INTEGER)  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getqst_rsp_modulo` (IN `p_crfformid` INT)  BEGIN
 #========================================================================================================================
 #== Procedure criada para retornar todas as questoes de um modulo 
 #== As questões podem estar associadas diretamente ao modulo ou a um agrupamento
@@ -148,7 +148,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `getqst_rsp_modulo` (`p_crfformid` I
 #== Criada em 19 nov 2020
 #========================================================================================================================
 
- select crfformsid as modId, questionid as qstId,
+ select crfformsid as modId, questionid as qstId, questionorder as qstOrder, qstgroupid as qstGroupID,
 	      translate('pt-br', questionGroup) as dsc_qst_grp,
 		 translate('pt-br', question) as dsc_qst,
 	 		    questionType as qst_type,
@@ -164,6 +164,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `getqst_rsp_modulo` (`p_crfformid` I
 			select crfformsid, questionid, questionorder, 
 				   formulario, 
 				   (case when questiongroup is null then '' else questiongroup end) as questionGroup,
+                   (case when qstgroupid is null then '' else qstgroupid end) as qstgroupid,
 				   (case when commentquestiongroup is null then '' else commentquestiongroup end) as commentquestiongroup,
 				   Question,
 				   QuestionType, listTypeResposta, listTypeID, IdQuestaoSubordinada_A, QuestaoSubordinada_A, QuestaoReferente_A
@@ -171,6 +172,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `getqst_rsp_modulo` (`p_crfformid` I
 			select t5.crfformsid, t1.questionid, t9.questionorder,
 				   t5.description as formulario,
 				   (select t2.description from tb_questiongroup t2 where t2.questiongroupid = t1.questiongroupid) as questionGroup,
+                  (select t2.questionGroupID from tb_questiongroup t2 where t2.questiongroupid = t1.questiongroupid) as qstgroupid,
 				   (select t2.comment from tb_questiongroup t2 where t2.questiongroupid = t1.questiongroupid) as commentquestionGroup,
 					t1.description as question,
 				   (select t3.description as questionType from tb_questiontype t3 where t3.questiontypeid = t1.questiontypeid) as questionType,
@@ -669,6 +671,7 @@ sp:BEGIN
         
   #      SELECT v_lista, length(v_lista), position(',' in v_lista);
         if position(',' in v_lista) < length(v_lista) then
+
 	  	   set v_lista = substring(v_lista,  position(',' in v_lista) + 1, length(v_lista));
 		else 
            set v_lista = '';
@@ -6129,7 +6132,7 @@ INSERT INTO `tb_questions` (`questionID`, `description`, `questionTypeID`, `list
 (239, 'Total duration RRT or dyalysis', 5, NULL, 13, 155, 173),
 (240, 'Total duration Inotropes/vasopressors', 5, NULL, 13, 151, 173),
 (241, 'Systemic anticoagulation', 8, 15, 9, NULL, NULL),
-(242, 'Nome da instalaçãum 11', 7, NULL, NULL, NULL, NULL),
+(242, 'Facility Name', 7, NULL, NULL, NULL, NULL),
 (243, 'Loss of smell', 8, 15, NULL, NULL, NULL),
 (244, 'Loss of taste', 8, 15, NULL, NULL, NULL),
 (245, 'FiO2 value', 10, NULL, 13, 152, NULL),

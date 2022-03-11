@@ -32,7 +32,8 @@ function EditPublishedForm({logged, user, participantId}) {
     const classes = useStyles();
     //console.log("Location Formulario", location);
     const titles = ['Admissão','Acompanhamento','Desfecho']
-    const [form, setForm] = useState({});
+    const [form, setForm] = useState({}); // descrições das perguntas
+    const [questionsgroups, setQuestionsGroups] = useState({}); // descrições dos grupos
     const [formError, setFormError] = useState('')
     const history = useHistory();
     const [questions, setQuestions] = useState([]);
@@ -67,16 +68,24 @@ function EditPublishedForm({logged, user, participantId}) {
         const target = e.target;
         const value = target.value;
         const name = target.name;
-
         //console.log('idQuestão: ' + target.name, 'value: ' + target.value);
-
         setForm({
             ...form,
             [name]: value,
         });
-
         console.log("form", form);
-
+    }
+    
+    function handleChangeGroups(e) {
+        const target = e.target;
+        const value = target.value;
+        const name = target.name;
+        //console.log('idQuestão: ' + target.name, 'value: ' + target.value);
+        setQuestionsGroups({
+            ...questionsgroups,
+            [name]: value,
+        });
+        console.log("questions groups", questionsgroups);
     }
 
     function checkTitle(index, question) { // tratamento da repetição dos nomes dos grupos
@@ -114,6 +123,7 @@ function EditPublishedForm({logged, user, participantId}) {
 
 
     async function submit(e) {
+        setFormError("");
         e.preventDefault();
         console.log(form);
 
@@ -147,9 +157,6 @@ function EditPublishedForm({logged, user, participantId}) {
     return (
         <main className="container">
             <div>
-                <header className="index ">
-                    { hospitalName } > <b>{ titles[location.state.modulo-1] }</b>
-                </header>
                 <div className="mainNav">
 				    <h2 className="pageTitle">Módulo { location.state.modulo } - { titles[location.state.modulo-1] } - {location.state.moduleStatus} [Edição]</h2>
                     <ArrowBackIcon className="ArrowBack" onClick={handleBackButton}/>
@@ -172,7 +179,7 @@ function EditPublishedForm({logged, user, participantId}) {
                             {/* Se for um novo grupo de questões*/}
                             { (question.dsc_qst_grp !== ""  && checkTitle(index, question)) &&
                             <div className="groupHeader" id={question.qstId}>
-                               <TextField className="inputQst" name={String(question.qstId)} value={question.dsc_qst_grp}>{question.dsc_qst_grp}</TextField>
+                               <TextField className="inputQst" name={String(question.qstGroupId)} value={questionsgroups[question.qstGroupId] ? questionsgroups[question.qstGroupId] : question.dsc_qst_grp } onChange={handleChangeGroups}>{question.dsc_qst_grp}</TextField>
                                 <p className="questionType groupType">Grupo de questões</p>
                             </div>
                             }
@@ -195,7 +202,7 @@ function EditPublishedForm({logged, user, participantId}) {
                             <div>
                             {/*<TextField  type="number" name={String(question.qstId)} label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } />*/}
                             <InputLabel>Questão:</InputLabel>
-                            <TextField className="inputQst inputQst2" value={form[question.qstId] ? form[question.qstId] : question.dsc_qst }  fullWidth multiline>{question.dsc_qst}</TextField>
+                            <TextField className="inputQst inputQst2"  name={String(question.qstId)} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } onChange={handleChange} fullWidth multiline>{question.dsc_qst}</TextField>
                             <p className="questionType">Tipo da questão: {question.qst_type}</p>
                             { question.sub_qst !== '' &&
                                <p className="subQstInfo"> É um subquestão de {question.sub_qst} que aparece quando a opção Sim é selecionada.</p>      
