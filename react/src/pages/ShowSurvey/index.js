@@ -261,7 +261,7 @@ function ShowSurvey({user}) {
                       <DialogContent>
                         <DialogContentText id="alert-dialog-description">
                         { location.state.questionnaireStatus === "Publicado" &&
-                        "Apenas edições básicas são permitidas em formulários em uso."}
+                        "Apenas edições básicas são permitidas em formulários publicados."}
                         { location.state.questionnaireStatus === "Deprecado" &&
                         "Tem certeza de que deseja alterar um formulário deprecado?"}
                         </DialogContentText>

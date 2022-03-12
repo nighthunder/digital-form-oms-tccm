@@ -114,8 +114,8 @@ function EditPublishedForm({logged, user, participantId}) {
     };
     const handleInfo = () => {
         setOpen(false);
-        setPopupTitle("Informações extras");
-        setPopupBodyText("Neste modo de edição só é possível fazer reordenação ou alterar as descrições das perguntas e agrupamentos.");
+        setPopupTitle("[Atenção] Informações sobre a edição");
+        setPopupBodyText("Neste modo de edição só é possível reodernar questões e agrupamentos ou alterar suas descrições. Para ser possível fazer mais alterações é necessário criar uma pesquisa derivada.");
         setOpen(true);
     };
     const handleAddSurvey = () => {
