@@ -88,7 +88,7 @@ function ShowSurvey({user}) {
         }
         { location.state.questionnaireStatus === "Deprecado" &&  
             setPopupTitle("Este questionário foi deprecado.");
-            setPopupBodyText("Apenas edições básicas são permitidas em formulários em uso.");
+            setPopupBodyText("Apenas edições básicas são permitidas em módulos de pesquisas publicadas.");
             setOpen(true);
         }
         {location.state.questionnaireStatus === "Novo" &&  history.push('/edit-unpublished-form');}
@@ -261,7 +261,7 @@ function ShowSurvey({user}) {
                       <DialogContent>
                         <DialogContentText id="alert-dialog-description">
                         { location.state.questionnaireStatus === "Publicado" &&
-                        "Apenas edições básicas são permitidas em formulários publicados."}
+                        "Apenas edições básicas são permitidas em formulários de pesquisas publicadas."}
                         { location.state.questionnaireStatus === "Deprecado" &&
                         "Tem certeza de que deseja alterar um formulário deprecado?"}
                         </DialogContentText>
