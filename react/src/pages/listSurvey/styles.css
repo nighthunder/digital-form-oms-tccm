@@ -46,6 +46,7 @@ tr td, tr th{
 }
 tr:nth-child(even){
 	background-color: #f4dfb6;
+	background-color: #f7eaad;
 }
 tr td:first-child, tr th:first-child{
 	text-align: left;

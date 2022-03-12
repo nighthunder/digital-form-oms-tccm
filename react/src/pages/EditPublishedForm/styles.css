@@ -1,21 +1,25 @@
 .questionType, .subQstInfo{
-	font-size: 0.85rem;
-	color: #515050;
+	font-size: 0.74rem;
+	color: #373737;
 	padding: 3px 10px 5px 10px;
-	background: #ffd7d5;
+	background:#e4eae1;
 	border-radius: 3px;
 	width: fit-content;
 	margin-bottom: 25px;
+	text-transform: uppercase;
+}
+.questionType{
+	margin: 25px 0px -10px;
 }
 .subQstInfo{
-	background: #ffd7d5;
+	background: #d8d5ff;
 }
 h4.questionDesc{
 	margin-bottom: 15px;
 }
 h2.pageTitle, h3.groupName{
-	color: #3c4971;
 	color: #132053;
+	color: #1d1e20;
 }
 .subQstDesc{
 	font-size: 0.90rem;
@@ -25,12 +29,16 @@ h2.pageTitle, h3.groupName{
 	color: #7d7c7c;
 }
 .questionnaireDesc{
-	font-size: 0.90rem;
-	color: #6a6969;
-	background-color: #d2f7b9;
+	font-size: 0.75rem;
+	color: #1d1e20;
 	padding: 10px 10px;
+	width: -moz-fit-content;
 	width: fit-content;
 	border-radius: 3px;
+	font-style: italic;
+	background: #f9eeee;
+	text-transform: uppercase;
+	font-weight: initial;
 }
 .inputQst2{
 	width: calc(100% - 25px) !important;
@@ -51,7 +59,7 @@ h2.pageTitle, h3.groupName{
 .groupHeader{
 	margin-top: 60px;
 	padding: 15px;
-	border: 3px dotted #d2cecb;
+	border: 3px dotted #9db6dd;
 	border-radius: 5px;
 	margin-bottom: 25px;
 }
@@ -60,6 +68,8 @@ h2.pageTitle, h3.groupName{
 	border-radius: 5px;
 	padding: 10px;
 	margin: 10px 0px 10px 20px;
+	background: #ffd7d5;
+	background: #f9eeee;
 }
 .groupType{
 	background:#ffd7d5;
@@ -95,7 +105,7 @@ aside{
 }
 .anchorLink{
 	font-size: 0.90rem;
-    color: #6a6969;
+    color:  #373737;
 	background: #ffd7d5;
 	padding: 10px 10px;
 	border-radius: 3px;
@@ -106,15 +116,41 @@ aside{
 	text-align: center;
 	text-transform: uppercase;
 	padding: 20px;
-	color: #000;
+	color: #fff;
 	padding-bottom: 15px;
 	border-bottom: 0.5px solid;
-	/* margin-bottom: 30px; */
 	font-size: 14px;
-	background: #f0e8e8;
+	background: #0052d2;
+	border-radius:5px;
+	letter-spacing: 0.04em;
 }
 .scrollchorlink{
 	text-decoration: none;
+}
+.qstIcon, .ediIcon{
+	width: 100%;
+	position: relative;
+	float: right;
+	color: #fff;
+	background: #0052d2;
+	background: #efc700;
+	background: #797874;
+	border-radius: 3px;
+	font-size: 1.45em;
+	padding: 2px;
+	cursor:pointer;
+	margin: -5px -5px;
+}
+.qstIcon{
+	right: -10px;
+
+}
+.ediIcon{
+	right: 32px;
+}
+.qstIcon:hover, .ediIcon:hover{
+	transition: 0.5s;
+	background: #09911f;
 }
 
 
