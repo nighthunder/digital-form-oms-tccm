@@ -116,6 +116,11 @@ aside{
 .scrollchorlink{
 	text-decoration: none;
 }
+.ArrowUp2 {
+	display: flex;
+	float: right;
+	cursor: pointer;
+}
 
 
 
