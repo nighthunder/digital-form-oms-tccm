@@ -1,5 +1,5 @@
 ﻿// View do formulário quando é preenchido.
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './styles.css';
 import { useLocation } from "react-router-dom";
 import { Scrollchor } from 'react-scrollchor';
@@ -122,9 +122,27 @@ function EditPublishedForm({logged, user, participantId}) {
         setOpen(false);
     };
 
-    const handleClickUpDown = (e, data) => {
-        console.log("cliquei", e, data);
+    const usernameRefs = useRef([]);
+
+    usernameRefs.current = questions.map(
+        (ref, index) =>   usernameRefs.current[index] = React.createRef()
+    )
+    
+    const handleClickUpDown = (index) => {
+        console.log("myRefname", usernameRefs.current[index].current);
+        usernameRefs.current[index].current.style.display = "none";
+        // let temp = usernameRefs.current[index].current
+        // let el1 = usernameRefs.current[index+1].current
+        // usernameRefs.current[index].current = el1
+        // usernameRefs.current[index+1].current = temp
     };
+
+    // since it is an array we need to method to add the myRefname
+//    const addToRefs = el => {
+//     if (el && !myRefname.current.includes(el)) {
+//         myRefname.current.push(el);
+//     }
+//    };
 
 
     async function submit(e) {
@@ -185,7 +203,7 @@ function EditPublishedForm({logged, user, participantId}) {
                         console.log("QUESTIONS2", questions)
                     }
                     {questions.map((question, index) => (
-                        <div className="qst qst2" key={question.qstId}>
+                        <div className="qst qst2" key={question.qstId} ref={usernameRefs.current[index]} value={index} onClick={() => handleClickUpDown(index)}>
                             {/* Se for um novo grupo de questões*/}
                             { (question.dsc_qst_grp !== ""  && checkTitle(index, question)) &&
                             <div className="groupHeader" id={question.qstId}>
