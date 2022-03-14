@@ -36,7 +36,6 @@ h2.pageTitle, h3.groupName{
 	width: fit-content;
 	border-radius: 3px;
 	font-style: italic;
-	background: #f9eeee;
 	text-transform: uppercase;
 	font-weight: initial;
 }
@@ -151,6 +150,10 @@ aside{
 .qstIcon:hover, .ediIcon:hover{
 	transition: 0.5s;
 	background: #09911f;
+}
+.alert-dialog-description{
+	font-weight:bold;
+
 }
 
 
