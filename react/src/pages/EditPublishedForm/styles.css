@@ -10,6 +10,7 @@
 }
 .questionType{
 	margin: 25px 0px -10px;
+	display: inline;
 }
 .subQstInfo{
 	background: #d8d5ff;

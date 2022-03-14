@@ -44,7 +44,10 @@ function EditPublishedForm({logged, user, participantId}) {
 
     // popup
     const [popupTitle, setPopupTitle] = useState('');
-    const [popupBodyText, setPopupBodyText] = useState([]);
+    const [questionTypeComment, setQuestionTypeComment] = useState('');
+    const [questionComment, setQuestionComment] = useState('');
+    const [questionListTypeComment, setQuestionListTypeComment] = useState('');
+    const [popupBodyText, setPopupBodyText] = useState('');
 
     useEffect(() => {
         async function loadForm() {
@@ -108,14 +111,21 @@ function EditPublishedForm({logged, user, participantId}) {
     const [open, setOpen] = React.useState(false);
     const handleClickOpen = (question) => {
         setOpen(false);
-        setPopupTitle("Informações sobre a questão");
-        setPopupBodyText(question.qst_type+" : "+question.qst_type_comment);
+        setPopupTitle("Comentários");
+        setPopupBodyText("");
+        if(question.qst_comment){ setQuestionComment(question.qst_comment)}
+        if(question.qst_type){ setQuestionTypeComment(question.qst_type+" : "+question.qst_type_comment)}
+        if(question.qst_list_type){ setQuestionListTypeComment(question.qst_list_type+" : "+question.qst_list_type_comment)}
+        //setQuestionListTypeComment(`rere \n asdssss`);
         setOpen(true);
     };
     const handleInfo = () => {
         setOpen(false);
         setPopupTitle("[Atenção] Informações sobre a edição");
         setPopupBodyText("Neste modo de edição só é possível reodernar questões e agrupamentos ou alterar suas descrições. Para ser possível fazer mais alterações é necessário criar uma pesquisa derivada.");
+        setQuestionComment("");
+        setQuestionTypeComment("");
+        setQuestionListTypeComment("");
         setOpen(true);
     };
     const handleAddSurvey = () => {
@@ -201,6 +211,9 @@ function EditPublishedForm({logged, user, participantId}) {
                             <div>
                                 <InputLabel className="qstLabel">Questão</InputLabel><Edit className="ediIcon" onClick={handleInfo}></Edit><QuestionMark className="qstIcon" onClick={() => handleClickOpen(question)}></QuestionMark>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
+                                {
+                                    question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
+                                }
                                 <TextField className={classes.root} className="inputQst inputQst2" name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } fullWidth multiline>{question.dsc_qst}</TextField>
                                 { question.sub_qst !== '' &&
                                  <p className="subQstInfo"> É um subquestão de {question.sub_qst} que aparece quando a opção Sim é selecionada.</p>      
@@ -214,6 +227,9 @@ function EditPublishedForm({logged, user, participantId}) {
                             {/*<TextField  type="number" name={String(question.qstId)} label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } />*/}
                             <InputLabel>Questão:</InputLabel><Edit className="ediIcon" onClick={handleInfo}></Edit><QuestionMark className="qstIcon" onClick={ ( ) => handleClickOpen(question) }></QuestionMark>
                             <p className="questionType">Tipo da questão: {question.qst_type}</p>
+                            {
+                                question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
+                            }
                             <TextField className="inputQst inputQst2"  name={String(question.qstId)} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } onChange={handleChange} fullWidth multiline>{question.dsc_qst}</TextField>
                             { question.sub_qst !== '' &&
                                <p className="subQstInfo"> É um subquestão de {question.sub_qst} que aparece quando a opção Sim é selecionada.</p>      
@@ -226,6 +242,9 @@ function EditPublishedForm({logged, user, participantId}) {
                             <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
                                 <InputLabel>Questão:</InputLabel><Edit className="ediIcon" onClick={handleInfo}></Edit><QuestionMark className="qstIcon" onClick={ ( ) => handleClickOpen(question) }></QuestionMark>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
+                                {
+                                    question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
+                                }
                                 <TextField  className="inputQst inputQst2" onChange={handleChange} name={String(question.qstId)} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst }  fullWidth multiline>{question.dsc_qst}</TextField>
                                 <p className="subQstDesc">Respostas padronizadas</p>
                                 <Select multiple native label={question.dsc_qst} aria-label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
@@ -244,6 +263,9 @@ function EditPublishedForm({logged, user, participantId}) {
                             <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
                                 <InputLabel>Questão:</InputLabel><Edit className="ediIcon" onClick={handleInfo}></Edit><QuestionMark className="qstIcon" onClick={ ( ) => handleClickOpen(question) }></QuestionMark>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
+                                {
+                                    question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
+                                }
                                 <TextField  className="inputQst inputQst2" onChange={handleChange} name={String(question.qstId)} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst }  fullWidth multiline>{question.dsc_qst}</TextField>
                                 <p className="subQstDesc">Respostas padronizadas</p>
                                 <Select multiple native label={question.dsc_qst} label={question.dsc_qst} aria-label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
@@ -262,6 +284,9 @@ function EditPublishedForm({logged, user, participantId}) {
                             <div>
                             <InputLabel>Questão:</InputLabel><Edit className="ediIcon" onClick={handleInfo}></Edit><QuestionMark className="qstIcon" onClick={ ( ) => handleClickOpen(question) }></QuestionMark>
                             <p className="questionType">Tipo da questão: {question.qst_type}</p>
+                            {
+                                question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
+                            }
                             <TextField  className="inputQst inputQst2" name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } fullWidth multiline>{question.dsc_qst}</TextField>
                             { question.sub_qst !== '' &&
                                <p className="subQstInfo"> É um subquestão de {question.sub_qst} que aparece quando a opção Sim é selecionada.</p>      
@@ -274,6 +299,9 @@ function EditPublishedForm({logged, user, participantId}) {
                             <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
                                 <InputLabel>Questão:</InputLabel><Edit className="ediIcon" onClick={handleInfo}></Edit><QuestionMark className="qstIcon" onClick={ ( ) => handleClickOpen(question) }></QuestionMark>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
+                                {
+                                    question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
+                                }
                                 <TextField  className="inputQst inputQst2" name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } fullWidth multiline>{question.dsc_qst}</TextField>
                                 <p className="subQstDesc">Respostas padronizadas</p>
                                 <Select multiple native label={question.dsc_qst} aria-label={question.dsc_qst} onChange={handleChange}>
@@ -307,7 +335,14 @@ function EditPublishedForm({logged, user, participantId}) {
                             </DialogTitle>
                             <DialogContent>
                                 <DialogContentText id="alert-dialog-description">
-                                {popupBodyText} 
+                                {popupBodyText}
+                                <b>{questionComment}.</b><br/>
+                                {
+                                   questionTypeComment? <p><b>Tipo da questão: </b><i>{questionTypeComment}.</i><br/></p> : ''
+                                }
+                                {
+                                   questionListTypeComment ? <p><b>Tipo da lista:</b><i>{questionListTypeComment}.</i><br/></p> : ''
+                                }
                                 </DialogContentText>
                             </DialogContent>
                             <DialogActions>
