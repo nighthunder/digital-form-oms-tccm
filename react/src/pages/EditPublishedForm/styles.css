@@ -36,7 +36,7 @@ h2.pageTitle1{
 	color: #7d7c7c;
 }
 .questionnaireDesc{
-	font-size: 0.75rem;
+	font-size: 0.8em;
 	color: #1d1e20;
 	padding: 0px 10px 15px 0px;
 	width: -moz-fit-content;
@@ -145,6 +145,7 @@ aside{
 	background: #ddb904;
 	background: #797874;
 	background: #b5807e;
+	background: #938989;
 	border-radius: 3px;
 	font-size: 1.45em;
 	padding: 2px;
