@@ -47,6 +47,7 @@ function EditPublishedForm({logged, user, participantId}) {
     const [questionTypeComment, setQuestionTypeComment] = useState('');
     const [questionComment, setQuestionComment] = useState('');
     const [questionListTypeComment, setQuestionListTypeComment] = useState('');
+    const [questionGroupComment, setQuestionGroupComment] = useState('');
     const [popupBodyText, setPopupBodyText] = useState('');
 
     useEffect(() => {
@@ -109,13 +110,37 @@ function EditPublishedForm({logged, user, participantId}) {
 
     // popup
     const [open, setOpen] = React.useState(false);
-    const handleClickOpen = (question) => {
+    const handleClickOpen = (question, param) => {
         setOpen(false);
         setPopupTitle("Comentários");
         setPopupBodyText("");
-        if(question.qst_comment){ setQuestionComment(question.qst_comment)}
-        if(question.qst_type){ setQuestionTypeComment(question.qst_type+" : "+question.qst_type_comment)}
-        if(question.qst_list_type){ setQuestionListTypeComment(question.qst_list_type+" : "+question.qst_list_type_comment)}
+
+        if(question.qst_group_comment && param === "group"){ 
+            setQuestionGroupComment(question.qst_group_comment+".")
+            setQuestionComment("");
+            setQuestionTypeComment("");
+            setQuestionListTypeComment("");
+        }else{
+            setQuestionGroupComment("")
+        }
+
+        if(question.qst_comment && param === "question"){ 
+            setQuestionComment(question.qst_comment + ".")
+        }else{
+            setQuestionComment("")
+        }
+
+        if(question.qst_type && param === "question"){ 
+            setQuestionTypeComment("Sobre o grupo "+ question.qst_type + " : " + question.qst_type_comment + ".")
+        }else{
+            setQuestionTypeComment("")
+        }
+
+        if(question.qst_list_type && param === "question"){ 
+            setQuestionListTypeComment(question.qst_list_type + " : " + question.qst_list_type_comment + ".")
+        }else{
+            setQuestionListTypeComment("")
+        }
         //setQuestionListTypeComment(`rere \n asdssss`);
         setOpen(true);
     };
@@ -126,6 +151,7 @@ function EditPublishedForm({logged, user, participantId}) {
         setQuestionComment("");
         setQuestionTypeComment("");
         setQuestionListTypeComment("");
+        setQuestionGroupComment("");
         setOpen(true);
     };
     const handleAddSurvey = () => {
@@ -200,7 +226,7 @@ function EditPublishedForm({logged, user, participantId}) {
                             { (question.dsc_qst_grp !== ""  && checkTitle(index, question)) &&
                             <div className="groupHeader" id={question.qstId}>
                                <TextField className="inputQst" name={String(question.qstGroupId)} value={questionsgroups[question.qstGroupId] ? questionsgroups[question.qstGroupId] : question.dsc_qst_grp } onChange={handleChangeGroups}>{question.dsc_qst_grp}</TextField>
-                                <Edit className="ediIcon" onClick={handleInfo}></Edit><QuestionMark className="qstIcon" ></QuestionMark>
+                                <Edit className="ediIcon" onClick={handleInfo}></Edit><QuestionMark className="qstIcon" onClick={() => handleClickOpen(question, "group")}></QuestionMark>
                                 <p className="questionType groupType">Grupo de questões</p>
                             </div>
                             }
@@ -209,7 +235,7 @@ function EditPublishedForm({logged, user, participantId}) {
                             {/* Se for do tipo Date question*/}
                             { (question.qst_type === "Date question") && 
                             <div>
-                                <InputLabel className="qstLabel">Questão</InputLabel><Edit className="ediIcon" onClick={handleInfo}></Edit><QuestionMark className="qstIcon" onClick={() => handleClickOpen(question)}></QuestionMark>
+                                <InputLabel className="qstLabel">Questão</InputLabel><Edit className="ediIcon" onClick={handleInfo}></Edit><QuestionMark className="qstIcon" onClick={() => handleClickOpen(question, "question")}></QuestionMark>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                 {
                                     question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
@@ -225,7 +251,7 @@ function EditPublishedForm({logged, user, participantId}) {
                             { (question.qst_type === "Number question") && 
                             <div>
                             {/*<TextField  type="number" name={String(question.qstId)} label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } />*/}
-                            <InputLabel>Questão:</InputLabel><Edit className="ediIcon" onClick={handleInfo}></Edit><QuestionMark className="qstIcon" onClick={ ( ) => handleClickOpen(question) }></QuestionMark>
+                            <InputLabel>Questão:</InputLabel><Edit className="ediIcon" onClick={handleInfo}></Edit><QuestionMark className="qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
                             <p className="questionType">Tipo da questão: {question.qst_type}</p>
                             {
                                 question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
@@ -240,7 +266,7 @@ function EditPublishedForm({logged, user, participantId}) {
                             {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha menos de 6 opções */}
                             { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length < 6 ) &&
                             <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
-                                <InputLabel>Questão:</InputLabel><Edit className="ediIcon" onClick={handleInfo}></Edit><QuestionMark className="qstIcon" onClick={ ( ) => handleClickOpen(question) }></QuestionMark>
+                                <InputLabel>Questão:</InputLabel><Edit className="ediIcon" onClick={handleInfo}></Edit><QuestionMark className="qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                 {
                                     question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
@@ -261,7 +287,7 @@ function EditPublishedForm({logged, user, participantId}) {
                             {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha 6 ou mais opções */}
                             { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length >= 6 ) &&
                             <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
-                                <InputLabel>Questão:</InputLabel><Edit className="ediIcon" onClick={handleInfo}></Edit><QuestionMark className="qstIcon" onClick={ ( ) => handleClickOpen(question) }></QuestionMark>
+                                <InputLabel>Questão:</InputLabel><Edit className="ediIcon" onClick={handleInfo}></Edit><QuestionMark className="qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                 {
                                     question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
@@ -282,7 +308,7 @@ function EditPublishedForm({logged, user, participantId}) {
                             {/* Se for do tipo Text_Question ou Laboratory question ou Ventilation question*/}
                             { (question.qst_type === "Text_Question" || question.qst_type === "Laboratory question" || question.qst_type === "Ventilation question") && 
                             <div>
-                            <InputLabel>Questão:</InputLabel><Edit className="ediIcon" onClick={handleInfo}></Edit><QuestionMark className="qstIcon" onClick={ ( ) => handleClickOpen(question) }></QuestionMark>
+                            <InputLabel>Questão:</InputLabel><Edit className="ediIcon" onClick={handleInfo}></Edit><QuestionMark className="qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
                             <p className="questionType">Tipo da questão: {question.qst_type}</p>
                             {
                                 question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
@@ -297,7 +323,7 @@ function EditPublishedForm({logged, user, participantId}) {
                             {/* Se for do tipo Boolean_Question*/}
                             { (question.qst_type === "Boolean_Question") && 
                             <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
-                                <InputLabel>Questão:</InputLabel><Edit className="ediIcon" onClick={handleInfo}></Edit><QuestionMark className="qstIcon" onClick={ ( ) => handleClickOpen(question) }></QuestionMark>
+                                <InputLabel>Questão:</InputLabel><Edit className="ediIcon" onClick={handleInfo}></Edit><QuestionMark className="qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                 {
                                     question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
@@ -336,12 +362,13 @@ function EditPublishedForm({logged, user, participantId}) {
                             <DialogContent>
                                 <DialogContentText id="alert-dialog-description">
                                 {popupBodyText}
-                                <b>{questionComment}.</b><br/>
+                                <b>{questionComment}</b><br/>
+                                <b>{questionGroupComment}</b><br/>
                                 {
-                                   questionTypeComment? <p><b>Tipo da questão: </b><i>{questionTypeComment}.</i><br/></p> : ''
+                                   questionTypeComment? <p><b>Tipo da questão: </b><i>{questionTypeComment}</i><br/></p> : ''
                                 }
                                 {
-                                   questionListTypeComment ? <p><b>Tipo da lista:</b><i>{questionListTypeComment}.</i><br/></p> : ''
+                                   questionListTypeComment ? <p><b>Tipo da lista:</b><i>{questionListTypeComment}</i><br/></p> : ''
                                 }
                                 </DialogContentText>
                             </DialogContent>
