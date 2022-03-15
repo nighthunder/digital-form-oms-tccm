@@ -32,7 +32,7 @@ h2.pageTitle1{
 	font-size: 0.90rem;
 	margin: 10px 0px 0px;
 	text-decoration: underline;
-	letter-spacing: 0.04em;
+	letter-spacing: 0.02em;
 	color: #7d7c7c;
 }
 .questionnaireDesc{
@@ -44,7 +44,7 @@ h2.pageTitle1{
 	border-radius: 3px;
 	text-transform: uppercase;
 	font-weight: bold;
-	letter-spacing: 0.04em;
+	letter-spacing: 0.01em;
 }
 .inputQst2{
 	width: calc(100% - 25px) !important;
@@ -171,7 +171,7 @@ aside{
 }
 .Icon:hover{
 	transition: 0.5s;
-	background: #09911f;
+	background: #0052d2;
 }
 .alert-dialog-description{
 	font-weight:bold;
