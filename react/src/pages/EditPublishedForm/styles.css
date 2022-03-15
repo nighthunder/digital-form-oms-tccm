@@ -25,6 +25,9 @@ h2.pageTitle, h3.groupName{
 h2.pageTitle1{
 	margin-top: 25px;
 }
+hr{
+	color: #fff8f8;
+}
 .ArrowBack1{
 	top:25px;
 }

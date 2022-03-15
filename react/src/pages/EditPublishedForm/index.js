@@ -206,7 +206,7 @@ function EditPublishedForm({logged, user, participantId}) {
         <main className="container">
             <div>
                 <header>
-                    <h1 className="questionnaireDesc"> <b>Questionário:</b> {location.state.questionnaireDesc} ( {location.state.questionnaireVers} ) {location.state.questionnaireStatus}  </h1>
+                    <h1 className="questionnaireDesc"> <b>Pesquisa:</b> {location.state.questionnaireDesc} ( {location.state.questionnaireVers} ) {location.state.questionnaireStatus}  </h1>
                 </header>
                 <hr/>
                 <div className="mainNav">
