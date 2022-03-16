@@ -62,11 +62,16 @@ hr{
 .qst2 > .MuiInputBase-Input{
 	font-size: 0.75rem;
 }
+.qst3{
+	margin-top: 60px;
+}
+.qst3 .qstIconArea{
+	margin-left: 0px;
+}
 .group{
 	margin-top: 60px;
 }
 .groupHeader{
-	margin-top: 60px;
 	padding: 15px;
 	border: 2px dotted #d2cecb;
 	border-radius: 5px;

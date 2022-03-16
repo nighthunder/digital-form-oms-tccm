@@ -36,6 +36,7 @@ function EditPublishedForm({logged, user, participantId}) {
     const titles = ['Admissão','Acompanhamento','Desfecho']
     const [form, setForm] = useState({}); // descrições das perguntas
     const [questionsgroups, setQuestionsGroups] = useState({}); // descrições dos grupos
+    const [groupsIDs, setGroupsIDs] = useState({});
     const [formError, setFormError] = useState('')
     const history = useHistory();
     const [questions, setQuestions] = useState([]);
@@ -227,25 +228,27 @@ function EditPublishedForm({logged, user, participantId}) {
                     }
                     {questions.map((question, index) => (
                         <div>
-                            {
-                                index === 0 ?
-                                <div className="qst qst2">
-                                <div className="qstBody qstIconArea">
-                                    <PlusOne className="Icon plusIcon" onClick={handleInfo}></PlusOne>
-                                </div>
-                                </div>
-                                :
-                                ''
-                            }
                             <div className="qst qst2" key={question.qstId}>
                                 {/* Se for um novo grupo de questões*/}
                                 { (question.dsc_qst_grp !== ""  && checkTitle(index, question)) &&
-                                <div className="groupHeader" id={question.qstId}>
-                                <TextField className="inputQst" name={String(question.qstGroupId)} value={questionsgroups[question.qstGroupId] ? questionsgroups[question.qstGroupId] : question.dsc_qst_grp } onChange={handleChangeGroups}>{question.dsc_qst_grp}</TextField>
-                                    <Edit className="Icon ediIcon" onClick={handleInfo}></Edit><QuestionMark className="Icon qstIcon" onClick={() => handleClickOpen(question, "group")}></QuestionMark>
-                                    <p className="questionType groupType">Grupo de questões</p>
+                                <div>
+                                    <div className="qst qst2 qst3">
+                                        <div className="qstBody qstIconArea">
+                                            <PlusOne className="Icon plusIcon" onClick={handleInfo}></PlusOne>
+                                        </div>
+                                    </div>
+                                    <div className="groupHeader" id={question.qstId}>
+                                    <TextField className="inputQst" name={String(question.qstGroupId)} value={questionsgroups[question.qstGroupId] ? questionsgroups[question.qstGroupId] : question.dsc_qst_grp } onChange={handleChangeGroups}>{question.dsc_qst_grp}</TextField>
+                                        <Edit className="Icon ediIcon" onClick={handleInfo}></Edit><QuestionMark className="Icon qstIcon" onClick={() => handleClickOpen(question, "group")}></QuestionMark>
+                                        <p className="questionType groupType">Grupo de questões</p>
+                                    </div>
                                 </div>
                                 }
+                                <div className="qst qst2">
+                                    <div className="qstBody qstIconArea">
+                                        <PlusOne className="Icon plusIcon" onClick={handleInfo}></PlusOne>
+                                    </div>
+                                </div>
                                 <div className="qstBody">
                                 
                                 {/* Se for do tipo Date question*/}
@@ -356,11 +359,6 @@ function EditPublishedForm({logged, user, participantId}) {
                                 </div>
                                 } 
                                 </div>    
-                            </div>
-                            <div className="qst qst2">
-                                <div className="qstBody qstIconArea">
-                                    <PlusOne className="Icon plusIcon" onClick={handleInfo}></PlusOne>
-                                </div>
                             </div>
                         </div>
                     ))}
