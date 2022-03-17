@@ -1,11 +1,12 @@
 ﻿// View do formulário quando é preenchido.
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './styles.css';
 import { useLocation } from "react-router-dom";
 import { Scrollchor } from 'react-scrollchor';
 import { TextField, Button, InputLabel, Select } from '@material-ui/core';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownwardRounded';
 import Edit from '@mui/icons-material/Edit';
 import QuestionMark from '@mui/icons-material/QuestionMark';
 import PlusOne from '@mui/icons-material/Add';
@@ -159,6 +160,51 @@ function EditPublishedForm({logged, user, participantId}) {
         setOpen(false);
     };
 
+    const usernameRefs = useRef([]);
+
+    usernameRefs.current = questions.map(
+        (ref, index) =>   usernameRefs.current[index] = React.createRef()
+    )
+    
+    const handleClickUpDown = (index, direction) => {
+        console.log("direction", direction);
+        // console.log("myRefname", usernameRefs.current[index].current);
+        // usernameRefs.current[index].current.style.display = "none";
+        // let temp = usernameRefs.current[index].current
+        // let el1 = usernameRefs.current[index+1].current
+        // usernameRefs.current[index].current = el1
+        // usernameRefs.current[index+1].current = temp
+        function findPrevious(elm) {
+            do {
+                elm = elm.previousSibling;
+            } while (elm && elm.nodeType != 1);
+            return elm;
+        }
+        function findNext(elm) {
+            do {
+                elm = elm.nextSibling;
+            } while (elm && elm.nodeType != 1);
+            return elm;
+        }
+        
+        var elm = usernameRefs.current[index].current;
+        var elm2
+        // let elem2 = usernameRefs.current[index+1].current;
+        if (direction == "UP"){
+            // elm2 = findPrevious(elm);
+            elm2 = elm.previousSibling;
+            console.log("elm2", elm2);
+            elm.parentNode.insertBefore(elm, elm2);
+        }
+        if (direction == "DOWN") {
+            // elm2 = findNext(elm);
+            elm2 = elm.nextSibling;
+            console.log("elm2", elm2);
+            elm2.parentNode.insertBefore(elm2, elm);
+
+        }
+        // elem.parentNode.insertBefore(elem, elem.parentNode.firstChild);
+    };
 
     async function submit(e) {
         setFormError("");
@@ -242,8 +288,8 @@ function EditPublishedForm({logged, user, participantId}) {
                         console.log("QUESTIONS2", questions)
                     }
                     {questions.map((question, index) => (
-                        <div>
-                            <div className="qst qst2" key={question.qstId}>
+                        <div ref={usernameRefs.current[index]}>
+                            <div className="qst qst2" key={question.qstId} >
                                 {/* Se for um novo grupo de questões*/}
                                 { (question.dsc_qst_grp !== ""  && checkTitle(index, question)) &&
                                 <div>
@@ -254,7 +300,8 @@ function EditPublishedForm({logged, user, participantId}) {
                                     </div>
                                     <div className="groupHeader" id={question.qstId}>
                                     <TextField className="inputQst" name={String(question.qstGroupId)} value={qstgroups[question.qstGroupId] ? qstgroups[question.qstGroupId] : question.dsc_qst_grp } onChange={handleChangeGroups}>{question.dsc_qst_grp}</TextField>
-                                        <Edit className="Icon ediIcon" onClick={handleInfo}></Edit><QuestionMark className="Icon qstIcon" onClick={() => handleClickOpen(question, "group")}></QuestionMark>
+                                        <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
+                                        <QuestionMark className="Icon qstIcon" onClick={() => handleClickOpen(question, "group")}></QuestionMark>
                                         <p className="questionType groupType">Grupo de questões</p>
                                     </div>
                                 </div>
@@ -269,7 +316,11 @@ function EditPublishedForm({logged, user, participantId}) {
                                 {/* Se for do tipo Date question*/}
                                 { (question.qst_type === "Date question") && 
                                 <div>
-                                    <InputLabel className="qstLabel">Questão</InputLabel><Edit className="Icon ediIcon" onClick={handleInfo}></Edit><QuestionMark className="Icon qstIcon" onClick={() => handleClickOpen(question, "question")}></QuestionMark>
+                                    <InputLabel className="qstLabel">Questão</InputLabel>
+                                    <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
+                                    <QuestionMark className="Icon qstIcon" onClick={() => handleClickOpen(question, "question")}></QuestionMark>
+                                    <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP")} />
+                                    <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN")} />
                                     <TextField className={classes.root} className="inputQst inputQst2" name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } fullWidth multiline>{question.dsc_qst}</TextField>
                                     <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                     {
@@ -285,7 +336,11 @@ function EditPublishedForm({logged, user, participantId}) {
                                 { (question.qst_type === "Number question") && 
                                 <div>
                                 {/*<TextField  type="number" name={String(question.qstId)} label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } />*/}
-                                <InputLabel>Questão:</InputLabel><Edit className="Icon ediIcon" onClick={handleInfo}></Edit><QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
+                                <InputLabel className="qstLabel">Questão:</InputLabel>
+                                <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
+                                <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
+                                <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP")} />
+                                <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN")} />
                                 <TextField className="inputQst inputQst2"  name={String(question.qstId)} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } onChange={handleChange} fullWidth multiline>{question.dsc_qst}</TextField>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                 {
@@ -300,7 +355,11 @@ function EditPublishedForm({logged, user, participantId}) {
                                 {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha menos de 6 opções */}
                                 { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length < 6 ) &&
                                 <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
-                                    <InputLabel>Questão:</InputLabel><Edit className="Icon ediIcon" onClick={handleInfo}></Edit><QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
+                                    <InputLabel className="qstLabel">Questão:</InputLabel>
+                                    <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
+                                    <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
+                                    <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP")} />
+                                    <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN")} />
                                     <TextField  className="inputQst inputQst2" onChange={handleChange} name={String(question.qstId)} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst }  fullWidth multiline>{question.dsc_qst}</TextField>
                                     <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                     {
@@ -321,7 +380,11 @@ function EditPublishedForm({logged, user, participantId}) {
                                 {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha 6 ou mais opções */}
                                 { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length >= 6 ) &&
                                 <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
-                                    <InputLabel>Questão:</InputLabel><Edit className="Icon ediIcon" onClick={handleInfo}></Edit><QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
+                                    <InputLabel className="qstLabel">Questão:</InputLabel>
+                                    <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
+                                    <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
+                                    <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP")} />
+                                    <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN")} />
                                     <TextField  className="inputQst inputQst2" onChange={handleChange} name={String(question.qstId)} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst }  fullWidth multiline>{question.dsc_qst}</TextField>
                                     <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                     {
@@ -342,7 +405,11 @@ function EditPublishedForm({logged, user, participantId}) {
                                 {/* Se for do tipo Text_Question ou Laboratory question ou Ventilation question*/}
                                 { (question.qst_type === "Text_Question" || question.qst_type === "Laboratory question" || question.qst_type === "Ventilation question") && 
                                 <div>
-                                <InputLabel>Questão:</InputLabel><Edit className="Icon ediIcon" onClick={handleInfo}></Edit><QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
+                                <InputLabel className="qstLabel">Questão:</InputLabel>
+                                <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
+                                <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
+                                <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP")} />
+                                <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN")} />
                                 <TextField  className="inputQst inputQst2" name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } fullWidth multiline>{question.dsc_qst}</TextField>
                                 <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                 {
@@ -357,7 +424,11 @@ function EditPublishedForm({logged, user, participantId}) {
                                 {/* Se for do tipo Boolean_Question*/}
                                 { (question.qst_type === "Boolean_Question") && 
                                 <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
-                                    <InputLabel>Questão:</InputLabel><Edit className="Icon ediIcon" onClick={handleInfo}></Edit><QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
+                                    <InputLabel className="qstLabel">Questão:</InputLabel>
+                                    <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
+                                    <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
+                                    <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP")} />
+                                    <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN")} />
                                     <TextField  className="inputQst inputQst2" name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } fullWidth multiline>{question.dsc_qst}</TextField>
                                     <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                     {

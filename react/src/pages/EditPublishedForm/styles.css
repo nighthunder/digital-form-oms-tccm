@@ -163,7 +163,6 @@ aside{
 	margin: -5px -5px;
 }
 .qstIcon{
-	right: -10px;
 }
 .qstIconArea{
 	text-align: center;
@@ -176,7 +175,15 @@ aside{
 	border-radius: 18px;
 }
 .ediIcon{
-	right: 32px;
+	right: 42px;
+}
+.ArrowUp1{
+	position: relative;
+	right: 58px;
+}
+.ArrowUp2{
+	position: relative;
+	right: 43px;
 }
 .Icon:hover{
 	transition: 0.5s;
