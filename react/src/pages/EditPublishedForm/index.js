@@ -36,11 +36,10 @@ function EditPublishedForm({logged, user, participantId}) {
     const titles = ['Admissão','Acompanhamento','Desfecho']
     const [form, setForm] = useState({}); // descrições das perguntas
     const [questionsgroups, setQuestionsGroups] = useState({}); // descrições dos grupos
-    const [groupsIDs, setGroupsIDs] = useState({});
     const [formError, setFormError] = useState('')
+    const [formOk, setFormOk] = useState('')
     const history = useHistory();
     const [questions, setQuestions] = useState([]);
-    const [questionstype, setQuestionsType] = useState([]);
     const [loadedResponses, setLoadedResponses] = useState(false);
     const [hospitalName, setHospitalName] = useState('');
 
@@ -62,13 +61,6 @@ function EditPublishedForm({logged, user, participantId}) {
         }
         loadForm();
         setHospitalName(user[location.state.hospitalIndex].hospitalName);
-
-        async function loadQuestionTypeAltText() {
-            const response = await api.get('/questiontype/' + location.state.modulo);
-            setQuestionsType(response.data);    
-
-        }
-        //loadQuestionTypeAltText();
     }, [])
 
     function handleChange(e) {
@@ -188,7 +180,10 @@ function EditPublishedForm({logged, user, participantId}) {
         response = await api.put('/formquestionsdesc/' + location.state.modulo, request);
 
         let errors;
-        setFormError(response.data[0].msgRetorno);
+
+        if (response.data[0].msgRetorno === ""){
+            setFormError(response.data[0].msgRetorno);
+        }
 
         request = {
             questionsgroups: JSON.stringify(questionsgroups),  
@@ -196,11 +191,23 @@ function EditPublishedForm({logged, user, participantId}) {
         }
 
         response = await api.put('/formgroupsdesc/' + location.state.modulo, request);
-        setFormError(response.data[0].msgRetorno);
+
+        if (response){
+            setFormError(response.data[0].msgRetorno);
+        }
+
     }
 
     function handleBackButton(){
         history.goBack();
+    }
+
+    function FormError(props){
+        return <p className="error error2">{props.formError}</p>
+    }
+
+    function FormOk(props){
+        return <p className="error error2">{props.formOk}</p>
     }
 
     return (
@@ -364,9 +371,8 @@ function EditPublishedForm({logged, user, participantId}) {
                     ))}
                     </div>
                     <div className="form-submit">
-                        <p className="error"> 
-                            { formError} 
-                        </p>
+                        { formError?   <FormError formError={formError}></FormError> : ''  } 
+                        { formOk?   <FormOk formOk={formOk}></FormOk> : ''  } 
                         <Button variant="contained" type="submit" color="primary">Salvar</Button>
                     </div>
                 </form>
