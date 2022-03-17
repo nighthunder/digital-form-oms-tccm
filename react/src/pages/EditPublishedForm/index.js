@@ -35,7 +35,8 @@ function EditPublishedForm({logged, user, participantId}) {
     //console.log("Location Formulario", location);
     const titles = ['Admissão','Acompanhamento','Desfecho']
     const [form, setForm] = useState({}); // descrições das perguntas
-    const [questionsgroups, setQuestionsGroups] = useState({}); // descrições dos grupos
+    const [qstgroups, setQstGroups] = useState({}); // descrições dos grupos
+    const [qstsorder, setQstOrder] = useState({}); // ordem das perguntas
     const [formError, setFormError] = useState('')
     const [formOk, setFormOk] = useState('')
     const history = useHistory();
@@ -80,11 +81,11 @@ function EditPublishedForm({logged, user, participantId}) {
         const value = target.value;
         const name = target.name;
         //console.log('idQuestão: ' + target.name, 'value: ' + target.value);
-        setQuestionsGroups({
-            ...questionsgroups,
+        setQstGroups({
+            ...qstgroups,
             [name]: value,
         });
-        console.log("questions groups", questionsgroups);
+        console.log("questions groups", qstgroups);
     }
 
     function checkTitle(index, question) { // tratamento da repetição dos nomes dos grupos
@@ -177,16 +178,16 @@ function EditPublishedForm({logged, user, participantId}) {
 
         //console.log( [ request.info['userid'], request.info['grouproleid'], request.info['hospitalunitid'], request.modulo, request.questionsdescriptions ]);
 
-        response = await api.put('/formquestionsdesc/' + location.state.modulo, request);
+        response = await api.put('/formqstdesc/' + location.state.modulo, request);
 
         let errors;
 
-        if (response.data[0].msgRetorno === ""){
+        if (response){
             setFormError(response.data[0].msgRetorno);
         }
 
         request = {
-            questionsgroups: JSON.stringify(questionsgroups),  
+            qstgroups: JSON.stringify(qstgroups),  
             modulo: location.state.modulo
         }
 
@@ -195,6 +196,13 @@ function EditPublishedForm({logged, user, participantId}) {
         if (response){
             setFormError(response.data[0].msgRetorno);
         }
+
+        /*request = {
+            qstsorder: JSON.stringify(qstsorder),  
+            modulo: location.state.modulo
+        }
+
+        response = await api.put('/formqstorder/' + location.state.modulo, request);*/
 
     }
 
@@ -245,7 +253,7 @@ function EditPublishedForm({logged, user, participantId}) {
                                         </div>
                                     </div>
                                     <div className="groupHeader" id={question.qstId}>
-                                    <TextField className="inputQst" name={String(question.qstGroupId)} value={questionsgroups[question.qstGroupId] ? questionsgroups[question.qstGroupId] : question.dsc_qst_grp } onChange={handleChangeGroups}>{question.dsc_qst_grp}</TextField>
+                                    <TextField className="inputQst" name={String(question.qstGroupId)} value={qstgroups[question.qstGroupId] ? qstgroups[question.qstGroupId] : question.dsc_qst_grp } onChange={handleChangeGroups}>{question.dsc_qst_grp}</TextField>
                                         <Edit className="Icon ediIcon" onClick={handleInfo}></Edit><QuestionMark className="Icon qstIcon" onClick={() => handleClickOpen(question, "group")}></QuestionMark>
                                         <p className="questionType groupType">Grupo de questões</p>
                                     </div>

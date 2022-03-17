@@ -35,9 +35,6 @@ Route::group(['middleware' => 'cors:api'], function() {
     Route::post('form/{id}', [FormController::class, 'store']);
     Route::put('form/{id}', [FormController::class, 'update']);
 
-    Route::put('formquestionsdesc/{id}', [FormStructureController::class, 'updatePublishedFormQuestions']);
-    Route::put('formgroupsdesc/{id}', [FormStructureController::class, 'updatePublishedFormQuestionsGroups']);
-
     Route::get('survey/{id}', [SurveyController::class, 'show']); //Pesquisa
     Route::get('survey/', [SurveyController::class, 'search']);
     Route::post('survey/', [SurveyController::class, 'insert']);
@@ -52,6 +49,11 @@ Route::group(['middleware' => 'cors:api'], function() {
     Route::get('questiontype/{id}', [ModuleController::class, 'getQuestionTypeAltText']); 
 
     Route::post('searchHospital/', [HospitalController::class, 'searchHospitalDesc']);
+
+    Route::put('formqstdesc/{id}', [FormStructureController::class, 'updatePublishedFormQuestions']);
+    Route::put('formgroupsdesc/{id}', [FormStructureController::class, 'updatePublishedFormQuestionsGroups']);
+    Route::put('formqstorder/{id}', [FormStructureController::class, 'updateQstChangeOrder']);
+
 });
 
 
