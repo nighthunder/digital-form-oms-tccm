@@ -9,6 +9,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownwardRounded';
 import Edit from '@mui/icons-material/Edit';
 import QuestionMark from '@mui/icons-material/QuestionMark';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import PlusOne from '@mui/icons-material/Add';
 import { makeStyles } from '@material-ui/styles';
 import api from '../../services/api';
@@ -19,6 +20,8 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+import { Transition } from "react-transition-group";
+import { display } from '@mui/system';
 
 
 const useStyles = makeStyles({
@@ -41,7 +44,8 @@ function EditPublishedForm({logged, user, participantId}) {
     const [formOk, setFormOk] = useState('')
     const history = useHistory();
     const [questions, setQuestions] = useState([]);
-    const [qstsorder, setQstOrder] = useState({}); // ordem das perguntas
+    // const [qstsorder, setQstOrder] = useState({}); // ordem das perguntas
+    var qstsorder = [];
     const [loadedResponses, setLoadedResponses] = useState(false);
     const [hospitalName, setHospitalName] = useState('');
 
@@ -57,7 +61,7 @@ function EditPublishedForm({logged, user, participantId}) {
         async function loadForm() {
             const response = await api.get('/form/' + location.state.modulo);
             setQuestions(response.data);
-            setQstOrder(response.data);
+            // setQstOrder(response.data);
 
             //console.log("QUESTOES", questions);
             //console.log("formRecordId", location.state.formRecordId);
@@ -151,6 +155,20 @@ function EditPublishedForm({logged, user, participantId}) {
         setQuestionGroupComment("");
         setOpen(true);
     };
+    const handleReorder = () => {
+        var orderQuestions = [];
+        document.querySelectorAll('.uniQuestion').forEach(function(i) {
+            orderQuestions.push(parseInt(i.getAttribute("id")))
+        });
+        qstsorder = [];
+        orderQuestions.forEach((el, i) => {
+            // console.log("i: ", i, "- el: ", el);
+            let found = questions.find(element => element.qstId === el);
+            // setQstOrder(qstsorder => [...qstsorder,found] );
+            qstsorder.push(found)
+        });
+        console.log("qstsorder", qstsorder);
+    };
     const handleAddSurvey = () => {
         history.push('/add-survey');
     };
@@ -161,89 +179,45 @@ function EditPublishedForm({logged, user, participantId}) {
         setOpen(false);
     };
 
+    const handleToogle = (description) => {
+        console.log("description", description);
+        document.querySelectorAll('.uniQuestion').forEach(function(i) {
+            if(i.getAttribute("value") === description){
+                // console.log("i", i);
+                if(i.style.display === "none"){
+                    i.style.display = "inline";
+                }else{
+                    i.style.display = "none";
+                }
+            }
+        });
+    };
+
     const usernameRefs = useRef([]);
 
     usernameRefs.current = questions.map(
         (ref, index) =>   usernameRefs.current[index] = React.createRef()
     )
     
-    const handleClickUpDown = (index, direction, question) => {
-        console.log("qstsorder", qstsorder);
-        console.log("index", index);
-        // console.log("direction question", direction, question);        
-        // console.log("myRefname", usernameRefs.current[index].current);
-        // usernameRefs.current[index].current.style.display = "none";
-        // let temp = usernameRefs.current[index].current
-        // let el1 = usernameRefs.current[index+1].current
-        // usernameRefs.current[index].current = el1
-        // usernameRefs.current[index+1].current = temp
-        // function findPrevious(elm) {
-        //     do {
-        //         elm = elm.previousSibling;
-        //     } while (elm && elm.nodeType != 1);
-        //     return elm;
-        // }
-        // function findNext(elm) {
-        //     do {
-        //         elm = elm.nextSibling;
-        //     } while (elm && elm.nodeType != 1);
-        //     return elm;
-        // }
-        
+    const handleClickUpDown = (index, direction, question) => {        
         var elm = usernameRefs.current[index].current;
-        console.log("elm", elm);
         var elm2
-        // let elem2 = usernameRefs.current[index+1].current;
         if (direction == "UP"){
-            // elm2 = findPrevious(elm);
-            elm2 = elm.previousSibling;
-            console.log("elm2", elm2);
-            elm.parentNode.insertBefore(elm, elm2);
-
-            // let tempRef = usernameRefs.current[index-1].current 
-            // usernameRefs.current[index-1].current = usernameRefs.current[index].current 
-            // usernameRefs.current[index].current = tempRef
-            let qstOrder = question.qstOrder
-            let temp = qstsorder.find(element => element.qstOrder == qstOrder)
-            setQstOrder(qstsorder => {
-                let data = [...qstsorder];
-                let temp = data[index];
-                data[index] = data[index-1];
-                data[index-1] = temp;
-                console.log(data);
-                return data ;
-            })
-            console.log("qstOrder", qstOrder);
-
-            // let currentIndex = qstsorder.indexOf(temp);
-            // console.log("currentIndex", currentIndex);
-
-            // console.log("temp", temp);
-            // qstsorder[currentIndex-1] = qstsorder[currentIndex];
-            // qstsorder[currentIndex] = temp;
-            // console.log("currentIndex", currentIndex);
-
-            // setqstOrder("")
-            // setqstOrder(qstOrder)
+            if (elm.previousSibling) {
+                elm2 = elm.previousSibling;
+                if (elm.getAttribute("value") === elm2.getAttribute("value")) {
+                    elm.parentNode.insertBefore(elm, elm2);
+                }
+            }
         }
         if (direction == "DOWN") {
-            // elm2 = findNext(elm);
-            elm2 = elm.nextSibling;
-            // console.log("elm2", elm2);
-            elm2.parentNode.insertBefore(elm2, elm);
-
-            // let tempRef = usernameRefs.current[index+1].current 
-            // usernameRefs.current[index+1].current = usernameRefs.current[index].current 
-            // usernameRefs.current[index].current = tempRef
-
-            // let temp = qstsorder[index+1];
-            // qstsorder[index+1] = qstsorder[index];
-            // qstsorder[index] = temp;
-            // setqstOrder("")
-            // setqstOrder(qstOrder)
+            if(elm.nextSibling){
+                elm2 = elm.nextSibling;
+                if (elm.getAttribute("value") === elm2.getAttribute("value")) {
+                    elm2.parentNode.insertBefore(elm2, elm);
+                }
+            }
         }
-        console.log("qstsorder", qstsorder);
-        // elem.parentNode.insertBefore(elem, elem.parentNode.firstChild);
     };
 
     async function submit(e) {
@@ -318,7 +292,7 @@ function EditPublishedForm({logged, user, participantId}) {
                 </div>
                
                 <form className="module" onSubmit={submit}>
-                    <div>
+                    <>
                     { questions.length === 0 && (location.state.formRecordId ? !loadedResponses : true) &&
                         <div className="loading">
                             <img src="assets/loading.svg" alt="Carregando"/>
@@ -328,195 +302,175 @@ function EditPublishedForm({logged, user, participantId}) {
                         console.log("QUESTIONS2", questions)
                     }
                     {questions.map((question, index) => (
-                        <div ref={usernameRefs.current[index]}>
-                            <div className="qst qst2" key={question.qstId} >
-                                {/* Se for um novo grupo de questões*/}
-                                { (question.dsc_qst_grp !== ""  && checkTitle(index, question)) &&
-                                <div>
+                        <>
+                            {/* Se for um novo grupo de questões*/}
+                            { (question.dsc_qst_grp !== ""  && checkTitle(index, question)) &&
+                                <div className="groupQuestion">
                                     <div className="qst qst2 qst3">
-                                        <div className="qstBody qstIconArea">
+                                        <div className="qstBodyGroup qstIconArea">
                                             <PlusOne className="Icon plusIcon" onClick={handleInfo}></PlusOne>
                                         </div>
                                     </div>
                                     <div className="groupHeader" id={question.qstId}>
-                                    <TextField className="inputQst" name={String(question.qstGroupId)} value={qstgroups[question.qstGroupId] ? qstgroups[question.qstGroupId] : question.dsc_qst_grp } onChange={handleChangeGroups}>{question.dsc_qst_grp}</TextField>
+                                        <TextField className="inputQst inputQst3" name={String(question.qstGroupId)} value={qstgroups[question.qstGroupId] ? qstgroups[question.qstGroupId] : question.dsc_qst_grp } onChange={handleChangeGroups}>{question.dsc_qst_grp}</TextField>
                                         <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
                                         <QuestionMark className="Icon qstIcon" onClick={() => handleClickOpen(question, "group")}></QuestionMark>
+                                        <VisibilityIcon className="Icon visIcon"  onClick={() => handleToogle(question.dsc_qst_grp)}></VisibilityIcon>
                                         <p className="questionType groupType">Grupo de questões</p>
                                     </div>
                                 </div>
-                                }
-                                <div className="qst qst2">
-                                    <div className="qstBody qstIconArea">
-                                        <PlusOne className="Icon plusIcon" onClick={handleInfo}></PlusOne>
+                            }
+                            <div ref={usernameRefs.current[index]} id={question.qstId} value={question.dsc_qst_grp} className="uniQuestion">
+                                <div className="qst qst2" key={question.qstId} >
+                                    <div className="qst qst2">
+                                        <div className="qstBody qstIconArea">
+                                            <PlusOne className="Icon plusIcon" onClick={handleInfo}></PlusOne>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="qstBody">
-                                
-                                {/* Se for do tipo Date question*/}
-                                { (question.qst_type === "Date question") && 
-                                <div>
-                                    <InputLabel className="qstLabel">Questão</InputLabel>
-                                    <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
-                                    <QuestionMark className="Icon qstIcon" onClick={() => handleClickOpen(question, "question")}></QuestionMark>
-                                    {!checkTitle(index, question) && 
-                                        <>
-                                            <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
-                                            <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
-                                        </>
-                                    }
-                                    <TextField className={classes.root} className="inputQst inputQst2" name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } fullWidth multiline>{question.dsc_qst}</TextField>
-                                    <p className="questionType">Tipo da questão: {question.qst_type}</p>
-                                    {
-                                        question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
-                                    }
-                                    { question.sub_qst !== '' &&
-                                    <p className="subQstInfo"> É um subquestão de {question.sub_qst} que aparece quando a opção Sim é selecionada.</p>      
-                                    }
-                                </div>
-                                }
-
-                                {/* Se for do tipo Number question*/}
-                                { (question.qst_type === "Number question") && 
-                                <div>
-                                {/*<TextField  type="number" name={String(question.qstId)} label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } />*/}
-                                <InputLabel className="qstLabel">Questão:</InputLabel>
-                                <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
-                                <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
-                                {!checkTitle(index, question) && 
-                                    <>
+                                    <div className="qstBody">
+                                    
+                                    {/* Se for do tipo Date question*/}
+                                    { (question.qst_type === "Date question") && 
+                                    <div>
+                                        <InputLabel className="qstLabel">Questão</InputLabel>
+                                        <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
+                                        <QuestionMark className="Icon qstIcon" onClick={() => handleClickOpen(question, "question")}></QuestionMark>
                                         <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
                                         <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
-                                    </>
-                                }
-                                <TextField className="inputQst inputQst2"  name={String(question.qstId)} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } onChange={handleChange} fullWidth multiline>{question.dsc_qst}</TextField>
-                                <p className="questionType">Tipo da questão: {question.qst_type}</p>
-                                {
-                                    question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
-                                }
-                                { question.sub_qst !== '' &&
-                                <p className="subQstInfo"> É um subquestão de {question.sub_qst} que aparece quando a opção Sim é selecionada.</p>      
-                                }
-                                </div>
-                                }
+                                        <TextField className={classes.root} className="inputQst inputQst2" name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } fullWidth multiline>{question.dsc_qst}</TextField>
+                                        <p className="questionType">Tipo da questão: {question.qst_type}</p>
+                                        {
+                                            question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
+                                        }
+                                        { question.sub_qst !== '' &&
+                                        <p className="subQstInfo"> É um subquestão de {question.sub_qst} que aparece quando a opção Sim é selecionada.</p>      
+                                        }
+                                    </div>
+                                    }
 
-                                {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha menos de 6 opções */}
-                                { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length < 6 ) &&
-                                <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
+                                    {/* Se for do tipo Number question*/}
+                                    { (question.qst_type === "Number question") && 
+                                    <div>
+                                    {/*<TextField  type="number" name={String(question.qstId)} label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } />*/}
                                     <InputLabel className="qstLabel">Questão:</InputLabel>
                                     <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
                                     <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
-                                    {!checkTitle(index, question) && 
-                                        <>
-                                            <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
-                                            <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
-                                        </>
-                                    }
-                                    <TextField  className="inputQst inputQst2" onChange={handleChange} name={String(question.qstId)} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst }  fullWidth multiline>{question.dsc_qst}</TextField>
+                                    <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
+                                    <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
+                                    <TextField className="inputQst inputQst2"  name={String(question.qstId)} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } onChange={handleChange} fullWidth multiline>{question.dsc_qst}</TextField>
                                     <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                     {
                                         question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
                                     }
-                                    <p className="subQstDesc">Respostas padronizadas</p>
-                                    <Select multiple native label={question.dsc_qst} aria-label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
-                                            {question.rsp_pad.split(',').map((item) => (
-                                                <option key={item} value={item}>{ item }</option>
-                                            ))}
-                                    </Select>
                                     { question.sub_qst !== '' &&
                                     <p className="subQstInfo"> É um subquestão de {question.sub_qst} que aparece quando a opção Sim é selecionada.</p>      
                                     }
-                                </div>
-                                } 
+                                    </div>
+                                    }
 
-                                {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha 6 ou mais opções */}
-                                { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length >= 6 ) &&
-                                <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
-                                    <InputLabel className="qstLabel">Questão:</InputLabel>
-                                    <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
-                                    <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
-                                    {!checkTitle(index, question) && 
-                                        <>
-                                            <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
-                                            <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
-                                        </>
-                                    }
-                                    <TextField  className="inputQst inputQst2" onChange={handleChange} name={String(question.qstId)} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst }  fullWidth multiline>{question.dsc_qst}</TextField>
-                                    <p className="questionType">Tipo da questão: {question.qst_type}</p>
-                                    {
-                                        question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
-                                    }
-                                    <p className="subQstDesc">Respostas padronizadas</p>
-                                    <Select multiple native label={question.dsc_qst} label={question.dsc_qst} aria-label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
-                                            {question.rsp_pad.split(',').map((item) => (
-                                                <option key={item} value={item}>{ item }</option>
-                                            ))}
-                                    </Select>
-                                    { question.sub_qst !== '' &&
-                                    <p className="subQstInfo"> É um subquestão de {question.sub_qst} que aparece quando a opção Sim é selecionada.</p>      
-                                    }
-                                </div>
-                                } 
-
-                                {/* Se for do tipo Text_Question ou Laboratory question ou Ventilation question*/}
-                                { (question.qst_type === "Text_Question" || question.qst_type === "Laboratory question" || question.qst_type === "Ventilation question") && 
-                                <div>
-                                <InputLabel className="qstLabel">Questão:</InputLabel>
-                                <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
-                                <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
-                                {!checkTitle(index, question) && 
-                                    <>
+                                    {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha menos de 6 opções */}
+                                    { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length < 6 ) &&
+                                    <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
+                                        <InputLabel className="qstLabel">Questão:</InputLabel>
+                                        <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
+                                        <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
                                         <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
                                         <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
-                                    </>
-                                }
-                                <TextField  className="inputQst inputQst2" name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } fullWidth multiline>{question.dsc_qst}</TextField>
-                                <p className="questionType">Tipo da questão: {question.qst_type}</p>
-                                {
-                                    question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
-                                }
-                                { question.sub_qst !== '' &&
-                                <p className="subQstInfo"> É um subquestão de {question.sub_qst} que aparece quando a opção Sim é selecionada.</p>      
-                                }
-                                </div>
-                                }
+                                        <TextField  className="inputQst inputQst2" onChange={handleChange} name={String(question.qstId)} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst }  fullWidth multiline>{question.dsc_qst}</TextField>
+                                        <p className="questionType">Tipo da questão: {question.qst_type}</p>
+                                        {
+                                            question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
+                                        }
+                                        <p className="subQstDesc">Respostas padronizadas</p>
+                                        <Select multiple native label={question.dsc_qst} aria-label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
+                                                {question.rsp_pad.split(',').map((item) => (
+                                                    <option key={item} value={item}>{ item }</option>
+                                                ))}
+                                        </Select>
+                                        { question.sub_qst !== '' &&
+                                        <p className="subQstInfo"> É um subquestão de {question.sub_qst} que aparece quando a opção Sim é selecionada.</p>      
+                                        }
+                                    </div>
+                                    } 
 
-                                {/* Se for do tipo Boolean_Question*/}
-                                { (question.qst_type === "Boolean_Question") && 
-                                <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
+                                    {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha 6 ou mais opções */}
+                                    { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length >= 6 ) &&
+                                    <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
+                                        <InputLabel className="qstLabel">Questão:</InputLabel>
+                                        <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
+                                        <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
+                                        <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
+                                        <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
+                                        <TextField  className="inputQst inputQst2" onChange={handleChange} name={String(question.qstId)} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst }  fullWidth multiline>{question.dsc_qst}</TextField>
+                                        <p className="questionType">Tipo da questão: {question.qst_type}</p>
+                                        {
+                                            question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
+                                        }
+                                        <p className="subQstDesc">Respostas padronizadas</p>
+                                        <Select multiple native label={question.dsc_qst} label={question.dsc_qst} aria-label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
+                                                {question.rsp_pad.split(',').map((item) => (
+                                                    <option key={item} value={item}>{ item }</option>
+                                                ))}
+                                        </Select>
+                                        { question.sub_qst !== '' &&
+                                        <p className="subQstInfo"> É um subquestão de {question.sub_qst} que aparece quando a opção Sim é selecionada.</p>      
+                                        }
+                                    </div>
+                                    } 
+
+                                    {/* Se for do tipo Text_Question ou Laboratory question ou Ventilation question*/}
+                                    { (question.qst_type === "Text_Question" || question.qst_type === "Laboratory question" || question.qst_type === "Ventilation question") && 
+                                    <div>
                                     <InputLabel className="qstLabel">Questão:</InputLabel>
                                     <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
                                     <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
-                                    {!checkTitle(index, question) && 
-                                        <>
-                                            <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
-                                            <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
-                                        </>
-                                    }
+                                    <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
+                                    <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
                                     <TextField  className="inputQst inputQst2" name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } fullWidth multiline>{question.dsc_qst}</TextField>
                                     <p className="questionType">Tipo da questão: {question.qst_type}</p>
                                     {
                                         question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
                                     }
-                                    <p className="subQstDesc">Respostas padronizadas</p>
-                                    <Select multiple native label={question.dsc_qst} aria-label={question.dsc_qst} onChange={handleChange}>
-                                        <option label='Sim'/>
-                                        <option label='Não'/>
-                                    </Select>
                                     { question.sub_qst !== '' &&
                                     <p className="subQstInfo"> É um subquestão de {question.sub_qst} que aparece quando a opção Sim é selecionada.</p>      
                                     }
+                                    </div>
+                                    }
+
+                                    {/* Se for do tipo Boolean_Question*/}
+                                    { (question.qst_type === "Boolean_Question") && 
+                                    <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
+                                        <InputLabel className="qstLabel">Questão:</InputLabel>
+                                        <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
+                                        <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
+                                        <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
+                                        <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
+                                        <TextField  className="inputQst inputQst2" name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } fullWidth multiline>{question.dsc_qst}</TextField>
+                                        <p className="questionType">Tipo da questão: {question.qst_type}</p>
+                                        {
+                                            question.qst_list_type ?  <p className="questionType">Tipo da lista: {question.qst_list_type}</p> : ''
+                                        }
+                                        <p className="subQstDesc">Respostas padronizadas</p>
+                                        <Select multiple native label={question.dsc_qst} aria-label={question.dsc_qst} onChange={handleChange}>
+                                            <option label='Sim'/>
+                                            <option label='Não'/>
+                                        </Select>
+                                        { question.sub_qst !== '' &&
+                                        <p className="subQstInfo"> É um subquestão de {question.sub_qst} que aparece quando a opção Sim é selecionada.</p>      
+                                        }
+                                    </div>
+                                    } 
+                                    </div>    
                                 </div>
-                                } 
-                                </div>    
                             </div>
-                        </div>
+                        </>
                     ))}
-                    </div>
+                    </>
                     <div className="form-submit">
                         { formError?   <FormError formError={formError}></FormError> : ''  } 
                         { formOk?   <FormOk formOk={formOk}></FormOk> : ''  } 
-                        <Button variant="contained" type="submit" color="primary">Salvar</Button>
+                        {/* <Button variant="contained" type="submit" color="primary">Salvar</Button> */}
+                        <Button onClick={handleReorder} variant="contained" color="primary">Salvar</Button>
                     </div>
                 </form>
                 <Dialog key={Math.random()}

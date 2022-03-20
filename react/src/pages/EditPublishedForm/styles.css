@@ -9,7 +9,7 @@
 	text-transform: uppercase;
 }
 .questionType{
-	margin: 25px 0px -10px;
+	margin: 0px 0px -10px;
 	display: inline;
 }
 .subQstInfo{
@@ -53,6 +53,9 @@ hr{
 	width: calc(100% - 25px) !important;
 	font-size: 0.75rem !important;
 }
+.inputQst3{
+	width: 70% !important;
+}
 .MuiTextField-root2{
 	width: 100% !important;
 }
@@ -72,14 +75,23 @@ hr{
 	margin-top: 60px;
 }
 .groupHeader{
-	padding: 15px;
+	padding: 35px;
 	border: 2px dotted #d2cecb;
 	border-radius: 5px;
 	margin-bottom: 25px;
-	background: #f9eeee;
+	background: url(//www.devmedia.com.br/view/img/grid.png), linear-gradient(to right, rgba(249, 238, 238, 0.75), rgba(225, 255, 254, 0.5));
 	border-radius: 5px;
 }
 .qstBody{
+	border: 2px dotted #d2cecb;
+	border-radius: 5px;
+	padding: 10px;
+	margin: 10px 20px 10px 20px;
+	background: #ffd7d5;
+	background: #f9eeee;
+	border-radius: 5px;
+}
+.qstBodyGroup{
 	border: 2px dotted #d2cecb;
 	border-radius: 5px;
 	padding: 10px;
@@ -182,6 +194,10 @@ aside{
 	right: 58px;
 }
 .ArrowUp2{
+	position: relative;
+	right: 43px;
+}
+.visIcon{
 	position: relative;
 	right: 43px;
 }
