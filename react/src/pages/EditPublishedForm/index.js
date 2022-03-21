@@ -20,8 +20,8 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import { Transition } from "react-transition-group";
-import { display } from '@mui/system';
+//import { Transition } from "react-transition-group";
+//import { display } from '@mui/system';
 
 
 const useStyles = makeStyles({
@@ -282,7 +282,7 @@ function EditPublishedForm({logged, user, participantId}) {
         }
 
         request = {
-            questionorder: JSON.stringify(swapQstsOrder),  
+            questionsorder: JSON.stringify(swapQstsOrder),  
             modulo: location.state.modulo
         }
 
