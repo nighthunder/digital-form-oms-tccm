@@ -46,6 +46,7 @@ function EditPublishedForm({logged, user, participantId}) {
     const [questions, setQuestions] = useState([]);
     // const [qstsorder, setQstOrder] = useState({}); // ordem das perguntas
     var qstsorder = [];
+    var swapQstsOrder = [];
     const [loadedResponses, setLoadedResponses] = useState(false);
     const [hospitalName, setHospitalName] = useState('');
 
@@ -206,6 +207,17 @@ function EditPublishedForm({logged, user, participantId}) {
             if (elm.previousSibling) {
                 elm2 = elm.previousSibling;
                 if (elm.getAttribute("value") === elm2.getAttribute("value")) {
+                    let orderelm = parseInt(elm.getAttribute("name"))
+                    let keyelm = parseInt(elm.getAttribute("id"))
+                    let orderelm2 = parseInt(elm2.getAttribute("name"))
+                    let keyelm2 = parseInt(elm2.getAttribute("id"))
+                    let tupla1 = {}
+                    let tupla2 = {}
+                    tupla1[keyelm] = orderelm2
+                    tupla2[keyelm2] = orderelm
+                    swapQstsOrder.push(tupla1, tupla2)
+                    elm.setAttribute("name", orderelm2)
+                    elm2.setAttribute("name", orderelm)
                     elm.parentNode.insertBefore(elm, elm2);
                 }
             }
@@ -214,10 +226,22 @@ function EditPublishedForm({logged, user, participantId}) {
             if(elm.nextSibling){
                 elm2 = elm.nextSibling;
                 if (elm.getAttribute("value") === elm2.getAttribute("value")) {
+                    let orderelm = parseInt(elm.getAttribute("name"))
+                    let keyelm = parseInt(elm.getAttribute("id"))
+                    let orderelm2 = parseInt(elm2.getAttribute("name"))
+                    let keyelm2 = parseInt(elm2.getAttribute("id"))
+                    let tupla1 = {}
+                    let tupla2 = {}
+                    tupla1[keyelm] = orderelm2
+                    tupla2[keyelm2] = orderelm
+                    swapQstsOrder.push(tupla1, tupla2)
+                    elm.setAttribute("name", orderelm2)
+                    elm2.setAttribute("name", orderelm)
                     elm2.parentNode.insertBefore(elm2, elm);
                 }
             }
         }
+        console.log("swapQstsOrder", swapQstsOrder);
     };
 
     async function submit(e) {
@@ -252,6 +276,19 @@ function EditPublishedForm({logged, user, participantId}) {
         }
 
         response = await api.put('/formgroupsdesc/' + location.state.modulo, request);
+
+        if (response){
+            setFormError(response.data[0].msgRetorno);
+        }
+
+        request = {
+            questionorder: JSON.stringify(swapQstsOrder),  
+            modulo: location.state.modulo
+        }
+
+        // console.log("JSON.stringify(swapQstsOrder)", JSON.stringify(swapQstsOrder));
+
+        response = await api.put('/formqstorder/' + location.state.modulo, request);
 
         if (response){
             setFormError(response.data[0].msgRetorno);
@@ -320,7 +357,7 @@ function EditPublishedForm({logged, user, participantId}) {
                                     </div>
                                 </div>
                             }
-                            <div ref={usernameRefs.current[index]} id={question.qstId} value={question.dsc_qst_grp} className="uniQuestion">
+                            <div ref={usernameRefs.current[index]} id={question.qstId} value={question.dsc_qst_grp} className="uniQuestion" name={question.qstOrder}>
                                 <div className="qst qst2" key={question.qstId} >
                                     <div className="qst qst2">
                                         <div className="qstBody qstIconArea">
@@ -470,7 +507,7 @@ function EditPublishedForm({logged, user, participantId}) {
                         { formError?   <FormError formError={formError}></FormError> : ''  } 
                         { formOk?   <FormOk formOk={formOk}></FormOk> : ''  } 
                         {/* <Button variant="contained" type="submit" color="primary">Salvar</Button> */}
-                        <Button onClick={handleReorder} variant="contained" color="primary">Salvar</Button>
+                        <Button onClick={handleReorder} type="submit" variant="contained" color="primary">Salvar</Button>
                     </div>
                 </form>
                 <Dialog key={Math.random()}
