@@ -81,6 +81,10 @@ function ShowSurvey({user}) {
         setOpen(false);
         setModuleID(q.crfFormsID);
         setModuleStatus(q.crfFormsStatus);
+        setMotherID(q.questionnaireID)
+        const moduleID = q.crfFormsID
+        const motherID = q.questionnaireID
+        const moduleStatus = q.crfFormsStatus
         {location.state.questionnaireStatus === "Publicado" &&
             setPopupTitle("Este questionário está em uso.");
             setPopupBodyText("Tem certeza de que deseja alterar um formulário deprecado?");
@@ -91,7 +95,16 @@ function ShowSurvey({user}) {
             setPopupBodyText("Apenas edições básicas são permitidas em módulos de pesquisas publicadas.");
             setOpen(true);
         }
-        {location.state.questionnaireStatus === "Novo" &&  history.push('/edit-unpublished-form');}
+        {location.state.questionnaireStatus === "Novo" &&    history.push('/edit-unpublished-form', {
+          modulo: moduleID,
+          moduleStatus: moduleStatus,
+          motherID: motherID,
+          hospitalIndex: user[0].hospitalunitid,
+          questionnaireID: location.state.questionnaireID,
+          questionnaireStatus: location.state.questionnaireStatus,
+          questionnaireDesc: location.state.description,
+          questionnaireVers: location.state.version
+        });}
   };
   const handleClose = () => {
     setOpen(false);
@@ -102,7 +115,9 @@ function ShowSurvey({user}) {
        history.push('/edit-published-form', {
             modulo: moduleID,
             moduleStatus: moduleStatus,
+            motherID: motherID,
             hospitalIndex: user[0].hospitalunitid,
+            questionnaireID: location.state.questionnaireID,
             questionnaireStatus: location.state.questionnaireStatus,
             questionnaireDesc: location.state.description,
             questionnaireVers: location.state.version

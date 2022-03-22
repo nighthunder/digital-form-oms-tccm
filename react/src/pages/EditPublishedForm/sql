@@ -1,0 +1,147 @@
+BEGIN
+#========================================================================================================================
+#== Procedure criada para o registro das questoes e respostas de um módulo de um formulario no sistema para um participante
+#== Criada em 21 dez 2020
+#== Alterada em 24 jan 2021 - ajuste da traduçao das respostas padronizadas
+#========================================================================================================================
+
+DECLARE v_Exist integer;
+DECLARE v_question varchar(50);
+DECLARE v_answer varchar(500);
+DECLARE v_questionid integer;
+DECLARE v_listOfValuesid integer;
+DECLARE v_listtypeid integer;
+DECLARE v_questionGroupFormid integer;
+DECLARE v_lista text;
+DECLARE v_apoio varchar(500);
+DECLARE v_resposta varchar(500);
+DECLARE v_listofvaluesid_ant integer;
+DECLARE v_answer_ant varchar(500);
+DECLARE v_operacao varchar(01);
+ 
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+   START TRANSACTION;
+	# Inserindo/Alterando as questoes registro do form e a questão associada a data    
+    
+    set v_lista = concat(p_stringquestions, ',') ;
+    
+    while length(v_lista) > 1 DO
+		set v_apoio = substring(v_lista, 1, position(',' in v_lista));
+		set v_question = substring(v_apoio, 1, position(':' in v_apoio) - 1);
+		set v_answer     = substring(v_apoio, position(':' in v_apoio) + 1, position(',' in v_apoio) - 1);
+        set v_answer     = REPLACE(v_answer, ',', '');
+		set v_questionid = CONVERT(v_question, SIGNED);
+	
+        # verificando se a questão exige um tipo de resposta padronizada
+        set v_listtypeid = null;
+        set v_listofvaluesid = null;
+        Select listtypeid into v_listtypeid from tb_questions
+							where questionid = v_questionid;
+
+		#select v_question, v_listtypeid, v_answer; 
+		if (v_listtypeid is not NULL) then
+               SELECT listofvaluesid into v_listOfValuesid 
+                    from tb_listtype t1, tb_listofvalues t2
+                    where t1.listTypeID = v_listtypeid and
+						  t2.listTypeID = t1.listTypeID and
+                          translate('pt-br', rtrim(ltrim(t2.description))) = rtrim(ltrim(v_answer)); 
+                          
+			   if v_listOfvaluesid is not null then
+			         set v_resposta = concat('Resposta da ', v_question, ':', v_answer, ' - ', convert (v_listtypeid, char), ':', convert(v_listofvaluesid, char));
+					 set v_answer = '';
+			   else # não foi localizada resposta para a questão - nao será inserida
+                     set v_resposta = '';
+                     set v_answer = '';
+			   end if;
+	    else
+			   set v_resposta = concat('Resposta da ', v_question, ':', v_answer);
+               set v_listofvaluesid = null;
+        end if;
+
+        if v_resposta <> '' then
+        
+                set v_listofvaluesid_ant = null;
+                set v_answer_ant = null;
+        
+				# verificar se a questão já havia sido respondido e o valor foi alterado
+                select listofvaluesid, answer into v_listofvaluesid_ant, v_answer_ant
+					    from tb_questiongroupformrecord
+                        where formRecordID = p_formRecordid and questionid = v_question;
+                if v_answer_ant = '' then
+                   set v_answer_ant = null;
+				end if;
+                
+                # se questão ainda nao foi respondida
+                if v_listofvaluesid_ant is null and v_answer_ant is null then
+                        set v_operacao = 'I';
+                        set v_resposta = CONCAT('Inclusão de ', v_resposta);
+                        
+						INSERT INTO tb_questiongroupformrecord (
+							formRecordID, crfFormsID, questionid, listofvaluesid, answer)
+							values (p_formRecordId, p_crfFormId, v_questionid, v_listofvaluesid, v_answer);
+				
+						set v_questionGroupFormid = LAST_INSERT_ID();
+    
+						if v_questionGroupFormid is NULL then
+							ROLLBACK;
+							set p_msg_retorno = 'Erro na inclusão do registro. Verifique!';
+							leave sp;
+						end if;
+				else
+						# select v_listofvaluesid_ant, v_answer_ant, v_listofvaluesid, v_answer;
+                        if (v_listofvaluesid_ant is not null and v_listofvaluesid_ant = v_listofvaluesid) or
+                           (v_answer_ant is not null and v_answer_ant = v_answer) then
+                           set v_operacao = '';
+                           set v_resposta = '';
+						else 
+							#select 'A', v_listofvaluesid_ant, v_answer_ant, v_listofvaluesid, v_answer;
+							set v_operacao = 'A';
+                            if v_listofvaluesid_ant is not null then
+							   set v_resposta = CONCAT('Exclusão da Resposta: ', convert(v_listofvaluesid_ant, char), ' para Inclusão de ', v_resposta);
+							end if;
+                            
+                            if v_answer_ant is not null then
+							   set v_resposta = CONCAT('Exclusão da Resposta: ', v_answer_ant, ' para Inclusão de ', v_resposta);
+							end if;
+                            
+							select questionGroupFormRecordID into v_questionGroupFormid 
+								from tb_questiongroupformrecord
+								where formRecordID = p_formrecordid and questionid = v_questionid;     
+
+							Update tb_questiongroupformrecord 
+								set listofvaluesid = v_listofvaluesid,
+									answer = v_answer
+								where questionGroupFormRecordID = v_questionGroupFormid;
+						end if;	
+                
+                end if;
+                
+                if v_operacao <> '' then
+					# registrando a informação de notificação para a inclusao/Alteração da questão referente a data do modulo
+					INSERT INTO tb_notificationrecord (
+							userid, profileid, hospitalunitid, tablename, rowdid, changedon, operation, log)
+							values (p_userid, p_grouproleid, p_hospitalunitid, 'tb_questiongroupformrecord', v_questionGroupFormid, now(), v_operacao, v_resposta);
+			    end if;
+		end if;
+        
+        if position(',' in v_lista) < length(v_lista) then
+	  	   set v_lista = substring(v_lista,  position(',' in v_lista) + 1, length(v_lista));
+		else 
+           set v_lista = '';
+		end if;
+          
+	End While;
+    
+	COMMIT;
+END;
+
+   select p_msg_retorno from DUAL;
+		
+END
