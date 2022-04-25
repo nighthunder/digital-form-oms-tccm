@@ -1,5 +1,5 @@
 // View do formulário quando é preenchido.
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, cloneElement } from 'react';
 import './styles.css';
 import { useLocation } from "react-router-dom";
 import { Scrollchor } from 'react-scrollchor';
@@ -146,7 +146,8 @@ function EditUnpublishedForm({logged, user, participantId}) {
         //setQuestionListTypeComment(`rere \n asdssss`);
         setOpen(true);
     };
-    const handleInfo = () => {
+    const handleInfo = (e) => {
+        console.log("e", e);
         setOpen(false);
         setPopupTitle("[Atenção] Informações sobre a edição");
         setPopupBodyText("Neste modo de edição só é possível reodernar questões e agrupamentos ou alterar suas descrições. Para ser possível fazer mais alterações é necessário criar uma pesquisa derivada.");
@@ -315,6 +316,23 @@ function EditUnpublishedForm({logged, user, participantId}) {
         return <p className="error error2">{props.formOk}</p>
     }
 
+    const handleClickClone = (tipo) => {
+        console.log("click clone", tipo);
+        if(tipo == "group"){
+            let elem = document.getElementsByClassName("groupQuestion");
+            let clone = elem[0].cloneNode(true);
+            // clone.setAttribute('value', 'Novo Grupo');
+            // document.querySelector(".module").appendChild(clone);
+            document.querySelector(".module").insertBefore(clone, elem[0]);
+            // document.getElementsByClassName("module").appendChild(clone);
+            console.log("elem", document.querySelector(".module"));
+        }
+        // ev.preventDefault();
+        // const { emails, input } = this.state;
+        //     if (!emails.includes(input))
+        //         this.setState({ emails: [...emails, input]});
+    }
+
     return (
         <main className="container">
             <div>
@@ -345,7 +363,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                                 <div className="groupQuestion">
                                     <div className="qst qst2 qst3">
                                         <div className="qstBodyGroup qstIconArea">
-                                            <PlusOne className="Icon plusIcon" onClick={handleInfo}></PlusOne>
+                                            <PlusOne className="Icon plusIcon" onClick={() => handleClickClone("group")}></PlusOne>
                                         </div>
                                     </div>
                                     <div className="groupHeader" id={question.qstId}>
