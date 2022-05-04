@@ -57,4 +57,22 @@ class FormStructureController extends Controller
        }
     }
 
+    public function createFormGroup(Request $request) // Criar um grupo de questões 
+    {
+        try {
+
+          $respostas = str_replace("{", "", $request->groupsdesc);
+          $respostas = str_replace("}", "", $respostas);
+          $respostas = str_replace('"', "", $respostas);
+
+          $query_response = DB::select("CALL postQstGroup('{$request->info['userid']}','{$request->info['grouproleid']}','{$request->info['hospitalunitid']}','{$respostas}', @p_msg_retorno)");
+
+        
+          return response()->json($query_msg);
+
+       } catch (Exception $e) {
+         return response()->json($e, 500);
+       }
+    }
+
 }
