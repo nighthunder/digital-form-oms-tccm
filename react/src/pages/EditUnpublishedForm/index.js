@@ -22,6 +22,9 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 //import { Transition } from "react-transition-group";
 //import { display } from '@mui/system';
+// import NewGroup from '../../components/newGroup';
+import ReactDOM from 'react-dom'
+import ReactDOMServer from "react-dom/server";
 
 
 const useStyles = makeStyles({
@@ -316,17 +319,72 @@ function EditUnpublishedForm({logged, user, participantId}) {
         return <p className="error error2">{props.formOk}</p>
     }
 
-    const handleClickClone = (tipo) => {
-        console.log("click clone", tipo);
-        if(tipo == "group"){
-            let elem = document.getElementsByClassName("groupQuestion");
-            let clone = elem[0].cloneNode(true);
+    // const [newGroup, setNewGroup] = useState();
+
+    function NewGroup() {
+        
+        return (
+            <div className="groupQuestion">
+                <div className="qst qst2 qst3">
+                    <div className="qstBodyGroup qstIconArea">
+                        <PlusOne className="Icon plusIcon" onClick={() => handleClickClone("group")}></PlusOne>
+                        {/* <PlusOne className="Icon plusIcon"></PlusOne> */}
+                    </div>
+                </div>
+                {/* <div className="groupHeader" id={question.qstId}> */}
+                <div className="groupHeader" >
+                    {/* <TextField className="inputQst inputQst3" name={String(question.qstGroupId)} value={qstgroups[question.qstGroupId] ? qstgroups[question.qstGroupId] : question.dsc_qst_grp } onChange={handleChangeGroups}>{question.dsc_qst_grp}</TextField> */}
+                    <TextField className="inputQst inputQst3" name="teste" placeholder="Novo Grupo" value="">Novo Grupo</TextField>
+                    {/* <Edit className="Icon ediIcon" onClick={handleInfo}></Edit> */}
+                    <Edit className="Icon ediIcon"></Edit>
+                    <QuestionMark className="Icon qstIcon"></QuestionMark>
+                    {/* <QuestionMark className="Icon qstIcon" onClick={() => handleClickOpen(question, "group")}></QuestionMark> */}
+                    <VisibilityIcon className="Icon visIcon" ></VisibilityIcon>
+                    {/* <VisibilityIcon className="Icon visIcon"  onClick={() => handleToogle(question.dsc_qst_grp)}></VisibilityIcon> */}
+                    <p className="questionType groupType">Grupo de questões</p>
+                </div>
+                <div className="qst qst2">
+                    <div className="qstBody qstIconArea">
+                        <PlusOne className="Icon plusIcon" onClick={handleInfo}></PlusOne>
+                    </div>
+                </div>
+            </div>
+        );
+        
+    }
+    const handleClickClone = (id) => {
+
+        let novoGrupo = ReactDOMServer.renderToStaticMarkup(<NewGroup />);
+        // let node = ReactDOM.render(novoGrupo);
+        // console.log("node", node);
+        console.log("novoGrupo", novoGrupo);
+
+        // setNewGroup(<NewGroup />);
+        // console.log("newGroup", newGroup);
+
+        console.log("click clone", id);
+        // if(tipo == "group"){
+            // let elem = document.getElementsByClassName("groupQuestion");
+            let elem;
+
+            document.querySelectorAll('.groupQuestion').forEach(function(i) {
+                if(parseInt(i.getAttribute("id")) == id){
+                    elem = i
+                }
+            });
+
+            
+            
+            let clone = elem.cloneNode(true);
+            console.log("clone", clone);
+            // document.querySelector(".module").insertBefore(clone, elem);
+            elem.insertAdjacentHTML('beforebegin', novoGrupo);
+
             // clone.setAttribute('value', 'Novo Grupo');
             // document.querySelector(".module").appendChild(clone);
-            document.querySelector(".module").insertBefore(clone, elem[0]);
             // document.getElementsByClassName("module").appendChild(clone);
-            console.log("elem", document.querySelector(".module"));
-        }
+            // console.log("elem", document.querySelector(".module"));
+        // }
         // ev.preventDefault();
         // const { emails, input } = this.state;
         //     if (!emails.includes(input))
@@ -360,10 +418,10 @@ function EditUnpublishedForm({logged, user, participantId}) {
                         <>
                             {/* Se for um novo grupo de questões*/}
                             { (question.dsc_qst_grp !== ""  && checkTitle(index, question)) &&
-                                <div className="groupQuestion">
+                                <div className="groupQuestion" id={question.qstId}>
                                     <div className="qst qst2 qst3">
                                         <div className="qstBodyGroup qstIconArea">
-                                            <PlusOne className="Icon plusIcon" onClick={() => handleClickClone("group")}></PlusOne>
+                                            <PlusOne className="Icon plusIcon" onClick={() => handleClickClone(question.qstId)}></PlusOne>
                                         </div>
                                     </div>
                                     <div className="groupHeader" id={question.qstId}>
