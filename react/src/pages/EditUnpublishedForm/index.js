@@ -47,6 +47,8 @@ function EditUnpublishedForm({logged, user, participantId}) {
     const [formOk, setFormOk] = useState('')
     const history = useHistory();
     const [questions, setQuestions] = useState([]);
+    const [contI, setContI] = useState(1);
+    // const [groups, setGroups] = useState([]); // grupos
     // const [qstsorder, setQstOrder] = useState({}); // ordem das perguntas
     var qstsorder = [];
     var swapQstsOrder = [];
@@ -90,7 +92,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
         const target = e.target;
         const value = target.value;
         const name = target.name;
-        //console.log('idQuestão: ' + target.name, 'value: ' + target.value);
+        console.log('idQuestão: ' + target.name, 'value: ' + target.value);
         setQstGroups({
             ...qstgroups,
             [name]: value,
@@ -353,42 +355,100 @@ function EditUnpublishedForm({logged, user, participantId}) {
         
     }
     const handleClickClone = (id) => {
+        
+        // const target = e.target;
+        // const value = target.value;
+        // const name = target.name;
+        // //console.log('idQuestão: ' + target.name, 'value: ' + target.value);
+        // setQstGroups({
+        //     ...qstgroups,
+        //     [name]: value,
+        // });
+        // console.log("questions groups", qstgroups);
 
-        let novoGrupo = ReactDOMServer.renderToStaticMarkup(<NewGroup />);
-        // let node = ReactDOM.render(novoGrupo);
-        // console.log("node", node);
-        console.log("novoGrupo", novoGrupo);
+        let myObj = questions.find(obj => obj.qstId === id);
+        let myObjIndex = questions.findIndex(obj => obj.qstId === id);
+        console.log("myObjIndex", myObjIndex);
 
-        // setNewGroup(<NewGroup />);
-        // console.log("newGroup", newGroup);
+        let left = questions.slice(0, myObjIndex)
+        let right = questions.slice(myObjIndex)
 
-        console.log("click clone", id);
-        // if(tipo == "group"){
-            // let elem = document.getElementsByClassName("groupQuestion");
-            let elem;
+        console.log("questions", questions);
+        console.log("right", right);
 
-            document.querySelectorAll('.groupQuestion').forEach(function(i) {
-                if(parseInt(i.getAttribute("id")) == id){
-                    elem = i
-                }
-            });
+        let objCopy = {...myObj};
+
+        setContI(contI + 1);
+
+        objCopy.dsc_qst = "Nova Questão"
+        objCopy.dsc_qst_grp = "Novo Grupo - " + contI
+        objCopy.qstGroupId = String(parseInt(1000 + (Math.random() * (20000-1000))))
+        objCopy.qstId = parseInt(1000 + (Math.random() * (20000-1000)));
+        objCopy.qstOrder = parseInt(100000 + (Math.random() * (200000-100000)));
+        objCopy.qst_type = "Number question"
+        objCopy.rsp_pad = null
+        objCopy.rsp_padId = null
+
+        left.push(objCopy);
+        console.log("left", left);
+        let mergeArrays = [...left, ...right]
+        console.log("mergeArrays", mergeArrays);
+
+        setQuestions(mergeArrays)
+
+        // setQuestions(prevState => {
+        //     let left = prevState.components.slice(0, myObjIndex)
+        //     let right = prevState.components.slice(myObjIndex)
+        //     console.log("left", left);
+        //     console.log("right", right);
+        //     return {
+        //         components: left.concat(elements, right)
+        //     }
+        // });
+
+        // setQuestions([
+        //     ...questions.slice(0, 1),
+        //     objCopy,
+        //     ...questions.slice(1)
+        // ])
+
+        // console.log("myObj", myObj);
+
+        // let novoGrupo = ReactDOMServer.renderToStaticMarkup(<NewGroup />);
+        // // let node = ReactDOM.render(novoGrupo);
+        // // console.log("node", node);
+        // console.log("novoGrupo", novoGrupo);
+
+        // // setNewGroup(<NewGroup />);
+        // // console.log("newGroup", newGroup);
+
+        // console.log("click clone", id);
+        // // if(tipo == "group"){
+        //     // let elem = document.getElementsByClassName("groupQuestion");
+        //     let elem;
+
+        //     document.querySelectorAll('.groupQuestion').forEach(function(i) {
+        //         if(parseInt(i.getAttribute("id")) == id){
+        //             elem = i
+        //         }
+        //     });
 
             
             
-            let clone = elem.cloneNode(true);
-            console.log("clone", clone);
-            // document.querySelector(".module").insertBefore(clone, elem);
-            elem.insertAdjacentHTML('beforebegin', novoGrupo);
+        //     let clone = elem.cloneNode(true);
+        //     console.log("clone", clone);
+        //     // document.querySelector(".module").insertBefore(clone, elem);
+        //     elem.insertAdjacentHTML('beforebegin', novoGrupo);
 
-            // clone.setAttribute('value', 'Novo Grupo');
-            // document.querySelector(".module").appendChild(clone);
-            // document.getElementsByClassName("module").appendChild(clone);
-            // console.log("elem", document.querySelector(".module"));
-        // }
-        // ev.preventDefault();
-        // const { emails, input } = this.state;
-        //     if (!emails.includes(input))
-        //         this.setState({ emails: [...emails, input]});
+        //     // clone.setAttribute('value', 'Novo Grupo');
+        //     // document.querySelector(".module").appendChild(clone);
+        //     // document.getElementsByClassName("module").appendChild(clone);
+        //     // console.log("elem", document.querySelector(".module"));
+        // // }
+        // // ev.preventDefault();
+        // // const { emails, input } = this.state;
+        // //     if (!emails.includes(input))
+        // //         this.setState({ emails: [...emails, input]});
     }
 
     return (
