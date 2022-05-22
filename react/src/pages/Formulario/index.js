@@ -7,6 +7,7 @@ import api from '../../services/api';
 import { connect } from 'react-redux';
 import { useHistory } from "react-router-dom";
 import validFormDate from '../../utils/methods/validFormDate';
+import { func } from 'prop-types';
 
 
 function Formulario({logged, user, participantId}) {
@@ -116,6 +117,22 @@ function Formulario({logged, user, participantId}) {
         }
     }
 
+    // Subordinated Questions check 
+    // test one of the marked value matches the acepted answers
+    function handleMultiSubordinated(selectedValue, sub_qst_values){ 
+
+        let validAnswers = sub_qst_values.split(",")
+        //console.log("Respostas",validAnswers)
+        //console.log("SelectedValue",selectedValue)
+        let aux = false;
+        validAnswers.forEach(function(elem) { 
+            if (elem === selectedValue){
+                aux = true;
+            }     
+        })
+        //console.log("Aux", aux);
+        return aux;
+    }
 
     async function submit(e) {
         e.preventDefault();
@@ -196,7 +213,7 @@ function Formulario({logged, user, participantId}) {
 
                             {/* Se for do tipo Date question*/}
                             { (question.qst_type === "Date question") && 
-                                ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
+                                ( (question.sub_qst !== '' && (handleMultiSubordinated(form[question['idsub_qst']], question.sub_qst_values))) || question.sub_qst === '') &&
                             <div>
                                 <TextField
                                     id="date"
@@ -214,15 +231,16 @@ function Formulario({logged, user, participantId}) {
                             </div>
                             }
 
+                           
                             {/* Se for do tipo Number question*/}
                             { (question.qst_type === "Number question") && 
-                                ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
+                                ( (question.sub_qst !== '' && ( handleMultiSubordinated(form[question['idsub_qst']], question.sub_qst_values) )) || question.sub_qst === '') &&
                             <TextField type="number" name={String(question.qstId)} label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' } />
                             }
 
                             {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha menos de 6 opções */}
                             { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length < 6 ) &&
-                                ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
+                                ( (question.sub_qst !== '' && (handleMultiSubordinated(form[question['idsub_qst']], question.sub_qst_values))) || question.sub_qst === '') &&
                             <div className="MuiTextField-root">
                                 <FormLabel component="legend">{question.dsc_qst}</FormLabel>
                                 <RadioGroup aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
@@ -235,7 +253,7 @@ function Formulario({logged, user, participantId}) {
 
                             {/* Se for do tipo List question ou YNU_Question ou YNUN_Question e tenha 6 ou mais opções */}
                             { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length >= 6 ) &&
-                                ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
+                                ( (question.sub_qst !== '' && (handleMultiSubordinated(form[question['idsub_qst']], question.sub_qst_values))) || question.sub_qst === '') &&
                             <div className="MuiTextField-root">
                                 <InputLabel>{question.dsc_qst}</InputLabel>
                                 <Select value={form[String(question.qstId)] || ''} aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
@@ -248,13 +266,14 @@ function Formulario({logged, user, participantId}) {
 
                             {/* Se for do tipo Text_Question ou Laboratory question ou Ventilation question*/}
                             { (question.qst_type === "Text_Question" || question.qst_type === "Laboratory question" || question.qst_type === "Ventilation question") && 
-                                ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
+                                ( (question.sub_qst !== '' && (handleMultiSubordinated(form[question['idsub_qst']], question.sub_qst_values))) || question.sub_qst === '') &&
                             <TextField name={String(question.qstId)} label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }/>
                             }
 
+
                             {/* Se for do tipo Boolean_Question*/}
                             { (question.qst_type === "Boolean_Question") && 
-                                ( (question.sub_qst !== '' && (form[question['idsub_qst']] === 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
+                                ( (question.sub_qst !== '' && ( form[question['idsub_qst']] == 'Sim' || Number(form[question['idsub_qst']] + 1) > 0)) || question.sub_qst === '') &&
                             <div className="MuiTextField-root">
                                 <FormLabel component="legend">{question.dsc_qst}</FormLabel>
                                 <RadioGroup aria-label={question.dsc_qst} name={String(question.qstId)} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : '' }>
