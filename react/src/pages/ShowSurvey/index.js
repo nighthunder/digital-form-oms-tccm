@@ -36,6 +36,7 @@ function ShowSurvey({user}) {
   const [loadingSearch, setLoadingSearch] = useState(false);
   const [popupTitle, setPopupTitle] = useState('');
   const [popupBodyText, setPopupBodyText] = useState('');
+  const [popupAction, setPopupAction] = useState('');
 
 	useEffect(() => {
 
@@ -88,11 +89,13 @@ function ShowSurvey({user}) {
         {location.state.questionnaireStatus === "Publicado" &&
             setPopupTitle("Este questionário está em uso.");
             setPopupBodyText("Tem certeza de que deseja alterar um formulário deprecado?");
+            setPopupAction("edition");
             setOpen(true);
         }
         { location.state.questionnaireStatus === "Deprecado" &&  
             setPopupTitle("Este questionário foi deprecado.");
             setPopupBodyText("Apenas edições básicas são permitidas em módulos de pesquisas publicadas.");
+            setPopupAction("edition");
             setOpen(true);
         }
         {location.state.questionnaireStatus === "Novo" &&    history.push('/edit-unpublished-form', {
@@ -105,10 +108,18 @@ function ShowSurvey({user}) {
           questionnaireDesc: location.state.description,
           questionnaireVers: location.state.version
         });}
+
   };
   const handleClose = () => {
     setOpen(false);
   };
+
+  function handlePublishing(e){
+    setPopupAction("publication");
+    setPopupTitle("Publicação de "+location.state.description);
+    setPopupBodyText("Essa função permite colocar uma pesquisa em uso. \n Todos os módulos do questionários estarão disponíveis para serem preenchidos. \n Você tgem certeza disso?");
+    setOpen(true);
+  }
 
   const handleOpenEditPublishedForm = () => {
        console.log(moduleID);
@@ -213,9 +224,7 @@ function ShowSurvey({user}) {
         <Add color="primary" />
           Adicionar novo formulário de módulo +
         </Button><br/>
-        <Button variant="outlined" color="primary" className="add-module publish" onClick={ () => {
-          history.push('/survey-publish')
-        }}>
+        <Button variant="contained" color="primary" className="add-module publish" onClick={handlePublishing}>
           <Add color="primary" />
           Publicar pesquisa
         </Button><br/>
@@ -275,17 +284,20 @@ function ShowSurvey({user}) {
                       </DialogTitle>
                       <DialogContent>
                         <DialogContentText id="alert-dialog-description">
-                        { location.state.questionnaireStatus === "Publicado" &&
+                        { location.state.questionnaireStatus === "Publicado" && popupAction == "edition" &&
                         "Apenas edições básicas são permitidas em formulários de pesquisas publicadas."}
-                        { location.state.questionnaireStatus === "Deprecado" &&
+                        { location.state.questionnaireStatus === "Deprecado" && popupAction == "edition" &&
                         "Tem certeza de que deseja alterar um formulário deprecado?"}
+                        { location.state.questionnaireStatus === "Novo" && popupAction == "publication" &&
+                          "Essa função permite colocar uma pesquisa em uso. \n Todos os módulos do questionários estarão disponíveis para terem prontuários preenchidos. \n Você tem certeza disso?"}
                         </DialogContentText>
-                      </DialogContent>
+                      </DialogContent>  
                       <DialogActions>
                         <Button onClick={handleClose}>Fechar [x]</Button>
-                        <Button onClick={handleOpenEditPublishedForm} autoFocus>
-                          Prosseguir
-                        </Button>
+                        {
+                          popupAction == "edition" ? <Button onClick={handleOpenEditPublishedForm} autoFocus>Prosseguir</Button> : <Button onClick={handlePublishing} autoFocus>Publicar</Button>
+                        }
+                        
                       </DialogActions>
                     </Dialog>
           </table>
