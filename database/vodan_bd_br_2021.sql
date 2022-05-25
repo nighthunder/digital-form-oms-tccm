@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 25, 2022 at 04:45 PM
+-- Generation Time: May 25, 2022 at 08:02 PM
 -- Server version: 10.4.22-MariaDB
 -- PHP Version: 7.4.27
 
@@ -25,7 +25,7 @@ DELIMITER $$
 --
 -- Procedures
 --
-CREATE DEFINER=`root`@`localhost` PROCEDURE `checkQuestionnairePublicationRules` (IN `p_questionnaireID` INT, IN `p_questionnaireDescription` VARCHAR(500))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `checkQuestionnairePublicationRules` (IN `p_questionnaireID` INT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
 #========================================================================================================================
 #== Procedure criada para checar se um questionário que irá ser publicado atende os requisitos
 #== As regras aplicadas nessa procedure são somente da pesquisa WHO COVID-19
@@ -37,8 +37,11 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `checkQuestionnairePublicationRules`
 
 DECLARE p_userID integer;
 DECLARE p_msg_retorno varchar(500);
+DECLARE p_check_questionnaire_status integer;
 DECLARE p_check_modules_qtd  integer; # verifica se o questionário tem 3 módulos
-DECLARE p_check_modules_types varchar(500); #== Checa se o questionário tem 1 formulário de Admissão, 1 de Acompanhamento e 1 de desfecho
+DECLARE p_check_admission_module_qtd varchar(500); #== Checa qtd de módulos de admissão
+DECLARE p_check_followup_module_qtd varchar(500); #== Checa qtd de módulos de Acompanhamento
+DECLARE p_check_discharged_module_qtd varchar(500); #== Checa qtd de módulos de Desfecho
 
 sp:BEGIN 
 
@@ -48,13 +51,20 @@ sp:BEGIN
         SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
     END;
 
+    START transaction;
 	if (p_questionnaireID is null) then
  	    set p_msg_retorno = 'Informe um ID para a pesquisa. ';
         leave sp;   
     end if;
 
-   START TRANSACTION;
-	# Atualizando a pesquisa
+	# Checando a pesquisa segundo as regras do WHO COVID-19
+    
+    SET p_check_questionnaire_status = (SELECT questionnaireStatusID from tb_questionnaire where questionnaireID = p_questionnaireID);
+    
+    if (p_check_questionnaire_status = 1) then
+    	SET p_msg_retorno = 'A pesquisa já está publicada';
+        leave sp;
+    end if;    
     
    SET p_check_modules_qtd = (SELECT COUNT(crfformsID) from tb_crfforms WHERE questionnaireID = p_questionnaireID);
         
@@ -64,31 +74,54 @@ sp:BEGIN
    end if;  
     
    if (p_check_modules_qtd <> 3) then  
-		set p_msg_retorno = CONCAT('A pesquisa ', p_questionnaireDescription,' tem ',p_check_modules_qtd,' módulos enquanto uma pesquisa WHO COVID-19 válida tem 3 módulos: 1 de Admissão, 1 de Acompanhamento e 1 de Desfecho.');
+		set p_msg_retorno = CONCAT('A pesquisa tem ',p_check_modules_qtd,' módulos enquanto uma pesquisa WHO COVID-19 válida tem 3 módulos: 1 de Admissão, 1 de Acompanhamento e 1 de Desfecho.');
 		leave sp;
   end if;  
-   
-   SET p_check_modules_types = (SELECT DISTINCT (SELECT count(crfFormsID) FROM tb_crfforms where description = 'Admission Form' and questionnaireID = p_questionnaireID) as count_admission,
+  
+  SET p_check_admission_module_qtd = (SELECT count(crfFormsID) FROM tb_crfforms where description = 'Admission Form' and questionnaireID = p_questionnaireID);
+  
+  if (p_check_admission_module_qtd <> 1) then
+	SET p_msg_retorno =  CONCAT('A pesquisa tem ',p_check_admission_module_qtd,' módulos de Admissão. Deveria ter 1 (um).');
+    leave sp;
+  end if;   
+  
+  SET p_check_followup_module_qtd = (SELECT count(crfFormsID) FROM tb_crfforms where description = 'Follow-up' and questionnaireID = p_questionnaireID);
+  
+  if (p_check_followup_module_qtd <> 1) then
+	SET p_msg_retorno =  CONCAT('A pesquisa tem ',p_check_followup_module_qtd,' módulos de Acompanhamento. Deveria ter 1 (um).');
+    leave sp;
+  end if;   
+  
+  SET p_check_discharged_module_qtd = (SELECT count(crfFormsID) FROM tb_crfforms where description = 'Discharge/death form' and questionnaireID = p_questionnaireID);
+  
+  if (p_check_discharged_module_qtd <> 1) then
+	SET p_msg_retorno =  CONCAT('A pesquisa ', p_questionnaireDescription,' tem ',p_check_discharged_module_qtd,' módulos de Desfecho. Deveria ter 1 (um).');
+    leave sp;
+  end if;  
+  
+   /*SET p_check_modules_types = (SELECT DISTINCT (SELECT count(crfFormsID) FROM tb_crfforms where description = 'Admission Form' and questionnaireID = p_questionnaireID) as count_admission,
 (SELECT count(crfFormsID) FROM tb_crfforms where description = 'Follow-up' and questionnaireID = p_questionnaireID) as count_followup ,
 (SELECT count(crfFormsID) FROM tb_crfforms where description = 'Discharge/death form' and questionnaireID = p_questionnaireID) as count_discharged from tb_crfforms);
 
- if (p_check_modules_types('count_admission') <> 1) then
-	set p_msg_retorno = CONCAT('A pesquisa ',p_questionnaireDescription,' tem ',p_check_modules_types('count_admission'),' Formulários de admissão entretanto somente deveria ter 1 (um)');
+  if (p_check_modules_types) then
+	set p_msg_retorno = concat('A pesquisa 1',p_questionnaireDescription,' tem Formulários de admissão entretanto somente deveria ter 1 (um)');
 	leave sp;
  end if;
  
-if (p_check_modules_types(1) <> 1) then
-	set p_msg_retorno = CONCAT('A pesquisa ',p_questionnaireDescription ,' tem ', p_check_modules_types(1) ,' Formulários de acompanhamento entretanto somente deveria ter 1 (um)');
+if (p_check_modules_types) then
+	set p_msg_retorno = concat('A pesquisa 2',p_questionnaireDescription ,' tem Formulários de acompanhamento entretanto somente deveria ter 1 (um)');
 	leave sp;
  end if;
  
- if (p_check_modules_types(2) <> 1) then
-	set p_msg_retorno = CONCAT('A pesquisa ',p_questionnaireDescription,' tem ',p_check_modules_types(2),' Formulários de desfecho entretanto somente deveria ter 1 (um)');
+ if (p_check_modules_types) then
+	set p_msg_retorno = concat('A pesquisa 3',p_questionnaireDescription,' tem Formulários de desfecho entretanto somente deveria ter 1 (um)');
 	leave sp;
- end if;
-    
+ end if;*/
+ 
+ COMMIT;
+ 
  set p_msg_retorno = 'Essa função permite colocar uma pesquisa em uso. \n Todos os módulos do questionários estarão disponíveis para terem prontuários preenchidos. \n Você tem certeza disso?';
-
+ 
 END sp;	
 
  ## select inserido para tratar limitaçao do retorno de procedures no Laravel	
@@ -669,7 +702,7 @@ select p_msg_retorno as msgRetorno from DUAL;
   
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `postQstGroup` (IN `p_userid` INT, IN `p_grouproleid` INT, IN `p_hospitalunitid` INT, IN `p_stringgroups` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `postQstGroup` (IN `p_stringgroups` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
 #========================================================================================================================
 #== Procedure criada para incluir grupo de questões
 #== Criada em 01 maio 2021
@@ -721,12 +754,6 @@ sp:BEGIN
 	
 	End While;
     
-    # registrando a informação de notificação para a inclusao de questionário 
-    INSERT INTO tb_notificationrecord (
-			userid, profileid, hospitalunitid, tablename, rowdid, changedon, operation, log)
-            values (p_userid, p_grouproleid, p_hospitalunitid, 'tb_questiongroups', 1, now(), 'I', CONCAT('Criação de uma lista de grupos: ', p_stringgroups));
-    
-	    
 	COMMIT;
     
 END;
@@ -1726,20 +1753,6 @@ SELECT questionnaireID,
 FROM tb_questionnaire as t1 
 WHERE t1.description like CONCAT('%',p_descricao, '%');
 END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `teste` (`p_teste` VARCHAR(255))  BEGIN
-
-declare p_userid integer;
-declare p_msg_retorno varchar(500);
-declare p_participantid integer;
-declare p_formrecordid integer;
- 
-call postModule(1,1,1,"descrição", 1,2, now(), now(), @p_msg_retorno);
-
-select p_teste, p_msg_retorno;
-
- 
- END$$
 
 --
 -- Functions
@@ -3328,7 +3341,29 @@ INSERT INTO `tb_multilanguage` (`languageID`, `description`, `descriptionLang`) 
 (1, ' oia oia', ' oia oia'),
 (2, ' oia oia', ' oia oia'),
 (1, 'olha oklha', 'olha oklha'),
-(2, 'olha oklha', 'olha oklha');
+(2, 'olha oklha', 'olha oklha'),
+(1, 'novo grupão', 'novo grupão'),
+(2, 'novo grupão', 'novo grupão'),
+(1, 'Critérios Clínicos para Inclusão', 'Critérios Clínicos para Inclusão'),
+(2, 'Critérios Clínicos para Inclusão', 'Critérios Clínicos para Inclusão'),
+(1, 'Novo Grupo - 1', 'Novo Grupo - 1'),
+(2, 'Novo Grupo - 1', 'Novo Grupo - 1'),
+(1, 'Dados demográficos', 'Dados demográficos'),
+(2, 'Dados demográficos', 'Dados demográficos'),
+(1, 'Início da doença e sinais vitais na admissão', 'Início da doença e sinais vitais na admissão'),
+(2, 'Início da doença e sinais vitais na admissão', 'Início da doença e sinais vitais na admissão'),
+(1, 'Comorbidades', 'Comorbidades'),
+(2, 'Comorbidades', 'Comorbidades'),
+(1, 'Pré-admissão e medicamentos de uso contínuo', 'Pré-admissão e medicamentos de uso contínuo'),
+(2, 'Pré-admissão e medicamentos de uso contínuo', 'Pré-admissão e medicamentos de uso contínuo'),
+(1, 'Sinais e sintomas na hora da admissão', 'Sinais e sintomas na hora da admissão'),
+(2, 'Sinais e sintomas na hora da admissão', 'Sinais e sintomas na hora da admissão'),
+(1, 'Doidera', 'Doidera'),
+(2, 'Doidera', 'Doidera'),
+(1, 'Cuidados', 'Cuidados'),
+(2, 'Cuidados', 'Cuidados'),
+(1, 'Resultados laboratoriais]', 'Resultados laboratoriais]'),
+(2, 'Resultados laboratoriais]', 'Resultados laboratoriais]');
 
 -- --------------------------------------------------------
 
@@ -4031,7 +4066,8 @@ INSERT INTO `tb_notificationrecord` (`userID`, `profileID`, `hospitalUnitID`, `t
 (20, 1, 1, 'tb_questiongroupformrecord', 1377, '2021-11-30 23:14:48', 'I', 'Inclusão de Resposta da 252:Sim - 15:298'),
 (20, 1, 1, 'tb_questiongroupformrecord', 1378, '2021-11-30 23:14:48', 'I', 'Inclusão de Resposta da 253:Sim - 15:298'),
 (20, 1, 1, 'tb_questiongroupformrecord', 1379, '2021-11-30 23:14:48', 'I', 'Inclusão de Resposta da 254:Inibidor de neuraminidase - 1:4'),
-(1, 1, 11, 'tb_questiongroups', 1, '2022-05-24 20:42:32', 'I', 'Criação de uma lista de grupos: 2344:olha oklha');
+(1, 1, 11, 'tb_questiongroups', 1, '2022-05-24 20:42:32', 'I', 'Criação de uma lista de grupos: 2344:olha oklha'),
+(11, 1, 2, 'tb_questiongroups', 1, '2022-05-25 17:36:38', 'I', 'Criação de uma lista de grupos: ');
 
 -- --------------------------------------------------------
 
@@ -4232,7 +4268,18 @@ INSERT INTO `tb_questiongroup` (`questionGroupID`, `description`, `comment`) VAL
 (16, 'Testando grupo', ''),
 (17, 'Um grupão só', ''),
 (18, ' oia oia', ''),
-(19, 'olha oklha', '');
+(19, 'olha oklha', ''),
+(20, 'novo grupão', ''),
+(21, 'Critérios Clínicos para Inclusão', ''),
+(22, 'Novo Grupo - 1', ''),
+(23, 'Dados demográficos', ''),
+(24, 'Início da doença e sinais vitais na admissão', ''),
+(25, 'Comorbidades', ''),
+(26, 'Pré-admissão e medicamentos de uso contínuo', ''),
+(27, 'Sinais e sintomas na hora da admissão', ''),
+(28, 'Doidera', ''),
+(29, 'Cuidados', ''),
+(30, 'Resultados laboratoriais]', '');
 
 -- --------------------------------------------------------
 
@@ -6631,59 +6678,6 @@ INSERT INTO `tb_userrole` (`userID`, `groupRoleID`, `hospitalUnitID`, `creationD
 -- --------------------------------------------------------
 
 --
--- Table structure for table `teste`
---
-
-CREATE TABLE `teste` (
-  `id` int(11) NOT NULL,
-  `question` varchar(500) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
---
--- Dumping data for table `teste`
---
-
-INSERT INTO `teste` (`id`, `question`) VALUES
-(0, '243'),
-(1, '0'),
-(2, '0'),
-(3, '0'),
-(4, '0'),
-(5, '0'),
-(6, '243'),
-(7, '243'),
-(8, '0'),
-(9, '214'),
-(10, '214'),
-(11, '0'),
-(12, '0'),
-(13, '1'),
-(14, '11'),
-(15, '0'),
-(16, '0'),
-(17, '0'),
-(18, '0'),
-(20, 'grávida'),
-(21, 'GRávida'),
-(22, 'Número da reserva'),
-(24, 'oi'),
-(64, 'Tosse e pigarro'),
-(110, 'Grávida'),
-(114, 'ALT/TGPe'),
-(166, 'Paísa'),
-(167, 'Datinha de inscrição'),
-(171, 'Bilirrubina totale'),
-(226, 'Leucócitositos'),
-(242, 'Nomin da Instalaução'),
-(243, '0'),
-(244, '243'),
-(415, '220'),
-(416, '224'),
-(417, '225');
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `vw_listype_covidcrfrapid`
 --
 
@@ -6778,12 +6772,6 @@ ALTER TABLE `tb_questionnaire`
   ADD PRIMARY KEY (`questionnaireID`);
 
 --
--- Indexes for table `teste`
---
-ALTER TABLE `teste`
-  ADD PRIMARY KEY (`id`);
-
---
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -6791,7 +6779,7 @@ ALTER TABLE `teste`
 -- AUTO_INCREMENT for table `tb_questiongroup`
 --
 ALTER TABLE `tb_questiongroup`
-  MODIFY `questionGroupID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `questionGroupID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `tb_questionnaire`
