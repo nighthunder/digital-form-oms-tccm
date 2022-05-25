@@ -164,8 +164,16 @@ function EditUnpublishedForm({logged, user, participantId}) {
     };
     const handleReorder = () => {
         var orderQuestions = [];
+        var listGroups = [];
+        var listQuestions = [];
+        var listGroupsQuestions = [];
         document.querySelectorAll('.uniQuestion').forEach(function(i) {
             orderQuestions.push(parseInt(i.getAttribute("id")))
+        });
+        document.querySelectorAll('.groupQuestion').forEach(function(i) {
+            let dictValueCurrent = {}
+            dictValueCurrent[parseInt(i.getAttribute("value"))] = i.querySelector('.MuiInputBase-input.MuiInput-input').value
+            listGroups.push(dictValueCurrent)
         });
         qstsorder = [];
         orderQuestions.forEach((el, i) => {
@@ -173,7 +181,16 @@ function EditUnpublishedForm({logged, user, participantId}) {
             let found = questions.find(element => element.qstId === el);
             // setQstOrder(qstsorder => [...qstsorder,found] );
             qstsorder.push(found)
+            let dictValueCurrentListQuestions = {}
+            let dictValueCurrentListGroupsQuestions = {}
+            dictValueCurrentListQuestions[found.qstId] = found.dsc_qst
+            dictValueCurrentListGroupsQuestions[found.qstGroupId] = found.qstId
+            listQuestions.push(dictValueCurrentListQuestions)
+            listGroupsQuestions.push(dictValueCurrentListGroupsQuestions)
         });
+        console.log("listQuestions", listQuestions);
+        console.log("listGroupsQuestions", listGroupsQuestions);
+        console.log("listGroups", listGroups);
         console.log("qstsorder", qstsorder);
     };
     const handleAddSurvey = () => {
@@ -323,38 +340,69 @@ function EditUnpublishedForm({logged, user, participantId}) {
 
     // const [newGroup, setNewGroup] = useState();
 
-    function NewGroup() {
+    // function NewGroup() {
         
-        return (
-            <div className="groupQuestion">
-                <div className="qst qst2 qst3">
-                    <div className="qstBodyGroup qstIconArea">
-                        <PlusOne className="Icon plusIcon" onClick={() => handleClickClone("group")}></PlusOne>
-                        {/* <PlusOne className="Icon plusIcon"></PlusOne> */}
-                    </div>
-                </div>
-                {/* <div className="groupHeader" id={question.qstId}> */}
-                <div className="groupHeader" >
-                    {/* <TextField className="inputQst inputQst3" name={String(question.qstGroupId)} value={qstgroups[question.qstGroupId] ? qstgroups[question.qstGroupId] : question.dsc_qst_grp } onChange={handleChangeGroups}>{question.dsc_qst_grp}</TextField> */}
-                    <TextField className="inputQst inputQst3" name="teste" placeholder="Novo Grupo" value="">Novo Grupo</TextField>
-                    {/* <Edit className="Icon ediIcon" onClick={handleInfo}></Edit> */}
-                    <Edit className="Icon ediIcon"></Edit>
-                    <QuestionMark className="Icon qstIcon"></QuestionMark>
-                    {/* <QuestionMark className="Icon qstIcon" onClick={() => handleClickOpen(question, "group")}></QuestionMark> */}
-                    <VisibilityIcon className="Icon visIcon" ></VisibilityIcon>
-                    {/* <VisibilityIcon className="Icon visIcon"  onClick={() => handleToogle(question.dsc_qst_grp)}></VisibilityIcon> */}
-                    <p className="questionType groupType">Grupo de questões</p>
-                </div>
-                <div className="qst qst2">
-                    <div className="qstBody qstIconArea">
-                        <PlusOne className="Icon plusIcon" onClick={handleInfo}></PlusOne>
-                    </div>
-                </div>
-            </div>
-        );
+    //     return (
+    //         <div className="groupQuestion">
+    //             <div className="qst qst2 qst3">
+    //                 <div className="qstBodyGroup qstIconArea">
+    //                     <PlusOne className="Icon plusIcon" onClick={() => handleClickNewGroup("group")}></PlusOne>
+    //                     {/* <PlusOne className="Icon plusIcon"></PlusOne> */}
+    //                 </div>
+    //             </div>
+    //             {/* <div className="groupHeader" id={question.qstId}> */}
+    //             <div className="groupHeader" >
+    //                 {/* <TextField className="inputQst inputQst3" name={String(question.qstGroupId)} value={qstgroups[question.qstGroupId] ? qstgroups[question.qstGroupId] : question.dsc_qst_grp } onChange={handleChangeGroups}>{question.dsc_qst_grp}</TextField> */}
+    //                 <TextField className="inputQst inputQst3" name="teste" placeholder="Novo Grupo" value="">Novo Grupo</TextField>
+    //                 {/* <Edit className="Icon ediIcon" onClick={handleInfo}></Edit> */}
+    //                 <Edit className="Icon ediIcon"></Edit>
+    //                 <QuestionMark className="Icon qstIcon"></QuestionMark>
+    //                 {/* <QuestionMark className="Icon qstIcon" onClick={() => handleClickOpen(question, "group")}></QuestionMark> */}
+    //                 <VisibilityIcon className="Icon visIcon" ></VisibilityIcon>
+    //                 {/* <VisibilityIcon className="Icon visIcon"  onClick={() => handleToogle(question.dsc_qst_grp)}></VisibilityIcon> */}
+    //                 <p className="questionType groupType">Grupo de questões</p>
+    //             </div>
+    //             <div className="qst qst2">
+    //                 <div className="qstBody qstIconArea">
+    //                     <PlusOne className="Icon plusIcon" onClick={handleInfo}></PlusOne>
+    //                 </div>
+    //             </div>
+    //         </div>
+    //     );
         
+    // }
+    const handleClickNewQuestion = (id) => {
+
+        let myObj = questions.find(obj => obj.qstId === id);
+        let myObjIndex = questions.findIndex(obj => obj.qstId === id);
+        console.log("myObjIndex", myObjIndex);
+
+        let left = questions.slice(0, myObjIndex)
+        let right = questions.slice(myObjIndex)
+
+        console.log("questions", questions);
+        console.log("right", right);
+
+        let objCopy = {...myObj};
+
+        setContI(contI + 1);
+
+        objCopy.dsc_qst = "Nova Questão - " + contI
+        objCopy.qstId = parseInt(1000 + (Math.random() * (20000-1000)));
+        objCopy.qstOrder = parseInt(100000 + (Math.random() * (200000-100000)));
+        objCopy.qst_type = "Number question"
+        objCopy.rsp_pad = null
+        objCopy.rsp_padId = null
+
+        left.push(objCopy);
+        console.log("left", left);
+        let mergeArrays = [...left, ...right]
+        console.log("mergeArrays", mergeArrays);
+
+        setQuestions(mergeArrays)
+
     }
-    const handleClickClone = (id) => {
+    const handleClickNewGroup = (id) => {
         
         // const target = e.target;
         // const value = target.value;
@@ -478,10 +526,10 @@ function EditUnpublishedForm({logged, user, participantId}) {
                         <>
                             {/* Se for um novo grupo de questões*/}
                             { (question.dsc_qst_grp !== ""  && checkTitle(index, question)) &&
-                                <div className="groupQuestion" id={question.qstId}>
+                                <div className="groupQuestion" id={question.qstId} value={question.qstGroupId}>
                                     <div className="qst qst2 qst3">
                                         <div className="qstBodyGroup qstIconArea">
-                                            <PlusOne className="Icon plusIcon" onClick={() => handleClickClone(question.qstId)}></PlusOne>
+                                            <PlusOne className="Icon plusIcon" onClick={() => handleClickNewGroup(question.qstId)}></PlusOne>
                                         </div>
                                     </div>
                                     <div className="groupHeader" id={question.qstId}>
@@ -497,7 +545,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                                 <div className="qst qst2" key={question.qstId} >
                                     <div className="qst qst2">
                                         <div className="qstBody qstIconArea">
-                                            <PlusOne className="Icon plusIcon" onClick={handleInfo}></PlusOne>
+                                            <PlusOne className="Icon plusIcon" onClick={() => handleClickNewQuestion(question.qstId)}></PlusOne>
                                         </div>
                                     </div>
                                     <div className="qstBody">
@@ -643,7 +691,8 @@ function EditUnpublishedForm({logged, user, participantId}) {
                         { formError?   <FormError formError={formError}></FormError> : ''  } 
                         { formOk?   <FormOk formOk={formOk}></FormOk> : ''  } 
                         {/* <Button variant="contained" type="submit" color="primary">Salvar</Button> */}
-                        <Button onClick={handleReorder} type="submit" variant="contained" color="primary">Salvar</Button>
+                        {/* <Button onClick={handleReorder} type="submit" variant="contained" color="primary">Salvar</Button> */}
+                        <Button onClick={handleReorder} variant="contained" color="primary">Salvar</Button>
                     </div>
                 </form>
                 <Dialog key={Math.random()}
