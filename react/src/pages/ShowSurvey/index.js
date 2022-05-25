@@ -36,7 +36,7 @@ function ShowSurvey({user}) {
   const [loadingSearch, setLoadingSearch] = useState(false);
   const [popupTitle, setPopupTitle] = useState('');
   const [popupBodyText, setPopupBodyText] = useState('');
-  const [isPublished, setIsPublished] = useState(false);
+  const [canBePublished, setCanBePublished] = useState(false);
   const [popupAction, setPopupAction] = useState('');
 
 	useEffect(() => {
@@ -117,35 +117,25 @@ function ShowSurvey({user}) {
   };
 
   async function getPublicationStatus(){
-    const response = await api.get('/checkpublication/'+location.state.questionnaireID);
-    if(response.data) {
-      setPopupBodyText(response.data[0].msgRetorno)
-    }  
+
   }
 
-  function handlePublishing(e){
+  async function handlePublication(e){
 
-    {location.state.questionnaireStatus === "Publicado" &&
-        setPopupTitle("Esta pesquisa está publicada.");
-        setPopupBodyText("A pesquisa já está publicada");
-        setIsPublished(true);
-        setOpen(true);
-    }
+    setPopupAction("publication");
+    setPopupTitle("Publicação de "+location.state.description);
+    const response = await api.get('/checkpublication/'+location.state.questionnaireID);
+    if(response.data) {
+      setPopupBodyText(response.data[0].msgRetorno);
 
-    {location.state.questionnaireStatus === "Novo" || location.state.questionnaireStatus === "Deprecado"  &&
-        setPopupAction("publication");
-        setPopupTitle("Publicação de "+location.state.description);
-        setIsPublished(false);
-        getPublicationStatus();
-        setOpen(true);
-    }
-
-    //setPopupBodyText("Essa função permite colocar uma pesquisa em uso. \n Todos os módulos do questionários estarão disponíveis para serem preenchidos. \n Você tgem certeza disso?");
+      if (response.data[0].msgRetorno == "OK") {setCanBePublished(true)}else{setCanBePublished(false)}
+    }  
+    setOpen(true);
     
   }
 
   const handleOpenEditPublishedForm = () => {
-       console.log(moduleID);
+       //console.log(moduleID);
        history.push('/edit-published-form', {
             modulo: moduleID,
             moduleStatus: moduleStatus,
@@ -189,13 +179,13 @@ function ShowSurvey({user}) {
       }
 
       setModules(response.data)
-      console.log("modules", modules);
+      //console.log("modules", modules);
   }
 
   function handleChange(e) {
       const target = e.target;
       const value = target.value;
-      console.log(value);
+      //console.log(value);
       setSearch(value);
   }
 
@@ -247,7 +237,7 @@ function ShowSurvey({user}) {
         <Add color="primary" />
           Adicionar novo formulário de módulo +
         </Button><br/>
-        <Button variant="contained" color="primary" className="add-module publish" onClick={handlePublishing}>
+        <Button variant="contained" color="primary" className="add-module publish" onClick={handlePublication}>
           <Add color="primary" />
           Publicar pesquisa
         </Button><br/>
@@ -311,8 +301,6 @@ function ShowSurvey({user}) {
                         "Apenas edições básicas são permitidas em formulários de pesquisas publicadas."}
                         { location.state.questionnaireStatus === "Deprecado" && popupAction == "edition" &&
                         "Tem certeza de que deseja alterar um formulário deprecado?"}
-                        { location.state.questionnaireStatus === "Novo" && popupAction == "publication" &&
-                          "Essa função permite colocar uma pesquisa em uso. \n Todos os módulos do questionários estarão disponíveis para terem prontuários preenchidos. \n Você tem certeza disso?"}
                         {popupBodyText}
                         </DialogContentText>
                       </DialogContent>  
@@ -322,7 +310,7 @@ function ShowSurvey({user}) {
                           popupAction == "edition" && <Button onClick={handleOpenEditPublishedForm} autoFocus>Prosseguir</Button> 
                         }
                         {
-                          popupAction == "publication" && !isPublished && <Button onClick={handlePublishing} autoFocus>Publicar</Button>
+                          popupAction == "publication" && canBePublished && <Button onClick={handlePublication} autoFocus>Publicar</Button>
                         }
                         
                       </DialogActions>
