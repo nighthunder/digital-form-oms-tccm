@@ -77,7 +77,7 @@ class FormStructureController extends Controller
     {
         try {
 
-          $query_msg = DB::select("CALL getLastInsertedGroupID('{$request->info['userid']}','{$request->info['grouproleid']}','{$request->info['hospitalunitid']}','{$respostas}', @p_msg_retorno)");
+          $query_msg = DB::select("CALL getLastInsertedGroupID(@p_msg_retorno)");
         
           return response()->json($query_msg);
 
@@ -89,7 +89,7 @@ class FormStructureController extends Controller
     public function getLastInsertedQstID(Request $request) // Cria uma lista de novos grupos
     {
         try {
-          $query_msg = DB::select("CALL getLastInsertedQstID('{$request->info['userid']}','{$request->info['grouproleid']}','{$request->info['hospitalunitid']}','{$respostas}', @p_msg_retorno)");
+          $query_msg = DB::select("CALL getLastInsertedQstID(@p_msg_retorno)");
         
           return response()->json($query_msg);
 
