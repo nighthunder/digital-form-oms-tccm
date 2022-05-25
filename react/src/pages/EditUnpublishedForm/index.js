@@ -196,11 +196,11 @@ function EditUnpublishedForm({logged, user, participantId}) {
             let response;
             
             request = {
-                respostas: JSON.stringify(listGroups),
+                stringgroups: JSON.stringify(listGroups),
                 info: user[location.state.hospitalIndex]
             }
 
-            response = await api.post('/formgroup/', request);
+            response = await api.put('/formgroup/', request);
 
             if (response){
                 // setFormError(response.data[0].msgRetorno);

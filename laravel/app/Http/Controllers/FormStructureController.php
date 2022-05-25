@@ -64,7 +64,7 @@ class FormStructureController extends Controller
           $respostas = str_replace("}", "", $respostas);
           $respostas = str_replace('"', "", $respostas);
 
-          $query_msg = DB::select("CALL postQstGroup('{$request->info['userid']}','{$request->info['grouproleid']}','{$request->info['hospitalunitid']}','{$respostas}', @p_msg_retorno)");
+          $query_msg = DB::select("CALL postQstGroup('{$respostas}', @p_msg_retorno)");
         
           return response()->json($query_msg);
 
