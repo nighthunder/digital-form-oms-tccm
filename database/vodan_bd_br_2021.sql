@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 19, 2022 at 12:07 AM
+-- Generation Time: May 25, 2022 at 04:45 PM
 -- Server version: 10.4.22-MariaDB
 -- PHP Version: 7.4.27
 
@@ -25,6 +25,77 @@ DELIMITER $$
 --
 -- Procedures
 --
+CREATE DEFINER=`root`@`localhost` PROCEDURE `checkQuestionnairePublicationRules` (IN `p_questionnaireID` INT, IN `p_questionnaireDescription` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para checar se um questionário que irá ser publicado atende os requisitos
+#== As regras aplicadas nessa procedure são somente da pesquisa WHO COVID-19
+#== Se tiver mais 
+#== retorna um registro contendo a msg de retorno
+#== Alterada em 23 05 2022
+#== Criada em 22 05 2022
+#========================================================================================================================
+
+DECLARE p_userID integer;
+DECLARE p_msg_retorno varchar(500);
+DECLARE p_check_modules_qtd  integer; # verifica se o questionário tem 3 módulos
+DECLARE p_check_modules_types varchar(500); #== Checa se o questionário tem 1 formulário de Admissão, 1 de Acompanhamento e 1 de desfecho
+
+sp:BEGIN 
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+
+	if (p_questionnaireID is null) then
+ 	    set p_msg_retorno = 'Informe um ID para a pesquisa. ';
+        leave sp;   
+    end if;
+
+   START TRANSACTION;
+	# Atualizando a pesquisa
+    
+   SET p_check_modules_qtd = (SELECT COUNT(crfformsID) from tb_crfforms WHERE questionnaireID = p_questionnaireID);
+        
+   if (p_check_modules_qtd is null) then
+		set p_msg_retorno = 'A pesquisa não tem módulos';
+        leave sp;
+   end if;  
+    
+   if (p_check_modules_qtd <> 3) then  
+		set p_msg_retorno = CONCAT('A pesquisa ', p_questionnaireDescription,' tem ',p_check_modules_qtd,' módulos enquanto uma pesquisa WHO COVID-19 válida tem 3 módulos: 1 de Admissão, 1 de Acompanhamento e 1 de Desfecho.');
+		leave sp;
+  end if;  
+   
+   SET p_check_modules_types = (SELECT DISTINCT (SELECT count(crfFormsID) FROM tb_crfforms where description = 'Admission Form' and questionnaireID = p_questionnaireID) as count_admission,
+(SELECT count(crfFormsID) FROM tb_crfforms where description = 'Follow-up' and questionnaireID = p_questionnaireID) as count_followup ,
+(SELECT count(crfFormsID) FROM tb_crfforms where description = 'Discharge/death form' and questionnaireID = p_questionnaireID) as count_discharged from tb_crfforms);
+
+ if (p_check_modules_types('count_admission') <> 1) then
+	set p_msg_retorno = CONCAT('A pesquisa ',p_questionnaireDescription,' tem ',p_check_modules_types('count_admission'),' Formulários de admissão entretanto somente deveria ter 1 (um)');
+	leave sp;
+ end if;
+ 
+if (p_check_modules_types(1) <> 1) then
+	set p_msg_retorno = CONCAT('A pesquisa ',p_questionnaireDescription ,' tem ', p_check_modules_types(1) ,' Formulários de acompanhamento entretanto somente deveria ter 1 (um)');
+	leave sp;
+ end if;
+ 
+ if (p_check_modules_types(2) <> 1) then
+	set p_msg_retorno = CONCAT('A pesquisa ',p_questionnaireDescription,' tem ',p_check_modules_types(2),' Formulários de desfecho entretanto somente deveria ter 1 (um)');
+	leave sp;
+ end if;
+    
+ set p_msg_retorno = 'Essa função permite colocar uma pesquisa em uso. \n Todos os módulos do questionários estarão disponíveis para terem prontuários preenchidos. \n Você tem certeza disso?';
+
+END sp;	
+
+ ## select inserido para tratar limitaçao do retorno de procedures no Laravel	
+select p_msg_retorno as msgRetorno from DUAL;
+  
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `CreateUserAdmin` (OUT `p_msg_retorno` VARCHAR(500))  sp:BEGIN
 
 declare v_userid integer;
@@ -90,6 +161,58 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `getcrfForms` (IN `p_questionnaireID
   from tb_crfforms t1, tb_questionnaire t2
   where t1.questionnaireID = t2.questionnaireID and
         t2.questionnaireID = p_questionnaireID;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getLastInsertedGroupID` (OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para obter o último ID inserido na tabela tb_questiongroup
+#== Criada em 25 de março de 2022
+#========================================================================================================================
+
+DECLARE v_nextid integer; 
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+    
+	SET v_nextid = (SELECT MAX(questionGroupID) + 1 FROM tb_questiongroup);
+
+    SET p_msg_retorno = v_nextid;
+	    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getLastInsertedQstID` (OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para obter o último ID inserido em uma tabela tb_Questions
+#== Criada em 25 de março de 2022
+#========================================================================================================================
+
+DECLARE v_nextid integer; 
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+    
+	SET v_nextid = (SELECT MAX(questionID) + 1 FROM tb_questions);
+
+    SET p_msg_retorno = v_nextid;
+	    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `getModulesMedicalRecord` (`p_MedicalRecord` VARCHAR(255), `p_hospitalUnitId` INTEGER)  BEGIN
@@ -546,7 +669,7 @@ select p_msg_retorno as msgRetorno from DUAL;
   
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `postQstGroup` (IN `p_userid` VARCHAR(500), IN `p_grouproleid` INT, IN `p_hospitalunitid` INT, IN `p_stringgroups` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `postQstGroup` (IN `p_userid` INT, IN `p_grouproleid` INT, IN `p_hospitalunitid` INT, IN `p_stringgroups` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
 #========================================================================================================================
 #== Procedure criada para incluir grupo de questões
 #== Criada em 01 maio 2021
@@ -561,11 +684,6 @@ DECLARE v_listtypeid integer;
 DECLARE v_questionGroupFormid integer;
 DECLARE v_lista text;
 DECLARE v_apoio varchar(500);
-DECLARE v_resposta varchar(500);
-DECLARE v_listofvaluesid_ant integer;
-DECLARE v_answer_ant varchar(500);
-DECLARE v_operacao varchar(01);
- 
 
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
     BEGIN
@@ -577,7 +695,7 @@ sp:BEGIN
    START TRANSACTION;
 
 	# Inserindo/Alterando as questoes registro do form e a questão associada a data    
-    set v_lista = concat(p_questionsorder, ',') ;
+    set v_lista = concat(p_stringgroups, ',') ;
     
     while length(v_lista) > 1 DO
 		set v_apoio = substring(v_lista, 1, position(',' in v_lista));
@@ -588,7 +706,9 @@ sp:BEGIN
 	
         if v_questionid is not null then
               
-			Insert into tb_questiongroup (questionGroupID, description, ´comment´) VALUES (DEFAULT,v_question,"");
+			Insert into tb_questiongroup (questionGroupID, description, `comment`) VALUES (DEFAULT,v_answer,"");
+            Insert into tb_multilanguage(languageID, description, descriptionLang) values(1,v_answer,v_answer);
+            Insert into tb_multilanguage(languageID, description, descriptionLang) values(2,v_answer,v_answer);
             set p_msg_retorno = 'Grupos inseridos com sucesso.';
         end if;
         
@@ -600,6 +720,12 @@ sp:BEGIN
 		end if;
 	
 	End While;
+    
+    # registrando a informação de notificação para a inclusao de questionário 
+    INSERT INTO tb_notificationrecord (
+			userid, profileid, hospitalunitid, tablename, rowdid, changedon, operation, log)
+            values (p_userid, p_grouproleid, p_hospitalunitid, 'tb_questiongroups', 1, now(), 'I', CONCAT('Criação de uma lista de grupos: ', p_stringgroups));
+    
 	    
 	COMMIT;
     
@@ -1843,7 +1969,9 @@ INSERT INTO `tb_crfforms` (`crfFormsID`, `questionnaireID`, `description`, `crff
 (593, 2, 'Follow-up', 2, '2022-01-12 14:39:15', '2022-01-12 14:39:15'),
 (595, 2, 'Discharge/death form', 2, '2022-02-14 16:52:44', '2022-02-14 16:52:44'),
 (0, 3, 'Admission Form', 2, '2022-03-09 17:41:15', '2022-03-09 17:41:15'),
-(0, 10, 'Admission Form', 2, '2022-04-30 17:30:42', '2022-04-30 17:30:42');
+(0, 10, 'Admission Form', 2, '2022-04-30 17:30:42', '2022-04-30 17:30:42'),
+(0, 3, 'Follow-up', 2, '2022-05-22 19:54:20', '2022-05-22 19:54:20'),
+(22, 3, 'Admission Form', 2, '2022-05-22 19:55:38', '2022-05-22 19:55:38');
 
 -- --------------------------------------------------------
 
@@ -3193,7 +3321,14 @@ INSERT INTO `tb_multilanguage` (`languageID`, `description`, `descriptionLang`) 
 (1, 'Paísa', 'Paísa'),
 (1, 'Nome da Instalaçãosd', 'Nome da Instalaçãosd'),
 (1, 'Medico safadinho', 'Medico safadinho'),
-(1, 'Doidera', 'Doidera');
+(1, 'Doidera', 'Doidera'),
+(1, 'Teste', 'Teste'),
+(1, 'Um grupão só', 'Um grupão só'),
+(2, 'Um grupão só', 'Um grupão só'),
+(1, ' oia oia', ' oia oia'),
+(2, ' oia oia', ' oia oia'),
+(1, 'olha oklha', 'olha oklha'),
+(2, 'olha oklha', 'olha oklha');
 
 -- --------------------------------------------------------
 
@@ -3895,7 +4030,8 @@ INSERT INTO `tb_notificationrecord` (`userID`, `profileID`, `hospitalUnitID`, `t
 (20, 1, 1, 'tb_questiongroupformrecord', 1376, '2021-11-30 23:14:48', 'I', 'Inclusão de Resposta da 249:67'),
 (20, 1, 1, 'tb_questiongroupformrecord', 1377, '2021-11-30 23:14:48', 'I', 'Inclusão de Resposta da 252:Sim - 15:298'),
 (20, 1, 1, 'tb_questiongroupformrecord', 1378, '2021-11-30 23:14:48', 'I', 'Inclusão de Resposta da 253:Sim - 15:298'),
-(20, 1, 1, 'tb_questiongroupformrecord', 1379, '2021-11-30 23:14:48', 'I', 'Inclusão de Resposta da 254:Inibidor de neuraminidase - 1:4');
+(20, 1, 1, 'tb_questiongroupformrecord', 1379, '2021-11-30 23:14:48', 'I', 'Inclusão de Resposta da 254:Inibidor de neuraminidase - 1:4'),
+(1, 1, 11, 'tb_questiongroups', 1, '2022-05-24 20:42:32', 'I', 'Criação de uma lista de grupos: 2344:olha oklha');
 
 -- --------------------------------------------------------
 
@@ -4091,7 +4227,12 @@ INSERT INTO `tb_questiongroup` (`questionGroupID`, `description`, `comment`) VAL
 (11, 'Pre-admission & chronic medication', 'Were any of the following taken within 14 days of admission?'),
 (12, 'Signs and symptoms on admission', ''),
 (13, 'Supportive care', 'Is the patient CURRENTLY receiving any of the following?'),
-(14, 'Vital signs', '');
+(14, 'Vital signs', ''),
+(15, 'we', ''),
+(16, 'Testando grupo', ''),
+(17, 'Um grupão só', ''),
+(18, ' oia oia', ''),
+(19, 'olha oklha', '');
 
 -- --------------------------------------------------------
 
@@ -6625,6 +6766,12 @@ CREATE TABLE `vw_questiontype_covidcrfrapid` (
 --
 
 --
+-- Indexes for table `tb_questiongroup`
+--
+ALTER TABLE `tb_questiongroup`
+  ADD PRIMARY KEY (`questionGroupID`);
+
+--
 -- Indexes for table `tb_questionnaire`
 --
 ALTER TABLE `tb_questionnaire`
@@ -6639,6 +6786,12 @@ ALTER TABLE `teste`
 --
 -- AUTO_INCREMENT for dumped tables
 --
+
+--
+-- AUTO_INCREMENT for table `tb_questiongroup`
+--
+ALTER TABLE `tb_questiongroup`
+  MODIFY `questionGroupID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `tb_questionnaire`

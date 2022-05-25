@@ -36,6 +36,7 @@ function ShowSurvey({user}) {
   const [loadingSearch, setLoadingSearch] = useState(false);
   const [popupTitle, setPopupTitle] = useState('');
   const [popupBodyText, setPopupBodyText] = useState('');
+  const [isPublished, setIsPublished] = useState(false);
   const [popupAction, setPopupAction] = useState('');
 
 	useEffect(() => {
@@ -82,7 +83,8 @@ function ShowSurvey({user}) {
         setOpen(false);
         setModuleID(q.crfFormsID);
         setModuleStatus(q.crfFormsStatus);
-        setMotherID(q.questionnaireID)
+        setMotherID(q.questionnaireID);
+        setPopupBodyText("");
         const moduleID = q.crfFormsID
         const motherID = q.questionnaireID
         const moduleStatus = q.crfFormsStatus
@@ -114,11 +116,32 @@ function ShowSurvey({user}) {
     setOpen(false);
   };
 
+  async function getPublicationStatus(){
+    const response = await api.get('/checkpublication/'+location.state.questionnaireID);
+    if(response.data) {
+      setPopupBodyText(response.data[0].msgRetorno)
+    }  
+  }
+
   function handlePublishing(e){
-    setPopupAction("publication");
-    setPopupTitle("Publicação de "+location.state.description);
-    setPopupBodyText("Essa função permite colocar uma pesquisa em uso. \n Todos os módulos do questionários estarão disponíveis para serem preenchidos. \n Você tgem certeza disso?");
-    setOpen(true);
+
+    {location.state.questionnaireStatus === "Publicado" &&
+        setPopupTitle("Esta pesquisa está publicada.");
+        setPopupBodyText("A pesquisa já está publicada");
+        setIsPublished(true);
+        setOpen(true);
+    }
+
+    {location.state.questionnaireStatus === "Novo" || location.state.questionnaireStatus === "Deprecado"  &&
+        setPopupAction("publication");
+        setPopupTitle("Publicação de "+location.state.description);
+        setIsPublished(false);
+        getPublicationStatus();
+        setOpen(true);
+    }
+
+    //setPopupBodyText("Essa função permite colocar uma pesquisa em uso. \n Todos os módulos do questionários estarão disponíveis para serem preenchidos. \n Você tgem certeza disso?");
+    
   }
 
   const handleOpenEditPublishedForm = () => {
@@ -290,12 +313,16 @@ function ShowSurvey({user}) {
                         "Tem certeza de que deseja alterar um formulário deprecado?"}
                         { location.state.questionnaireStatus === "Novo" && popupAction == "publication" &&
                           "Essa função permite colocar uma pesquisa em uso. \n Todos os módulos do questionários estarão disponíveis para terem prontuários preenchidos. \n Você tem certeza disso?"}
+                        {popupBodyText}
                         </DialogContentText>
                       </DialogContent>  
                       <DialogActions>
                         <Button onClick={handleClose}>Fechar [x]</Button>
                         {
-                          popupAction == "edition" ? <Button onClick={handleOpenEditPublishedForm} autoFocus>Prosseguir</Button> : <Button onClick={handlePublishing} autoFocus>Publicar</Button>
+                          popupAction == "edition" && <Button onClick={handleOpenEditPublishedForm} autoFocus>Prosseguir</Button> 
+                        }
+                        {
+                          popupAction == "publication" && !isPublished && <Button onClick={handlePublishing} autoFocus>Publicar</Button>
                         }
                         
                       </DialogActions>

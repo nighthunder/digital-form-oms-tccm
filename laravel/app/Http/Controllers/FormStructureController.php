@@ -57,4 +57,57 @@ class FormStructureController extends Controller
        }
     }
 
+    public function postQstGroup(Request $request) // Cria uma lista de novos grupos
+    {
+        try {
+          $respostas = str_replace("{", "", $request->stringgroups);
+          $respostas = str_replace("}", "", $respostas);
+          $respostas = str_replace('"', "", $respostas);
+
+          $query_msg = DB::select("CALL postQstGroup('{$request->info['userid']}','{$request->info['grouproleid']}','{$request->info['hospitalunitid']}','{$respostas}', @p_msg_retorno)");
+        
+          return response()->json($query_msg);
+
+       } catch (Exception $e) {
+         return response()->json($e, 500);
+       }
+    }
+
+    public function getLastInsertedGroupID(Request $request) // Cria uma lista de novos grupos
+    {
+        try {
+
+          $query_msg = DB::select("CALL getLastInsertedGroupID('{$request->info['userid']}','{$request->info['grouproleid']}','{$request->info['hospitalunitid']}','{$respostas}', @p_msg_retorno)");
+        
+          return response()->json($query_msg);
+
+       } catch (Exception $e) {
+         return response()->json($e, 500);
+       }
+    }
+
+    public function getLastInsertedQstID(Request $request) // Cria uma lista de novos grupos
+    {
+        try {
+          $query_msg = DB::select("CALL getLastInsertedQstID('{$request->info['userid']}','{$request->info['grouproleid']}','{$request->info['hospitalunitid']}','{$respostas}', @p_msg_retorno)");
+        
+          return response()->json($query_msg);
+
+       } catch (Exception $e) {
+         return response()->json($e, 500);
+       }
+    }
+
+    public function checkQuestionnairePublicationRules(Request $request) // Cria uma lista de novos grupos
+    {
+        try {
+          $query_msg = DB::select("CALL checkQuestionnairePublicationRules('{$request->id}', @p_msg_retorno)");
+        
+          return response()->json($query_msg);
+
+       } catch (Exception $e) {
+         return response()->json($e, 500);
+       }
+    }
+
 }
