@@ -162,36 +162,57 @@ function EditUnpublishedForm({logged, user, participantId}) {
         setQuestionGroupComment("");
         setOpen(true);
     };
-    const handleReorder = () => {
-        var orderQuestions = [];
-        var listGroups = [];
-        var listQuestions = [];
-        var listGroupsQuestions = [];
-        document.querySelectorAll('.uniQuestion').forEach(function(i) {
-            orderQuestions.push(parseInt(i.getAttribute("id")))
-        });
-        document.querySelectorAll('.groupQuestion').forEach(function(i) {
-            let dictValueCurrent = {}
-            dictValueCurrent[parseInt(i.getAttribute("value"))] = i.querySelector('.MuiInputBase-input.MuiInput-input').value
-            listGroups.push(dictValueCurrent)
-        });
-        qstsorder = [];
-        orderQuestions.forEach((el, i) => {
-            // console.log("i: ", i, "- el: ", el);
-            let found = questions.find(element => element.qstId === el);
-            // setQstOrder(qstsorder => [...qstsorder,found] );
-            qstsorder.push(found)
-            let dictValueCurrentListQuestions = {}
-            let dictValueCurrentListGroupsQuestions = {}
-            dictValueCurrentListQuestions[found.qstId] = found.dsc_qst
-            dictValueCurrentListGroupsQuestions[found.qstGroupId] = found.qstId
-            listQuestions.push(dictValueCurrentListQuestions)
-            listGroupsQuestions.push(dictValueCurrentListGroupsQuestions)
-        });
-        console.log("listQuestions", listQuestions);
-        console.log("listGroupsQuestions", listGroupsQuestions);
-        console.log("listGroups", listGroups);
-        console.log("qstsorder", qstsorder);
+
+    async function handleReorder() {
+        if (location.state.motherID !== location.state.questionnaireID){
+            var orderQuestions = [];
+            var listGroups = [];
+            var listQuestions = [];
+            var listGroupsQuestions = [];
+            document.querySelectorAll('.uniQuestion').forEach(function(i) {
+                orderQuestions.push(parseInt(i.getAttribute("id")))
+            });
+            document.querySelectorAll('.groupQuestion').forEach(function(i) {
+                let dictValueCurrent = {}
+                dictValueCurrent[parseInt(i.getAttribute("value"))] = i.querySelector('.MuiInputBase-input.MuiInput-input').value
+                listGroups.push(dictValueCurrent)
+            });
+            qstsorder = [];
+            orderQuestions.forEach((el, i) => {
+                // console.log("i: ", i, "- el: ", el);
+                let found = questions.find(element => element.qstId === el);
+                // setQstOrder(qstsorder => [...qstsorder,found] );
+                qstsorder.push(found)
+                let dictValueCurrentListQuestions = {}
+                let dictValueCurrentListGroupsQuestions = {}
+                dictValueCurrentListQuestions[found.qstId] = found.dsc_qst
+                dictValueCurrentListGroupsQuestions[found.qstGroupId] = found.qstId
+                listQuestions.push(dictValueCurrentListQuestions)
+                listGroupsQuestions.push(dictValueCurrentListGroupsQuestions)
+            });
+            // console.log(location.state.motherID, " - ", location.state.questionnaireID);
+            
+            let request;
+            let response;
+            
+            request = {
+                respostas: JSON.stringify(listGroups),
+                info: user[location.state.hospitalIndex]
+            }
+
+            response = await api.post('/formgroup/', request);
+
+            if (response){
+                // setFormError(response.data[0].msgRetorno);
+                console.log("deu certo!");
+            }
+        }
+        // console.log("listQuestions", listQuestions);
+        // console.log("listGroupsQuestions", listGroupsQuestions);
+        // console.log("listGroups", listGroups);
+        // console.log("qstsorder", qstsorder);
+        // console.log("location.state.description", location);
+        // console.log("location.state.questionnaireDescription", location.state.questionnaireDescription);
     };
     const handleAddSurvey = () => {
         history.push('/add-survey');
@@ -692,7 +713,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                         { formOk?   <FormOk formOk={formOk}></FormOk> : ''  } 
                         {/* <Button variant="contained" type="submit" color="primary">Salvar</Button> */}
                         {/* <Button onClick={handleReorder} type="submit" variant="contained" color="primary">Salvar</Button> */}
-                        <Button onClick={handleReorder} variant="contained" color="primary">Salvar</Button>
+                        <Button onClick={handleReorder} type="submit" variant="contained" color="primary">Salvar</Button>
                     </div>
                 </form>
                 <Dialog key={Math.random()}
