@@ -98,4 +98,16 @@ class FormStructureController extends Controller
        }
     }
 
+    public function checkQuestionnairePublicationRules(Request $request) // Cria uma lista de novos grupos
+    {
+        try {
+          $query_msg = DB::select("CALL checkQuestionnairePublicationRules('{$request->id}', @p_msg_retorno)");
+        
+          return response()->json($query_msg);
+
+       } catch (Exception $e) {
+         return response()->json($e, 500);
+       }
+    }
+
 }
