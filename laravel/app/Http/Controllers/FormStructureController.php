@@ -73,6 +73,26 @@ class FormStructureController extends Controller
        }
     }
 
+    public function postQst(Request $request) // Cria uma lista de novos grupos
+    {
+        try {
+          $respostas = str_replace("{", "", $request->stringquestions);
+          $respostas = str_replace("}", "", $respostas);
+          $respostas = str_replace('"', "", $respostas);
+
+          $respostas2 = str_replace("{", "", $request->stringgroups);
+          $respostas2 = str_replace("}", "", $resposta2);
+          $respostas2 = str_replace('"', "", $respostas2);
+
+          $query_msg = DB::select("CALL postQstGroup('{$respostas}', '{$respostas2}',@p_msg_retorno)");
+        
+          return response()->json($query_msg);
+
+       } catch (Exception $e) {
+         return response()->json($e, 500);
+       }
+    }
+
     public function getLastInsertedGroupID(Request $request) // Cria uma lista de novos grupos
     {
         try {

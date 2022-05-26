@@ -54,9 +54,9 @@ Route::group(['middleware' => 'cors:api'], function() {
     Route::put('formgroupsdesc/{id}', [FormStructureController::class, 'updatePublishedFormQuestionsGroups']);
     Route::put('formqstorder/{id}', [FormStructureController::class, 'updateQstChangeOrder']);
     Route::put('formgroup/', [FormStructureController::class, 'postQstGroup']);
+    Route::put('formqst/', [FormStructureController::class, 'postQst']);
     Route::get('formgroupid/', [FormStructureController::class, 'getLastInsertedGroupID']);
     Route::get('formqstid/', [FormStructureController::class, 'getLastInsertedQstID']);
-    
 
     Route::get('checkpublication/{id}', [FormStructureController::class, 'checkQuestionnairePublicationRules']); //verifica se o questionário tem condições de ser publicado
 
