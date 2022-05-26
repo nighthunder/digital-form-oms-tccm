@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 26, 2022 at 05:47 PM
+-- Generation Time: May 26, 2022 at 07:42 PM
 -- Server version: 10.4.22-MariaDB
 -- PHP Version: 7.4.27
 
@@ -685,7 +685,72 @@ select p_msg_retorno as msgRetorno from DUAL;
   
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `postQst` (IN `p_stringquestions` TEXT, IN `p_stringgroups` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `postQst` (IN `p_stringquestions` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para incluir grupo de questões
+#== Criada em 01 maio 2021
+#========================================================================================================================
+
+# Questões
+DECLARE v_Exist integer; # Está sendo usado para checar se existe entrada em pt-br na multilanguage
+DECLARE v_question varchar(50);  # Descrição do novo grupo
+DECLARE v_answer varchar(500); # variavel auxiliar do novo grupo
+DECLARE v_questionid integer; # variavel auxiliar do id da pergunta que será alterada
+DECLARE v_listOfValuesid integer;
+DECLARE v_listtypeid integer;
+DECLARE v_questionGroupFormid integer;
+DECLARE v_lista text;
+DECLARE v_apoio varchar(500);
+DECLARE v_resposta varchar(500);
+DECLARE v_listofvaluesid_ant integer;
+DECLARE v_answer_ant varchar(500);
+DECLARE v_operacao varchar(01);
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+   START TRANSACTION;
+
+	# Inserindo/Alterando as questoes registro do form e a questão associada a data    
+    set v_lista = concat(p_stringquestions, ',') ;
+    
+    while length(v_lista) > 1 DO
+		set v_apoio = substring(v_lista, 1, position(',' in v_lista));
+		set v_question = substring(v_apoio, 1, position(':' in v_apoio) - 1);
+		set v_answer     = substring(v_apoio, position(':' in v_apoio) + 1, position(',' in v_apoio) - 1);
+        set v_answer     = REPLACE(v_answer, ',', '');
+		set v_questionid = CONVERT(v_question, SIGNED);  
+	
+        if v_questionid is not null then
+              
+			Insert into tb_questions (questionID, description, questionTypeID,listTypeID,questionGroupID,subordinateTo,subordinateValues,isAbout,`comment`) VALUES (v_questionid,v_answer,7,NULL,NULL,NULL,NULL,NULL,NULL);
+            
+        end if;
+        
+  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
+        if position(',' in v_lista) < length(v_lista) then
+	  	   set v_lista = substring(v_lista,  position(',' in v_lista) + 1, length(v_lista));
+		else 
+           set v_lista = '';
+		end if;
+	
+	End While;
+	    
+    set p_msg_retorno = 'Questões inseridos com sucesso.';
+    
+	COMMIT;
+    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `postQst2` (IN `p_stringquestions` INT, IN `p_stringgroups` INT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
 #========================================================================================================================
 #== Procedure criada para incluir grupo de questões
 #== Criada em 01 maio 2021
@@ -1136,6 +1201,41 @@ DECLARE v_hospitalUnitName varchar(500);
 		
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `publishQuestionnaire` (IN `p_questionnaireID` INT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para publicar um questionário e seus módulos
+#== Criada em 26 de março de 2022
+#== Alterada em 26 de março de 2022
+#========================================================================================================================
+ 
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+   START TRANSACTION;
+
+	# Alterando o status do questionário para publicado 
+    
+    Update tb_Questionnaire set lastModification = NOW() and questionnaireStatusID = 1 and version = "1.0" where questionnaireID = p_questionnaireID;
+    
+	# Alterando o status dos seus módulos para publicado
+    
+    UPDATE tb_crfforms set crfformsStatusID = 1 where questionnaireID = p_questionnaireID;
+   
+	COMMIT;
+    
+    set p_msg_retorno = "Questionário publicado com sucesso.";
+    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `putMedicalRecord` (IN `p_userid` INT, IN `p_groupRoleid` INT, IN `p_hospitalUnitid` INT, IN `p_questionnaireId` INT, IN `p_participantId` INT, IN `p_medicalRecordNew` VARCHAR(255), OUT `p_msg_retorno` VARCHAR(500))  BEGIN
 #========================================================================================================================
 #== Procedure criada para o atualizar o registro de um participant associado a um hospital para futuro lançamento dos modulos do formulario
@@ -1359,6 +1459,61 @@ sp:BEGIN
 	
 	End While;
 	    
+	COMMIT;
+    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstGroup` (IN `p_stringquestionsgroups` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para alterar os grupos de questões associados às questões
+#== Criada em 25 de Maio de 2022
+#========================================================================================================================
+
+# Grupos das questões
+DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
+DECLARE v_groupid integer; # o id do grupo da questão
+DECLARE v_lista2 text; # lista de grupos com questões: v_questionid2 : v_groupid
+DECLARE v_apoio2 varchar(500); 
+DECLARE v_questionid2 varchar(500); # o id da questão na v_lista2
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+   START TRANSACTION;
+
+	# Alterando os grupos associados as questões em v_lista
+    set v_lista2 = concat(p_stringquestionsgroups, ',') ;
+        
+   	while length(v_lista2) > 1 DO
+		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
+		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
+		set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
+        set v_groupid     = REPLACE(v_groupid, ',', '');
+		set v_questionid2 = CONVERT(v_group, SIGNED);
+            
+        if v_questionid2 is not null then
+			UPDATE tb_questions set questionGroupID = CONVERT(v_groupid, SIGNED) where questionID = v_questionid2;
+        end if;
+        
+  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
+        if position(',' in v_lista2) < length(v_lista2) then
+	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
+		else 
+           set v_lista2 = '';
+		end if;
+	
+	End While;
+	    
+    set p_msg_retorno = 'Associações entre grupos e questões atualizados com sucesso.';
+    
 	COMMIT;
     
 END;
@@ -1830,6 +1985,16 @@ END$$
 --
 -- Functions
 --
+CREATE DEFINER=`root`@`localhost` FUNCTION `getQuestionnaireNewVersionNumber` (`p_questionnaireID` INT) RETURNS VARCHAR(50) CHARSET utf8mb4 BEGIN
+
+   DECLARE version VARCHAR(500);
+
+   SET version = (Select version from tb_Questionnaire where questionnaireID = p_questionnaireID);
+
+   RETURN version;
+
+END$$
+
 CREATE DEFINER=`root`@`localhost` FUNCTION `getTotalMedicalRecordHospitalUnit` (`p_hospitalUnitid` INTEGER, `p_questionnaireid` INTEGER) RETURNS INT(11) BEGIN
 #========================================================================================================================
 #== Função criada para verificar se já existem prontuários/registros associados a um determinado hospital
@@ -2791,7 +2956,7 @@ INSERT INTO `tb_listtype` (`listTypeID`, `description`, `comment`) VALUES
 (14, 'Source of oxygen list', 'Este é um comentário sobre o tipo da lista'),
 (15, 'ynu_list', 'Este é um comentário sobre o tipo da lista'),
 (16, 'ynun_list', 'Este é um comentário sobre o tipo da lista'),
-(0, '', 'Este é um comentário sobre o tipo da lista');
+(17, '', 'Este é um comentário sobre o tipo da lista');
 
 -- --------------------------------------------------------
 
@@ -6251,7 +6416,7 @@ CREATE TABLE `tb_questionnaire` (
 --
 
 INSERT INTO `tb_questionnaire` (`questionnaireID`, `description`, `questionnaireStatusID`, `isNewVersionOf`, `IsBasedOn`, `version`, `lastModification`, `creationDate`) VALUES
-(1, 'WHO COVID-19 Rapid Version CRF', 1, 0, 0, '1.0', '2021-11-17 21:06:57', '2022-02-28 22:20:37'),
+(1, 'WHO COVID-19 Rapid Version CRF', 1, 0, 0, '1.0', '0000-00-00 00:00:00', '2022-05-26 16:24:03'),
 (2, 'Pesquisa de teste 2', 3, 0, 1, '2.0', '2021-11-17 23:16:07', '2022-03-02 00:35:35'),
 (3, 'Nova Pesquisa', 2, 0, 4, '0.0', '2022-02-14 17:45:19', '2022-03-09 18:19:38'),
 (4, 'WHO COVID-19 Full Version CRF', 2, 1, 0, '0.0', '2022-02-28 22:05:39', '2022-03-09 18:19:34'),
@@ -6328,7 +6493,7 @@ CREATE TABLE `tb_questions` (
   `subordinateTo` int(10) DEFAULT NULL,
   `subordinateValues` varchar(100) DEFAULT NULL,
   `isAbout` int(10) DEFAULT NULL,
-  `comment` varchar(500) NOT NULL
+  `comment` varchar(500) DEFAULT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
@@ -6590,7 +6755,8 @@ INSERT INTO `tb_questions` (`questionID`, `description`, `questionTypeID`, `list
 (252, 'Loss of smell signs', 8, 15, 12, NULL, NULL, 243, 'Este é um comentário sobre a questão'),
 (253, 'Loss of taste signs', 8, 15, 12, NULL, NULL, 244, 'Este é um comentário sobre a questão'),
 (254, 'Which antiviral', 4, 1, 11, NULL, NULL, 101, 'Este é um comentário sobre a questão'),
-(255, 'Which other antiviral', 7, NULL, 11, 254, 'Sim', 104, 'Este é um comentário sobre a questão');
+(255, 'Which other antiviral', 7, NULL, 11, 254, 'Sim', 104, 'Este é um comentário sobre a questão'),
+(256, ' Questão fresquinha', 7, NULL, 8, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -6786,20 +6952,68 @@ CREATE TABLE `vw_questiontype_covidcrfrapid` (
 --
 
 --
+-- Indexes for table `tb_listofvalues`
+--
+ALTER TABLE `tb_listofvalues`
+  ADD PRIMARY KEY (`listOfValuesID`);
+
+--
+-- Indexes for table `tb_listtype`
+--
+ALTER TABLE `tb_listtype`
+  ADD PRIMARY KEY (`listTypeID`);
+
+--
 -- Indexes for table `tb_questionnaire`
 --
 ALTER TABLE `tb_questionnaire`
   ADD PRIMARY KEY (`questionnaireID`);
 
 --
+-- Indexes for table `tb_questions`
+--
+ALTER TABLE `tb_questions`
+  ADD PRIMARY KEY (`questionID`);
+
+--
+-- Indexes for table `tb_questiontype`
+--
+ALTER TABLE `tb_questiontype`
+  ADD PRIMARY KEY (`questionTypeID`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
+
+--
+-- AUTO_INCREMENT for table `tb_listofvalues`
+--
+ALTER TABLE `tb_listofvalues`
+  MODIFY `listOfValuesID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=308;
+
+--
+-- AUTO_INCREMENT for table `tb_listtype`
+--
+ALTER TABLE `tb_listtype`
+  MODIFY `listTypeID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `tb_questionnaire`
 --
 ALTER TABLE `tb_questionnaire`
   MODIFY `questionnaireID` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT for table `tb_questions`
+--
+ALTER TABLE `tb_questions`
+  MODIFY `questionID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=257;
+
+--
+-- AUTO_INCREMENT for table `tb_questiontype`
+--
+ALTER TABLE `tb_questiontype`
+  MODIFY `questionTypeID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

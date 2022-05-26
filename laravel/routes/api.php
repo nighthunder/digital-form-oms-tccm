@@ -55,6 +55,7 @@ Route::group(['middleware' => 'cors:api'], function() {
     Route::put('formqstorder/{id}', [FormStructureController::class, 'updateQstChangeOrder']);
     Route::put('formgroup/', [FormStructureController::class, 'postQstGroup']);
     Route::put('formqst/', [FormStructureController::class, 'postQst']);
+    Route::put('formqst/', [FormStructureController::class, 'putQstGroup']);
     Route::get('formgroupid/', [FormStructureController::class, 'getLastInsertedGroupID']);
     Route::get('formqstid/', [FormStructureController::class, 'getLastInsertedQstID']);
 
