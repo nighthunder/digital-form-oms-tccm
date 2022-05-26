@@ -90,7 +90,7 @@ class FormStructureController extends Controller
        }
     }
 
-    public function putQstGroup(Request $request) // Cria uma lista de novos grupos
+    public function putQstGroup(Request $request) // Altera associação entre grupos e questões
     {
         try {
 
@@ -99,6 +99,74 @@ class FormStructureController extends Controller
           $respostas = str_replace('"', "", $respostas);
 
           $query_msg = DB::select("CALL putQstGroup('{$respostas}',@p_msg_retorno)");
+        
+          return response()->json($query_msg);
+
+       } catch (Exception $e) {
+         return response()->json($e, 500);
+       }
+    }
+
+    public function putQstType(Request $request) // Altera associação entre tipos e questões
+    {
+        try {
+
+          $respostas = str_replace("{", "", $request->stringtypes);
+          $respostas = str_replace("}", "", $resposta);
+          $respostas = str_replace('"', "", $respostas);
+
+          $query_msg = DB::select("CALL putQstType('{$respostas}',@p_msg_retorno)");
+        
+          return response()->json($query_msg);
+
+       } catch (Exception $e) {
+         return response()->json($e, 500);
+       }
+    }
+
+    public function putQstListType(Request $request) // Altera associação entre tipos e questões
+    {
+        try {
+
+          $respostas = str_replace("{", "", $request->stringlisttypes);
+          $respostas = str_replace("}", "", $resposta);
+          $respostas = str_replace('"', "", $respostas);
+
+          $query_msg = DB::select("CALL putQstListType('{$respostas}',@p_msg_retorno)");
+        
+          return response()->json($query_msg);
+
+       } catch (Exception $e) {
+         return response()->json($e, 500);
+       }
+    }
+
+    public function putQstSubordinateTo(Request $request) // Altera associação entre tipos e questões
+    {
+        try {
+
+          $respostas = str_replace("{", "", $request->stringsubordinateto);
+          $respostas = str_replace("}", "", $resposta);
+          $respostas = str_replace('"', "", $respostas);
+
+          $query_msg = DB::select("CALL putQstSubordinateTo('{$respostas}',@p_msg_retorno)");
+        
+          return response()->json($query_msg);
+
+       } catch (Exception $e) {
+         return response()->json($e, 500);
+       }
+    }
+
+    public function putQstSubordinateValues(Request $request) // Altera associação entre tipos e questões
+    {
+        try {
+
+          $respostas = str_replace("{", "", $request->stringsubordinatevalues);
+          $respostas = str_replace("}", "", $resposta);
+          $respostas = str_replace('"', "", $respostas);
+
+          $query_msg = DB::select("CALL putQstSubordinateValues('{$respostas}',@p_msg_retorno)");
         
           return response()->json($query_msg);
 
