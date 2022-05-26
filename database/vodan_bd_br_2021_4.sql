@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 26, 2022 at 07:42 PM
+-- Generation Time: May 26, 2022 at 08:24 PM
 -- Server version: 10.4.22-MariaDB
 -- PHP Version: 7.4.27
 
@@ -1593,6 +1593,61 @@ select p_msg_retorno as msgRetorno from DUAL;
 		
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstListType` (IN `p_stringquestionslisttypes` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para alterar os tipos de lista associados às questões
+#== Criada em 25 de Maio de 2022
+#========================================================================================================================
+
+# Grupos das questões
+DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
+DECLARE v_groupid integer; # o id do tipo de lista
+DECLARE v_lista2 text; # lista de grupos com questões: v_questionid2 : v_groupid
+DECLARE v_apoio2 varchar(500); 
+DECLARE v_questionid2 varchar(500); # o id da questão na v_lista2
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+   START TRANSACTION;
+
+	# Alterando os grupos associados as questões em v_lista
+    set v_lista2 = concat(p_stringquestionslisttypes, ',') ;
+        
+   	while length(v_lista2) > 1 DO
+		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
+		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
+		set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
+        set v_groupid     = REPLACE(v_groupid, ',', '');
+		set v_questionid2 = CONVERT(v_group, SIGNED);
+            
+        if v_questionid2 is not null then
+			UPDATE tb_questions set listTypeID = CONVERT(v_groupid, SIGNED) where questionID = v_questionid2;
+        end if;
+        
+  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
+        if position(',' in v_lista2) < length(v_lista2) then
+	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
+		else 
+           set v_lista2 = '';
+		end if;
+	
+	End While;
+	    
+    set p_msg_retorno = 'Associações entre os tipos de lista e questões atualizadas com sucesso.';
+    
+	COMMIT;
+    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstModuleDescription` (IN `p_moduleID` INT, IN `p_questionsdescriptions` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
 #========================================================================================================================
 #== Procedure criada para alterar as descrições das questões de um determinado módulo
@@ -1810,6 +1865,171 @@ sp:BEGIN
 END;
 
    select p_msg_retorno from DUAL;
+		
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstSubordinateTo` (IN `p_stringquestionssubordinateto` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para alterar os grupos de questões associados às questões
+#== Criada em 25 de Maio de 2022
+#========================================================================================================================
+
+# Grupos das questões
+DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
+DECLARE v_groupid integer; # o id da questão a que se subordina
+DECLARE v_lista2 text; # lista de grupos com questões: v_questionid2 : v_groupid
+DECLARE v_apoio2 varchar(500); 
+DECLARE v_questionid2 varchar(500); # o id da questão na v_lista2
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+   START TRANSACTION;
+
+	# Alterando as subordinações associadas as questões em v_lista
+    set v_lista2 = concat(p_stringquestionssubordinateto, ',') ;
+        
+   	while length(v_lista2) > 1 DO
+		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
+		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
+		set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
+        set v_groupid     = REPLACE(v_groupid, ',', '');
+		set v_questionid2 = CONVERT(v_group, SIGNED);
+            
+        if v_questionid2 is not null then
+			UPDATE tb_questions set questionGroupID = CONVERT(v_groupid, SIGNED) where questionID = v_questionid2;
+        end if;
+        
+  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
+        if position(',' in v_lista2) < length(v_lista2) then
+	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
+		else 
+           set v_lista2 = '';
+		end if;
+	
+	End While;
+	    
+    set p_msg_retorno = 'Associações de subordinações entre questões atualizados com sucesso.';
+    
+	COMMIT;
+    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstSubordinateValues` (IN `p_stringquestionssudbordinatevalues` TEXT, IN `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para alterar os valores de subordinação associados às questões
+#== Criada em 25 de Maio de 2022
+#========================================================================================================================
+
+# Grupos das questões
+DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
+DECLARE v_groupid varchar(50); # os valores novos de subordinação
+DECLARE v_lista2 text; # lista de grupos com questões: v_questionid2 : v_groupid
+DECLARE v_apoio2 varchar(500); 
+DECLARE v_questionid2 varchar(500); # o id da questão na v_lista2
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+   START TRANSACTION;
+
+	# Alterando os grupos associados as questões em v_lista
+    set v_lista2 = concat(p_stringquestionssudbordinatevalues, ',') ;
+        
+   	while length(v_lista2) > 1 DO
+		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
+		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
+		set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
+        set v_groupid     = REPLACE(v_groupid, ',', '');
+		set v_questionid2 = CONVERT(v_group, SIGNED);
+            
+        if v_questionid2 is not null then
+			UPDATE tb_questions set subordinateValues = v_groupid where questionID = v_questionid2;
+        end if;
+        
+  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
+        if position(',' in v_lista2) < length(v_lista2) then
+	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
+		else 
+           set v_lista2 = '';
+		end if;
+	
+	End While;
+	    
+    set p_msg_retorno = 'Associações entre os valores de subordinação e questões atualizadas com sucesso.';
+    
+	COMMIT;
+    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstType` (IN `p_stringquestionstypes` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para alterar os tipios de questões associados às questões
+#== Criada em 25 de Maio de 2022
+#========================================================================================================================
+
+# Grupos das questões
+DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
+DECLARE v_groupid integer; # o id do tipo da questão
+DECLARE v_lista2 text; # lista de grupos com questões: v_questionid2 : v_groupid
+DECLARE v_apoio2 varchar(500); 
+DECLARE v_questionid2 varchar(500); # o id da questão na v_lista2
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+   START TRANSACTION;
+
+	# Alterando os grupos associados as questões em v_lista
+    set v_lista2 = concat(p_stringquestionstypes, ',') ;
+        
+   	while length(v_lista2) > 1 DO
+		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
+		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
+		set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
+        set v_groupid     = REPLACE(v_groupid, ',', '');
+		set v_questionid2 = CONVERT(v_group, SIGNED);
+            
+        if v_questionid2 is not null then
+			UPDATE tb_questions set questionTypeID = CONVERT(v_groupid, SIGNED) where questionID = v_questionid2;
+        end if;
+
+  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
+        if position(',' in v_lista2) < length(v_lista2) then
+	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
+		else 
+           set v_lista2 = '';
+		end if;
+	
+	End While;
+	    
+    set p_msg_retorno = 'Associações entre tipos e questões atualizadas com sucesso.';
+    
+	COMMIT;
+    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
 		
 END$$
 
