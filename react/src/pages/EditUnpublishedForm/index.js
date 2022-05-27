@@ -47,7 +47,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
     const [formOk, setFormOk] = useState('')
     const history = useHistory();
     const [questions, setQuestions] = useState([]);
-    const [contI, setContI] = useState(1);
+    const [contI, setContI] = useState(0);
     // const [groups, setGroups] = useState([]); // grupos
     // const [qstsorder, setQstOrder] = useState({}); // ordem das perguntas
     var qstsorder = [];
@@ -169,47 +169,63 @@ function EditUnpublishedForm({logged, user, participantId}) {
             var listGroups = [];
             var listQuestions = [];
             var listGroupsQuestions = [];
+
+            var pairKeyGroupId = {}
+
+            let lastGroupId = await api.get('/formgroupid/');
+            lastGroupId = parseInt(lastGroupId.data[0].msgRetorno);
+
+            let lastQuestionId = await api.get('/formqstid/');
+            lastQuestionId = parseInt(lastQuestionId.data[0].msgRetorno);
+
+            // console.log("lastQuestionId", lastQuestionId);
             document.querySelectorAll('.uniQuestion').forEach(function(i) {
                 orderQuestions.push(parseInt(i.getAttribute("id")))
             });
-            document.querySelectorAll('.groupQuestion').forEach(function(i) {
+            document.querySelectorAll('.groupQuestion').forEach(function(el, i) {
+                console.log("el, i", el, i);
+                pairKeyGroupId[parseInt(el.getAttribute("value"))] = lastGroupId + i
                 let dictValueCurrent = {}
-                dictValueCurrent[parseInt(i.getAttribute("value"))] = i.querySelector('.MuiInputBase-input.MuiInput-input').value
+                dictValueCurrent[lastGroupId + i] = el.querySelector('.MuiInputBase-input.MuiInput-input').value
                 listGroups.push(dictValueCurrent)
             });
+            console.log("pairKeyGroupId", pairKeyGroupId);
             qstsorder = [];
             orderQuestions.forEach((el, i) => {
                 // console.log("i: ", i, "- el: ", el);
                 let found = questions.find(element => element.qstId === el);
                 // setQstOrder(qstsorder => [...qstsorder,found] );
                 qstsorder.push(found)
+
                 let dictValueCurrentListQuestions = {}
                 let dictValueCurrentListGroupsQuestions = {}
-                dictValueCurrentListQuestions[found.qstId] = found.dsc_qst
-                dictValueCurrentListGroupsQuestions[found.qstGroupId] = found.qstId
+
+                dictValueCurrentListQuestions[lastQuestionId + i] = found.dsc_qst
+                dictValueCurrentListGroupsQuestions[lastQuestionId + i] = pairKeyGroupId[parseInt(found.qstGroupId)]
+
                 listQuestions.push(dictValueCurrentListQuestions)
                 listGroupsQuestions.push(dictValueCurrentListGroupsQuestions)
             });
             // console.log(location.state.motherID, " - ", location.state.questionnaireID);
             
-            let request;
-            let response;
+            // let request;
+            // let response;
             
-            request = {
-                stringgroups: JSON.stringify(listGroups),
-                info: user[location.state.hospitalIndex]
-            }
+            // request = {
+            //     stringgroups: JSON.stringify(listGroups),
+            //     info: user[location.state.hospitalIndex]
+            // }
 
-            response = await api.put('/formgroup/', request);
+            // response = await api.put('/formgroup/', request);
 
-            if (response){
-                // setFormError(response.data[0].msgRetorno);
-                console.log("deu certo!");
-            }
+            // if (response){
+            //     // setFormError(response.data[0].msgRetorno);
+            //     console.log("deu certo!");
+            // }
         }
-        // console.log("listQuestions", listQuestions);
-        // console.log("listGroupsQuestions", listGroupsQuestions);
-        // console.log("listGroups", listGroups);
+        console.log("listQuestions", listQuestions);
+        console.log("listGroupsQuestions", listGroupsQuestions);
+        console.log("listGroups", listGroups);
         // console.log("qstsorder", qstsorder);
         // console.log("location.state.description", location);
         // console.log("location.state.questionnaireDescription", location.state.questionnaireDescription);
@@ -392,7 +408,13 @@ function EditUnpublishedForm({logged, user, participantId}) {
     //     );
         
     // }
-    const handleClickNewQuestion = (id) => {
+    async function handleClickNewQuestion(id) {
+
+        let lastGroupId = await api.get('/formgroupid/');
+        lastGroupId = parseInt(lastGroupId.data[0].msgRetorno);
+
+        let lastQuestionId = await api.get('/formqstid/');
+        lastQuestionId = parseInt(lastQuestionId.data[0].msgRetorno);
 
         let myObj = questions.find(obj => obj.qstId === id);
         let myObjIndex = questions.findIndex(obj => obj.qstId === id);
@@ -409,8 +431,8 @@ function EditUnpublishedForm({logged, user, participantId}) {
         setContI(contI + 1);
 
         objCopy.dsc_qst = "Nova Questão - " + contI
-        objCopy.qstId = parseInt(1000 + (Math.random() * (20000-1000)));
-        objCopy.qstOrder = parseInt(100000 + (Math.random() * (200000-100000)));
+        objCopy.qstId = lastQuestionId + contI
+        objCopy.qstOrder = ""
         objCopy.qst_type = "Number question"
         objCopy.rsp_pad = null
         objCopy.rsp_padId = null
@@ -423,7 +445,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
         setQuestions(mergeArrays)
 
     }
-    const handleClickNewGroup = (id) => {
+    async function handleClickNewGroup(id) {
         
         // const target = e.target;
         // const value = target.value;
@@ -434,6 +456,22 @@ function EditUnpublishedForm({logged, user, participantId}) {
         //     [name]: value,
         // });
         // console.log("questions groups", qstgroups);
+        // let request;
+        // let response;
+        
+        // request = {
+        //     stringgroups: JSON.stringify(listGroups),
+        //     info: user[location.state.hospitalIndex]
+        // }
+
+        // let response = await api.get('/formgroupid/');
+        // console.log("response", response.data[0].msgRetorno);
+
+        let lastGroupId = await api.get('/formgroupid/');
+        lastGroupId = parseInt(lastGroupId.data[0].msgRetorno);
+
+        let lastQuestionId = await api.get('/formqstid/');
+        lastQuestionId = parseInt(lastQuestionId.data[0].msgRetorno);
 
         let myObj = questions.find(obj => obj.qstId === id);
         let myObjIndex = questions.findIndex(obj => obj.qstId === id);
@@ -447,16 +485,19 @@ function EditUnpublishedForm({logged, user, participantId}) {
 
         let objCopy = {...myObj};
 
-        setContI(contI + 1);
-
-        objCopy.dsc_qst = "Nova Questão"
+        
+        // let idGrupo = response.data[0].msgRetorno + contI
+        
+        objCopy.dsc_qst = "Nova Questão - " + contI
         objCopy.dsc_qst_grp = "Novo Grupo - " + contI
-        objCopy.qstGroupId = String(parseInt(1000 + (Math.random() * (20000-1000))))
-        objCopy.qstId = parseInt(1000 + (Math.random() * (20000-1000)));
-        objCopy.qstOrder = parseInt(100000 + (Math.random() * (200000-100000)));
+        objCopy.qstGroupId = lastGroupId + contI
+        objCopy.qstId = lastQuestionId + contI
+        objCopy.qstOrder = ""
         objCopy.qst_type = "Number question"
         objCopy.rsp_pad = null
         objCopy.rsp_padId = null
+        
+        setContI(contI + 1);
 
         left.push(objCopy);
         console.log("left", left);
@@ -713,7 +754,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                         { formOk?   <FormOk formOk={formOk}></FormOk> : ''  } 
                         {/* <Button variant="contained" type="submit" color="primary">Salvar</Button> */}
                         {/* <Button onClick={handleReorder} type="submit" variant="contained" color="primary">Salvar</Button> */}
-                        <Button onClick={handleReorder} type="submit" variant="contained" color="primary">Salvar</Button>
+                        <Button onClick={handleReorder} variant="contained" color="primary">Salvar</Button>
                     </div>
                 </form>
                 <Dialog key={Math.random()}
