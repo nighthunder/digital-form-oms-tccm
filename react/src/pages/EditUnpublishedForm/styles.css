@@ -7,3 +7,9 @@ main.container.unpublished{
 .col-right{
 	width: 70%;
 }
+.newTypeQuestion{
+	display: none;
+}
+.subordinateQuestion{
+	display: none;
+}

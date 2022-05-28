@@ -78,7 +78,7 @@ class FormStructureController extends Controller
         try {
 
           $respostas = str_replace("{", "", $request->stringgroups);
-          $respostas = str_replace("}", "", $resposta);
+          $respostas = str_replace("}", "", $respostas);
           $respostas = str_replace('"', "", $respostas);
 
           $query_msg = DB::select("CALL postQstGroup('{$respostas}',@p_msg_retorno)");
@@ -95,7 +95,7 @@ class FormStructureController extends Controller
         try {
 
           $respostas = str_replace("{", "", $request->stringgroups);
-          $respostas = str_replace("}", "", $resposta);
+          $respostas = str_replace("}", "", $respostas);
           $respostas = str_replace('"', "", $respostas);
 
           $query_msg = DB::select("CALL putQstGroup('{$respostas}',@p_msg_retorno)");
@@ -112,7 +112,7 @@ class FormStructureController extends Controller
         try {
 
           $respostas = str_replace("{", "", $request->stringtypes);
-          $respostas = str_replace("}", "", $resposta);
+          $respostas = str_replace("}", "", $respostas);
           $respostas = str_replace('"', "", $respostas);
 
           $query_msg = DB::select("CALL putQstType('{$respostas}',@p_msg_retorno)");
@@ -129,7 +129,7 @@ class FormStructureController extends Controller
         try {
 
           $respostas = str_replace("{", "", $request->stringlisttypes);
-          $respostas = str_replace("}", "", $resposta);
+          $respostas = str_replace("}", "", $respostas);
           $respostas = str_replace('"', "", $respostas);
 
           $query_msg = DB::select("CALL putQstListType('{$respostas}',@p_msg_retorno)");
@@ -146,7 +146,7 @@ class FormStructureController extends Controller
         try {
 
           $respostas = str_replace("{", "", $request->stringsubordinateto);
-          $respostas = str_replace("}", "", $resposta);
+          $respostas = str_replace("}", "", $respostas);
           $respostas = str_replace('"', "", $respostas);
 
           $query_msg = DB::select("CALL putQstSubordinateTo('{$respostas}',@p_msg_retorno)");
@@ -163,7 +163,7 @@ class FormStructureController extends Controller
         try {
 
           $respostas = str_replace("{", "", $request->stringsubordinatevalues);
-          $respostas = str_replace("}", "", $resposta);
+          $respostas = str_replace("}", "", $respostas);
           $respostas = str_replace('"', "", $respostas);
 
           $query_msg = DB::select("CALL putQstSubordinateValues('{$respostas}',@p_msg_retorno)");

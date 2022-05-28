@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, cloneElement } from 'react';
 import './styles.css';
 import { useLocation } from "react-router-dom";
 import { Scrollchor } from 'react-scrollchor';
-import { TextField, Button, InputLabel, Select } from '@material-ui/core';
+import { TextField, Button, InputLabel, Select, Checkbox } from '@material-ui/core';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownwardRounded';
@@ -25,6 +25,8 @@ import DialogTitle from '@mui/material/DialogTitle';
 // import NewGroup from '../../components/newGroup';
 import ReactDOM from 'react-dom'
 import ReactDOMServer from "react-dom/server";
+import { SingleSelect } from "react-select-material-ui";
+import FormControlLabel from '@mui/material/FormControlLabel';
 
 
 const useStyles = makeStyles({
@@ -63,6 +65,43 @@ function EditUnpublishedForm({logged, user, participantId}) {
     const [questionGroupComment, setQuestionGroupComment] = useState('');
     const [popupBodyText, setPopupBodyText] = useState('');
 
+    //select de tipo de questao
+    const [typeQuestions, setTypeQuestions] = useState();
+    const options = [
+        { label: "Questões do tipo Sim ou Não", value: "Boolean_Question" },
+        { label: "Questões do tipo data", value: "Date question" },
+        { label: "Questões de exame de sangue", value: "Laboratory question" },
+        { label: "Questões de lista com valores fechados", value: "List question" },
+        { label: "Questões númericas", value: "Number question" },
+        { label: "Questões PNNot_done", value: "PNNot_done_Question" },
+        { label: "Questões textuais", value: "Text_Question" },
+        { label: "Questões YNU", value: "YNU_Question" },
+        { label: "Questões YNUN", value: "YNUN_Question" },
+        { label: "Questões de ventilação de paciente", value: "Ventilation question" }
+    ];
+    const handleChangeOptionsTypeQuestions = value => {
+        setTypeQuestions[0]=value;
+        console.log(value);
+    };
+    var newQuestionType = false;
+    var existsQuestionType = true;
+    const handleChangeCheckboxQuestionType = (event) => {
+        console.log("event.target.checked", event.target.checked);
+        console.log(newQuestionType, existsQuestionType);
+        newQuestionType=event.target.checked;
+        existsQuestionType=!event.target.checked;
+        console.log(newQuestionType, existsQuestionType);
+        if(event.target.checked){
+            document.querySelectorAll('.newTypeQuestion')[0].setAttribute("style","display:inline;");
+            document.querySelectorAll('.existsTypeQuestion')[0].setAttribute("style","display:none;");
+        }else{
+            document.querySelectorAll('.newTypeQuestion')[0].setAttribute("style","display:none;");
+            document.querySelectorAll('.existsTypeQuestion')[0].setAttribute("style","display:inline;");
+
+        }
+    }
+    
+
     useEffect(() => {
         async function loadForm() {
             const response = await api.get('/form/' + location.state.modulo);
@@ -75,6 +114,24 @@ function EditUnpublishedForm({logged, user, participantId}) {
         loadForm();
         setHospitalName(user[location.state.hospitalIndex].hospitalName);
     }, [])
+
+    const [typeSubordinateQuestion, setTypeSubordinateQuestion] = useState();
+    const optionsSubordinateQuestion = []
+    questions.map(
+        (ref, index) => optionsSubordinateQuestion.push({ label: ref.dsc_qst, value: ref.qstId })
+    )
+    const handleChangeOptionsTypeSubordinateQuestion = value => {
+        setTypeSubordinateQuestion[0]=value;
+        console.log(value);
+    };
+    const handleChangeCheckboxSubordinateQuestion = (event) => {
+        if(event.target.checked){
+            document.querySelectorAll('.subordinateQuestion')[0].setAttribute("style","display:inline;");
+        }else{
+            document.querySelectorAll('.subordinateQuestion')[0].setAttribute("style","display:none;");
+
+        }
+    }
 
     function handleChange(e) {
         const target = e.target;
@@ -151,11 +208,23 @@ function EditUnpublishedForm({logged, user, participantId}) {
         //setQuestionListTypeComment(`rere \n asdssss`);
         setOpen(true);
     };
+    // const handleInfo = (e) => {
+    //     console.log("e", e);
+    //     setOpen(false);
+    //     setPopupTitle("[Atenção] Informações sobre a edição");
+    //     setPopupBodyText("Neste modo de edição só é possível reodernar questões e agrupamentos ou alterar suas descrições. Para ser possível fazer mais alterações é necessário criar uma pesquisa derivada.");
+    //     setQuestionComment("");
+    //     setQuestionTypeComment("");
+    //     setQuestionListTypeComment("");
+    //     setQuestionGroupComment("");
+    //     setOpen(true);
+    // };
+
     const handleInfo = (e) => {
         console.log("e", e);
         setOpen(false);
-        setPopupTitle("[Atenção] Informações sobre a edição");
-        setPopupBodyText("Neste modo de edição só é possível reodernar questões e agrupamentos ou alterar suas descrições. Para ser possível fazer mais alterações é necessário criar uma pesquisa derivada.");
+        setPopupTitle("Adicione uma nova pergunta");
+        setPopupBodyText("Configure a sua nova pergunta.");
         setQuestionComment("");
         setQuestionTypeComment("");
         setQuestionListTypeComment("");
@@ -201,27 +270,31 @@ function EditUnpublishedForm({logged, user, participantId}) {
                 let dictValueCurrentListGroupsQuestions = {}
 
                 dictValueCurrentListQuestions[lastQuestionId + i] = found.dsc_qst
-                dictValueCurrentListGroupsQuestions[lastQuestionId + i] = pairKeyGroupId[parseInt(found.qstGroupId)]
+                if (parseInt(found.qstGroupId)){
+                    dictValueCurrentListGroupsQuestions[lastQuestionId + i] = pairKeyGroupId[parseInt(found.qstGroupId)]
+                }else{
+                    dictValueCurrentListGroupsQuestions[lastQuestionId + i] = null
+                }
 
                 listQuestions.push(dictValueCurrentListQuestions)
                 listGroupsQuestions.push(dictValueCurrentListGroupsQuestions)
             });
             // console.log(location.state.motherID, " - ", location.state.questionnaireID);
             
-            // let request;
-            // let response;
+            let request;
+            let response;
             
-            // request = {
-            //     stringgroups: JSON.stringify(listGroups),
-            //     info: user[location.state.hospitalIndex]
-            // }
+            request = {
+                stringgroups: JSON.stringify(listGroups),
+                info: user[location.state.hospitalIndex]
+            }
 
-            // response = await api.put('/formgroup/', request);
+            response = await api.put('/formgroup/', request);
 
-            // if (response){
-            //     // setFormError(response.data[0].msgRetorno);
-            //     console.log("deu certo!");
-            // }
+            if (response){
+                // setFormError(response.data[0].msgRetorno);
+                console.log("deu certo!");
+            }
         }
         console.log("listQuestions", listQuestions);
         console.log("listGroupsQuestions", listGroupsQuestions);
@@ -754,10 +827,10 @@ function EditUnpublishedForm({logged, user, participantId}) {
                         { formOk?   <FormOk formOk={formOk}></FormOk> : ''  } 
                         {/* <Button variant="contained" type="submit" color="primary">Salvar</Button> */}
                         {/* <Button onClick={handleReorder} type="submit" variant="contained" color="primary">Salvar</Button> */}
-                        <Button onClick={handleReorder} variant="contained" color="primary">Salvar</Button>
+                        <Button onClick={handleReorder} type="submit" variant="contained" color="primary">Salvar</Button>
                     </div>
                 </form>
-                <Dialog key={Math.random()}
+                {/* <Dialog key={Math.random()}
                             open={open}
                             onClose={handleClose}
                             aria-labelledby="alert-dialog-title"
@@ -781,6 +854,77 @@ function EditUnpublishedForm({logged, user, participantId}) {
                             </DialogContent>
                             <DialogActions>
                                 <Button onClick={handleClose}>Fechar [x]</Button>
+                            </DialogActions>
+                </Dialog> */}
+                <Dialog key={Math.random()}
+                            open={open}
+                            onClose={handleClose}
+                            aria-labelledby="alert-dialog-title"
+                            aria-describedby="alert-dialog-description"
+                            fullWidth
+                            maxWidth='lg'
+                            
+                            >
+                            <DialogTitle id="alert-dialog-title">
+                                {popupTitle}
+                            </DialogTitle>
+                            <DialogContent style={{height:'100vh'}}>
+                                <DialogContentText id="alert-dialog-description">
+                                <b>{popupBodyText}</b>
+                                <br/>
+                                <br/>
+                                <TextField fullWidth id="outlined-basic" label="Descrição da Pergunta" variant="outlined" />
+                                <br/>
+                                <br/>
+                                <p>Selecione um tipo de questão:</p>
+                                <FormControlLabel
+                                    control={
+                                    // <Checkbox checked={antoine} onChange={handleChange} name="antoine" />
+                                    <Checkbox name="newQuestionType" onChange={handleChangeCheckboxQuestionType} />
+                                    }
+                                    label="Criar novo tipo de questão"
+                                />
+                                <div className="newTypeQuestion">
+                                    <TextField fullWidth label="Tipo novo de questão" variant="outlined" />
+                                    <br/>
+                                    <br/>
+                                    <TextField fullWidth label="Valores de resposta para o novo tipo" variant="outlined" />
+                                </div>
+                                <div className="existsTypeQuestion">
+                                    <SingleSelect
+                                        value={typeQuestions}
+                                        placeholder="Selecione um tipo de questão existente"
+                                        options={options}
+                                        onChange={handleChangeOptionsTypeQuestions}
+                                    />
+                                </div>
+                                <br/>
+                                <br/>
+                                <FormControlLabel
+                                    control={
+                                    // <Checkbox checked={antoine} onChange={handleChange} name="antoine" />
+                                    <Checkbox name="subordinateQuestion" onChange={handleChangeCheckboxSubordinateQuestion} />
+                                    }
+                                    label="Adicionar subordinação a essa questão"
+                                />
+                                <div className="subordinateQuestion">
+                                    <SingleSelect
+                                        value={typeSubordinateQuestion}
+                                        placeholder="Selecione a questão a qual será subordinada"
+                                        options={optionsSubordinateQuestion}
+                                        onChange={handleChangeOptionsTypeSubordinateQuestion}
+                                    />
+                                    <br/>
+                                    <br/>
+                                    <p>Valores de resposta para subordinação:</p>
+                                    <TextField fullWidth variant="outlined" />
+                                </div>
+
+                                </DialogContentText>
+                            </DialogContent>
+                            <DialogActions>
+                                <Button onClick={handleClose}>Salvar</Button>
+                                <Button onClick={handleClose}>Fechar</Button>
                             </DialogActions>
                 </Dialog>
                 <aside> 
