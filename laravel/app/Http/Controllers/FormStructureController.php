@@ -212,4 +212,16 @@ class FormStructureController extends Controller
        }
     }
 
+    public function publication(Request $request) // Publica um questionário e seus módulos
+    {
+        try {
+          $query_msg = DB::select("CALL publishQuestionnaire('{$request->id}', @p_msg_retorno)");
+        
+          return response()->json($query_msg);
+
+       } catch (Exception $e) {
+         return response()->json($e, 500);
+       }
+    }
+
 }

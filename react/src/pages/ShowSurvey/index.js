@@ -36,6 +36,7 @@ function ShowSurvey({user}) {
   const [loadingSearch, setLoadingSearch] = useState(false);
   const [popupTitle, setPopupTitle] = useState('');
   const [popupBodyText, setPopupBodyText] = useState('');
+  const [canShowPublishButton, setCanShowPublishButton] = useState(false);
   const [canBePublished, setCanBePublished] = useState(false);
   const [popupAction, setPopupAction] = useState('');
 
@@ -80,6 +81,7 @@ function ShowSurvey({user}) {
   // popup  
 	const [open, setOpen] = React.useState(false);
   const handleClickOpen = (q) => {
+
         setOpen(false);
         setModuleID(q.crfFormsID);
         setModuleStatus(q.crfFormsStatus);
@@ -116,22 +118,44 @@ function ShowSurvey({user}) {
     setOpen(false);
   };
 
-  async function getPublicationStatus(){
-
-  }
-
-  async function handlePublication(e){
+  async function handlePublishing(e){
 
     setPopupAction("publication");
     setPopupTitle("Publicação de "+location.state.description);
     const response = await api.get('/checkpublication/'+location.state.questionnaireID);
+
     if(response.data) {
       setPopupBodyText(response.data[0].msgRetorno);
 
-      if (response.data[0].msgRetorno == "OK") {setCanBePublished(true)}else{setCanBePublished(false)}
+      if (response.data[0].msgRetorno == "OK") {
+        setCanShowPublishButton(true)
+        setPopupBodyText("Atenção. Este questionário e todos os seus formulários de módulos serão publicados. Tem certeza?");
+        setCanBePublished(true);
+    
+      }else{
+        setCanShowPublishButton(false)
+
+      }
     }  
+    
     setOpen(true);
     
+  }
+
+  async function publish(e){
+    const response = await api.post('/publication/'+location.state.questionnaireID);
+
+    if(response){
+      setPopupBodyText("Questionário publicado com sucesso");
+      setCanShowPublishButton(false);
+      setCanBePublished(false);
+      const response = await api.get('/modules/'+location.state.questionnaireID);
+      if(response.data) {
+        setModules(response.data);
+        setModulesLoaded(true);
+      }  
+      location.state.questionnaireStatus = "Publicado";
+    }
   }
 
   const handleOpenEditPublishedForm = () => {
@@ -237,7 +261,7 @@ function ShowSurvey({user}) {
         <Add color="primary" />
           Adicionar novo formulário de módulo +
         </Button><br/>
-        <Button variant="contained" color="primary" className="add-module publish" onClick={handlePublication}>
+        <Button variant="contained" color="primary" className="add-module publish" onClick={handlePublishing}>
           <Add color="primary" />
           Publicar pesquisa
         </Button><br/>
@@ -310,9 +334,8 @@ function ShowSurvey({user}) {
                           popupAction == "edition" && <Button onClick={handleOpenEditPublishedForm} autoFocus>Prosseguir</Button> 
                         }
                         {
-                          popupAction == "publication" && canBePublished && <Button onClick={handlePublication} autoFocus>Publicar</Button>
+                          popupAction == "publication" && canShowPublishButton && <Button onClick={!canBePublished ? handlePublishing : publish} autoFocus>Publicar</Button>
                         }
-                        
                       </DialogActions>
                     </Dialog>
           </table>
