@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 19, 2022 at 10:19 PM
+-- Generation Time: Jun 25, 2022 at 11:27 PM
 -- Server version: 10.4.22-MariaDB
 -- PHP Version: 7.4.27
 
@@ -552,7 +552,7 @@ DECLARE v_alteracao text;
 		
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `postMedicalRecord` (IN `p_userid` INT, IN `p_groupRoleid` INT, IN `p_hospitalUnitid` INT, IN `p_questionnaireId` INT, IN `p_medicalRecord` VARCHAR(255))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `postMedicalRecord` (IN `p_userid` INT, IN `p_groupRoleid` INT, IN `p_hospitalUnitid` INT, IN `p_questionnaireId` INT, IN `p_medicalRecord` VARCHAR(255), OUT `p_msg_retorno` VARCHAR(500))  BEGIN
 #========================================================================================================================
 #== Procedure criada para o registro de um participant associado a um hospital para futuro lançamento dos modulos do formulario
 #== Cria o registro na tb_participant e na tb_AssessmentQuestionnaire
@@ -2504,7 +2504,13 @@ INSERT INTO `tb_assessmentquestionnaire` (`participantID`, `hospitalUnitID`, `qu
 (184, 1, 1),
 (185, 1, 1),
 (186, 1, 1),
-(187, 1, 1);
+(187, 1, 1),
+(188, 1, 1),
+(189, 1, 1),
+(0, 1, 2),
+(190, 1, 4),
+(191, 1, 4),
+(203, 1, 3);
 
 -- --------------------------------------------------------
 
@@ -4610,7 +4616,21 @@ INSERT INTO `tb_notificationrecord` (`userID`, `profileID`, `hospitalUnitID`, `t
 (20, 1, 1, 'tb_questiongroupformrecord', 1376, '2021-11-30 23:14:48', 'I', 'Inclusão de Resposta da 249:67'),
 (20, 1, 1, 'tb_questiongroupformrecord', 1377, '2021-11-30 23:14:48', 'I', 'Inclusão de Resposta da 252:Sim - 15:298'),
 (20, 1, 1, 'tb_questiongroupformrecord', 1378, '2021-11-30 23:14:48', 'I', 'Inclusão de Resposta da 253:Sim - 15:298'),
-(20, 1, 1, 'tb_questiongroupformrecord', 1379, '2021-11-30 23:14:48', 'I', 'Inclusão de Resposta da 254:Inibidor de neuraminidase - 1:4');
+(20, 1, 1, 'tb_questiongroupformrecord', 1379, '2021-11-30 23:14:48', 'I', 'Inclusão de Resposta da 254:Inibidor de neuraminidase - 1:4'),
+(20, 7, 1, 'tb_participant', 0, '2022-06-20 17:52:54', 'I', 'Inclusão de paciente: 8324234332'),
+(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-20 17:52:54', 'I', 'Inclusão do registro referente ao paciente: 0 para o hospital: 1'),
+(20, 7, 1, 'tb_participant', 0, '2022-06-25 20:50:02', 'I', 'Inclusão de paciente: 9435345'),
+(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-25 20:50:02', 'I', 'Inclusão do registro referente ao paciente: 0 para o hospital: 1'),
+(20, 7, 1, 'tb_participant', 0, '2022-06-25 20:51:17', 'I', 'Inclusão de paciente: 94353456'),
+(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-25 20:51:17', 'I', 'Inclusão do registro referente ao paciente: 0 para o hospital: 1'),
+(20, 7, 1, 'tb_participant', 0, '2022-06-25 20:58:59', 'I', 'Inclusão de paciente: 0032442345'),
+(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-25 20:58:59', 'I', 'Inclusão do registro referente ao paciente: 0 para o hospital: 1'),
+(20, 7, 1, 'tb_participant', 0, '2022-06-25 21:09:35', 'I', 'Inclusão de paciente: 45455'),
+(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-25 21:09:35', 'I', 'Inclusão do registro referente ao paciente: 0 para o hospital: 1'),
+(20, 7, 1, 'tb_participant', 0, '2022-06-25 21:09:38', 'I', 'Inclusão de paciente: 45455'),
+(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-25 21:09:38', 'I', 'Inclusão do registro referente ao paciente: 0 para o hospital: 1'),
+(20, 7, 1, 'tb_participant', 203, '2022-06-25 21:17:05', 'I', 'Inclusão de paciente: 45455345'),
+(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-25 21:17:05', 'I', 'Inclusão do registro referente ao paciente: 203 para o hospital: 1');
 
 -- --------------------------------------------------------
 
@@ -4753,7 +4773,23 @@ INSERT INTO `tb_participant` (`participantID`, `medicalRecord`) VALUES
 (184, '1234355345'),
 (185, '6575675778'),
 (186, '94564563'),
-(187, '54654654');
+(187, '54654654'),
+(188, '8324234332'),
+(189, '9435345'),
+(190, '94353456'),
+(191, '34234234'),
+(192, '34234234'),
+(193, '23423434'),
+(194, '93453454'),
+(195, '93453453'),
+(196, '23123123'),
+(197, '23123123'),
+(198, '0032442345'),
+(199, '45455'),
+(200, '45455'),
+(201, '45455'),
+(202, '45455'),
+(203, '45455345');
 
 -- --------------------------------------------------------
 
@@ -7289,10 +7325,34 @@ CREATE TABLE `vw_questiontype_covidcrfrapid` (
 --
 
 --
+-- Indexes for table `tb_assessmentquestionnaire`
+--
+ALTER TABLE `tb_assessmentquestionnaire`
+  ADD PRIMARY KEY (`participantID`);
+
+--
 -- Indexes for table `tb_crfforms`
 --
 ALTER TABLE `tb_crfforms`
   ADD PRIMARY KEY (`crfFormsID`);
+
+--
+-- Indexes for table `tb_crfformsstatus`
+--
+ALTER TABLE `tb_crfformsstatus`
+  ADD PRIMARY KEY (`crfformsStatusID`);
+
+--
+-- Indexes for table `tb_hospitalunit`
+--
+ALTER TABLE `tb_hospitalunit`
+  ADD PRIMARY KEY (`hospitalUnitID`);
+
+--
+-- Indexes for table `tb_language`
+--
+ALTER TABLE `tb_language`
+  ADD PRIMARY KEY (`languageID`);
 
 --
 -- Indexes for table `tb_listofvalues`
@@ -7307,6 +7367,18 @@ ALTER TABLE `tb_listtype`
   ADD PRIMARY KEY (`listTypeID`);
 
 --
+-- Indexes for table `tb_ontology`
+--
+ALTER TABLE `tb_ontology`
+  ADD PRIMARY KEY (`ontologyID`);
+
+--
+-- Indexes for table `tb_participant`
+--
+ALTER TABLE `tb_participant`
+  ADD PRIMARY KEY (`participantID`);
+
+--
 -- Indexes for table `tb_questiongroup`
 --
 ALTER TABLE `tb_questiongroup`
@@ -7317,6 +7389,24 @@ ALTER TABLE `tb_questiongroup`
 --
 ALTER TABLE `tb_questionnaire`
   ADD PRIMARY KEY (`questionnaireID`);
+
+--
+-- Indexes for table `tb_questionnairepartsontology`
+--
+ALTER TABLE `tb_questionnairepartsontology`
+  ADD PRIMARY KEY (`ontologyID`);
+
+--
+-- Indexes for table `tb_questionnairepartstable`
+--
+ALTER TABLE `tb_questionnairepartstable`
+  ADD PRIMARY KEY (`questionnairePartsTableID`);
+
+--
+-- Indexes for table `tb_questionnairestatus`
+--
+ALTER TABLE `tb_questionnairestatus`
+  ADD PRIMARY KEY (`questionnaireStatusID`);
 
 --
 -- Indexes for table `tb_questions`
@@ -7331,14 +7421,44 @@ ALTER TABLE `tb_questiontype`
   ADD PRIMARY KEY (`questionTypeID`);
 
 --
+-- Indexes for table `tb_user`
+--
+ALTER TABLE `tb_user`
+  ADD PRIMARY KEY (`userID`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
+
+--
+-- AUTO_INCREMENT for table `tb_assessmentquestionnaire`
+--
+ALTER TABLE `tb_assessmentquestionnaire`
+  MODIFY `participantID` int(10) NOT NULL AUTO_INCREMENT COMMENT '(pt-br)  Chave estrangeira para a tabela tb_Patient.\r\n(en) Foreign key to the tb_Patient table.', AUTO_INCREMENT=204;
 
 --
 -- AUTO_INCREMENT for table `tb_crfforms`
 --
 ALTER TABLE `tb_crfforms`
   MODIFY `crfFormsID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=600;
+
+--
+-- AUTO_INCREMENT for table `tb_crfformsstatus`
+--
+ALTER TABLE `tb_crfformsstatus`
+  MODIFY `crfformsStatusID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `tb_hospitalunit`
+--
+ALTER TABLE `tb_hospitalunit`
+  MODIFY `hospitalUnitID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `tb_language`
+--
+ALTER TABLE `tb_language`
+  MODIFY `languageID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `tb_listofvalues`
@@ -7353,6 +7473,18 @@ ALTER TABLE `tb_listtype`
   MODIFY `listTypeID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
+-- AUTO_INCREMENT for table `tb_ontology`
+--
+ALTER TABLE `tb_ontology`
+  MODIFY `ontologyID` int(10) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tb_participant`
+--
+ALTER TABLE `tb_participant`
+  MODIFY `participantID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=204;
+
+--
 -- AUTO_INCREMENT for table `tb_questiongroup`
 --
 ALTER TABLE `tb_questiongroup`
@@ -7365,6 +7497,24 @@ ALTER TABLE `tb_questionnaire`
   MODIFY `questionnaireID` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
+-- AUTO_INCREMENT for table `tb_questionnairepartsontology`
+--
+ALTER TABLE `tb_questionnairepartsontology`
+  MODIFY `ontologyID` int(10) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tb_questionnairepartstable`
+--
+ALTER TABLE `tb_questionnairepartstable`
+  MODIFY `questionnairePartsTableID` int(10) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tb_questionnairestatus`
+--
+ALTER TABLE `tb_questionnairestatus`
+  MODIFY `questionnaireStatusID` int(19) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT for table `tb_questions`
 --
 ALTER TABLE `tb_questions`
@@ -7375,6 +7525,12 @@ ALTER TABLE `tb_questions`
 --
 ALTER TABLE `tb_questiontype`
   MODIFY `questionTypeID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT for table `tb_user`
+--
+ALTER TABLE `tb_user`
+  MODIFY `userID` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
