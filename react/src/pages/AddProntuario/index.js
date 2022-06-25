@@ -101,7 +101,7 @@ function AddProntuario({user}) {
                 <br/>
                 <Select native label="Questionnaire" aria-label="Questionnaire" onChange={handleSelectChange} inputProps={styles}>
                     {questionnaires.map( (questionnaire, index) => (
-                         <option key={questionnaire.questionnaireID} value={questionnaire.questionnaireID}>{ questionnaire.description }</option>
+                        questionnaire.questionnaireStatus === "Publicado" && <option key={questionnaire.questionnaireID} value={questionnaire.questionnaireID}>{ questionnaire.description }</option>
                     ))}
                 </Select>    
                 <div className="submit-prontuario">
