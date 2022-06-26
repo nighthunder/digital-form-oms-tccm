@@ -27,6 +27,7 @@ Route::group(['middleware' => 'cors:api'], function() {
 
     Route::post('insertMedicalRecord/', [MedicalRecordController::class, 'insert']);
     Route::post('searchMedicalRecord/', [MedicalRecordController::class, 'getModulesMedicalRecord']);
+    Route::get('getQuestionnaireFromMedicalRecord/{id}', [MedicalRecordController::class, 'getQuestionnaireFromMedicalRecord']);
     Route::post('editMedicalRecord/', [MedicalRecordController::class, 'edit']);
 
     Route::get('form/{id}', [FormController::class, 'show']); // obtenção das perguntas de um formulário
@@ -64,6 +65,7 @@ Route::group(['middleware' => 'cors:api'], function() {
     Route::get('formqstid/', [FormStructureController::class, 'getLastInsertedQstID']);
 
     Route::get('checkpublication/{id}', [FormStructureController::class, 'checkQuestionnairePublicationRules']); //verifica se o questionário tem condições de ser publicado
+    Route::post('publication/{id}', [FormStructureController::class, 'publication']); //publica o questionário e seus módulos
 
 });
 

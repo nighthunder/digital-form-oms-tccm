@@ -11,7 +11,7 @@ import { connect } from 'react-redux';
 
     useEffect( () => {
         async function setModules() {
-            const { data } = await api.get('/form');
+            const { data } = await api.get('/modules/'+ location.state.questionnaireID);
             setResponseQuantityModules(data)
             //console.log("registeredModules", location.state.registeredModules);
         }
@@ -34,9 +34,9 @@ import { connect } from 'react-redux';
                 {responseQuantityModules.map((item, index) => (
                     <div key={index}
                         className="item" onClick={ () => {
-                    history.push('/formulario', { modulo: item.crfFormsId, hospitalIndex: location.state.hospitalIndex, registeredModules: location.state.registeredModules })
+                    history.push('/formulario', { modulo: item.crfFormsID, hospitalIndex: location.state.hospitalIndex, registeredModules: location.state.registeredModules })
                 }}>
-                    <h4>Módulo {item.crfFormsId}</h4>
+                    <h4>Módulo {item.crfFormsID}</h4>
                     <p>{item.description}</p>
                 </div>
                 ))}

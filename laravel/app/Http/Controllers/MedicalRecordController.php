@@ -13,8 +13,9 @@ class MedicalRecordController extends Controller
             $query_msg = DB::select("CALL postMedicalRecord('{$request->userid}',
                                                             '{$request->groupRoleid}',
                                                             '{$request->hospitalUnitid}',
-                                                            '1',
-                                                            '{$request->medicalRecord}')");
+                                                            '{$request->questionnaireId}',
+                                                            '{$request->medicalRecord}',
+                                                             @p_msg_retorno)");
             $query_msg = $query_msg[0];
             if($query_msg->msgRetorno == 'Informe o numero do prontuário eletronico para cadastro. '
             || $query_msg->msgRetorno == 'Prontuário já registrado para o Hospital.'
@@ -39,6 +40,15 @@ class MedicalRecordController extends Controller
     public function getModulesMedicalRecord(Request $request) {
         try {
             $query_msg = DB::select("CALL getModulesMedicalRecord('{$request->medicalRecord}', {$request->hospitalUnitId})");
+            return response()->json($query_msg);
+        } catch(Exception $e) {
+            return response()->json($e, 500);
+        }
+    } 
+
+    public function getQuestionnaireFromMedicalRecord($medicalRecord) { // obter o id do questionário a partir do número de prontuário
+        try {
+            $query_msg = DB::select("CALL getQuestionnaireFromMedicalRecord('{$medicalRecord}')");
             return response()->json($query_msg);
         } catch(Exception $e) {
             return response()->json($e, 500);
