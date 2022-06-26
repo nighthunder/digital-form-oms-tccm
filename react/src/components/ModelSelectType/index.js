@@ -43,11 +43,18 @@ class ModelSelectType extends React.Component {
     return (
       <div id="App">
         <div className="select-container">
-          <select value={this.state.value} onChange={this.handleChange} placeholder={this.props.placeHolder} id={this.props.id}>
+          <SingleSelect
+            id={this.props.id}
+            value={this.state.value}
+            placeholder={this.props.placeHolder}
+            options={this.props.options}
+            onChange={this.handleChange}
+          />
+          {/* <select value={this.state.value} onChange={this.handleChange} placeholder={this.props.placeHolder} id={this.props.id}>
             {this.props.options.map((option) => (
               <option value={option.value}>{option.label}</option>
             ))}
-          </select>
+          </select> */}
         </div>
       </div>
     );

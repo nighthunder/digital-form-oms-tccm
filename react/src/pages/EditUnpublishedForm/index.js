@@ -929,13 +929,18 @@ function EditUnpublishedForm({logged, user, participantId}) {
                             label="Adicionar subordinação a essa questão"
                         />
                         <div className="subordinateQuestion">
-                            <SingleSelect
+                            <ModelSelectType
+                                id={"selectSubordinateQuestion"}
+                                placeHolder={"Selecione a questão a qual será subordinada"}
+                                options={optionsSubordinateQuestion}
+                            />
+                            {/* <SingleSelect
                                 id="selectSubordinateQuestion"
                                 value={typeSubordinateQuestion}
                                 placeholder="Selecione a questão a qual será subordinada"
                                 options={optionsSubordinateQuestion}
                                 onChange={handleChangeOptionsTypeSubordinateQuestion}
-                            />
+                            /> */}
                             <br/>
                             <br/>
                             <p>Valores de resposta para subordinação:</p>
