@@ -22,7 +22,8 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 //import { Transition } from "react-transition-group";
 //import { display } from '@mui/system';
-// import NewGroup from '../../components/newGroup';
+import NewInput from '../../components/NewInput';
+import ModelSelectType from '../../components/ModelSelectType';
 import ReactDOM from 'react-dom'
 import ReactDOMServer from "react-dom/server";
 import { SingleSelect } from "react-select-material-ui";
@@ -86,18 +87,14 @@ function EditUnpublishedForm({logged, user, participantId}) {
     var newQuestionType = false;
     var existsQuestionType = true;
     const handleChangeCheckboxQuestionType = (event) => {
-        console.log("event.target.checked", event.target.checked);
-        console.log(newQuestionType, existsQuestionType);
         newQuestionType=event.target.checked;
         existsQuestionType=!event.target.checked;
-        console.log(newQuestionType, existsQuestionType);
         if(event.target.checked){
             document.querySelectorAll('.newTypeQuestion')[0].setAttribute("style","display:inline;");
             document.querySelectorAll('.existsTypeQuestion')[0].setAttribute("style","display:none;");
         }else{
             document.querySelectorAll('.newTypeQuestion')[0].setAttribute("style","display:none;");
             document.querySelectorAll('.existsTypeQuestion')[0].setAttribute("style","display:inline;");
-
         }
     }
     
@@ -481,7 +478,8 @@ function EditUnpublishedForm({logged, user, participantId}) {
     //     );
         
     // }
-    async function handleClickNewQuestion(id) {
+
+    async function handleSaveNewQuestion(id, descricaoPergunta, selectExistsTypeQuestion) {
 
         let lastGroupId = await api.get('/formgroupid/');
         lastGroupId = parseInt(lastGroupId.data[0].msgRetorno);
@@ -503,12 +501,12 @@ function EditUnpublishedForm({logged, user, participantId}) {
 
         setContI(contI + 1);
 
-        objCopy.dsc_qst = "Nova Questão - " + contI
+        objCopy.dsc_qst = descricaoPergunta
         objCopy.qstId = lastQuestionId + contI
         objCopy.qstOrder = ""
-        objCopy.qst_type = "Number question"
-        objCopy.rsp_pad = null
-        objCopy.rsp_padId = null
+        objCopy.qst_type = selectExistsTypeQuestion
+        // objCopy.rsp_pad = null
+        // objCopy.rsp_padId = null
 
         left.push(objCopy);
         console.log("left", left);
@@ -516,6 +514,33 @@ function EditUnpublishedForm({logged, user, participantId}) {
         console.log("mergeArrays", mergeArrays);
 
         setQuestions(mergeArrays)
+        setOpen(false);
+        
+    }
+    function handleClickNewQuestion(id) {
+
+        setOpen(false);
+        setPopupTitle("Adicione uma nova pergunta");
+        setPopupBodyText("Configure a sua nova pergunta.");
+        setQuestionComment("");
+        setQuestionTypeComment("");
+        setQuestionListTypeComment("");
+        setQuestionGroupComment("");
+        setOpen(true);
+
+        setTimeout(() => {
+            let divSaveClickQuestion = document.querySelectorAll('.divSaveClickQuestion');
+            divSaveClickQuestion[0].onclick = () => {
+                let descricaoPergunta = document.querySelector('#descricaoPergunta').value;
+                let selectExistsTypeQuestion = document.querySelector("#selectExistsTypeQuestion").value
+                // let descricaoPergunta = document.querySelector('#descricaoPergunta').value;
+                console.log('clicked', descricaoPergunta, selectExistsTypeQuestion, id);
+                handleSaveNewQuestion(id, descricaoPergunta, selectExistsTypeQuestion)
+            }
+        }, 3000);
+
+
+        // handleSaveNewQuestion(id)
 
     }
     async function handleClickNewGroup(id) {
@@ -669,7 +694,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                                     </div>
                                     <div className="groupHeader" id={question.qstId}>
                                         <TextField className="inputQst inputQst3" name={String(question.qstGroupId)} value={qstgroups[question.qstGroupId] ? qstgroups[question.qstGroupId] : question.dsc_qst_grp } onChange={handleChangeGroups}>{question.dsc_qst_grp}</TextField>
-                                        <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
+                                        {/* <Edit className="Icon ediIcon" onClick={handleInfo}></Edit> */}
                                         <QuestionMark className="Icon qstIcon" onClick={() => handleClickOpen(question, "group")}></QuestionMark>
                                         <VisibilityIcon className="Icon visIcon"  onClick={() => handleToogle(question.dsc_qst_grp)}></VisibilityIcon>
                                         <p className="questionType groupType">Grupo de questões</p>
@@ -689,7 +714,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                                     { (question.qst_type === "Date question") && 
                                     <div>
                                         <InputLabel className="qstLabel">Questão</InputLabel>
-                                        <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
+                                        {/* <Edit className="Icon ediIcon" onClick={handleInfo}></Edit> */}
                                         <QuestionMark className="Icon qstIcon" onClick={() => handleClickOpen(question, "question")}></QuestionMark>
                                         <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
                                         <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
@@ -709,7 +734,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                                     <div>
                                     {/*<TextField  type="number" name={String(question.qstId)} label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } />*/}
                                     <InputLabel className="qstLabel">Questão:</InputLabel>
-                                    <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
+                                    {/* <Edit className="Icon ediIcon" onClick={handleInfo}></Edit> */}
                                     <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
                                     <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
                                     <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
@@ -728,7 +753,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                                     { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length < 6 ) &&
                                     <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
                                         <InputLabel className="qstLabel">Questão:</InputLabel>
-                                        <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
+                                        {/* <Edit className="Icon ediIcon" onClick={handleInfo}></Edit> */}
                                         <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
                                         <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
                                         <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
@@ -753,7 +778,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                                     { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length >= 6 ) &&
                                     <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
                                         <InputLabel className="qstLabel">Questão:</InputLabel>
-                                        <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
+                                        {/* <Edit className="Icon ediIcon" onClick={handleInfo}></Edit> */}
                                         <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
                                         <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
                                         <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
@@ -778,7 +803,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                                     { (question.qst_type === "Text_Question" || question.qst_type === "Laboratory question" || question.qst_type === "Ventilation question") && 
                                     <div>
                                     <InputLabel className="qstLabel">Questão:</InputLabel>
-                                    <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
+                                    {/* <Edit className="Icon ediIcon" onClick={handleInfo}></Edit> */}
                                     <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
                                     <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
                                     <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
@@ -797,7 +822,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                                     { (question.qst_type === "Boolean_Question") && 
                                     <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
                                         <InputLabel className="qstLabel">Questão:</InputLabel>
-                                        <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
+                                        {/* <Edit className="Icon ediIcon" onClick={handleInfo}></Edit> */}
                                         <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
                                         <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
                                         <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
@@ -857,75 +882,71 @@ function EditUnpublishedForm({logged, user, participantId}) {
                             </DialogActions>
                 </Dialog> */}
                 <Dialog key={Math.random()}
-                            open={open}
-                            onClose={handleClose}
-                            aria-labelledby="alert-dialog-title"
-                            aria-describedby="alert-dialog-description"
-                            fullWidth
-                            maxWidth='lg'
-                            
-                            >
-                            <DialogTitle id="alert-dialog-title">
-                                {popupTitle}
-                            </DialogTitle>
-                            <DialogContent style={{height:'100vh'}}>
-                                <DialogContentText id="alert-dialog-description">
-                                <b>{popupBodyText}</b>
-                                <br/>
-                                <br/>
-                                <TextField fullWidth id="outlined-basic" label="Descrição da Pergunta" variant="outlined" />
-                                <br/>
-                                <br/>
-                                <p>Selecione um tipo de questão:</p>
-                                <FormControlLabel
-                                    control={
-                                    // <Checkbox checked={antoine} onChange={handleChange} name="antoine" />
-                                    <Checkbox name="newQuestionType" onChange={handleChangeCheckboxQuestionType} />
-                                    }
-                                    label="Criar novo tipo de questão"
-                                />
-                                <div className="newTypeQuestion">
-                                    <TextField fullWidth label="Tipo novo de questão" variant="outlined" />
-                                    <br/>
-                                    <br/>
-                                    <TextField fullWidth label="Valores de resposta para o novo tipo" variant="outlined" />
-                                </div>
-                                <div className="existsTypeQuestion">
-                                    <SingleSelect
-                                        value={typeQuestions}
-                                        placeholder="Selecione um tipo de questão existente"
-                                        options={options}
-                                        onChange={handleChangeOptionsTypeQuestions}
-                                    />
-                                </div>
-                                <br/>
-                                <br/>
-                                <FormControlLabel
-                                    control={
-                                    // <Checkbox checked={antoine} onChange={handleChange} name="antoine" />
-                                    <Checkbox name="subordinateQuestion" onChange={handleChangeCheckboxSubordinateQuestion} />
-                                    }
-                                    label="Adicionar subordinação a essa questão"
-                                />
-                                <div className="subordinateQuestion">
-                                    <SingleSelect
-                                        value={typeSubordinateQuestion}
-                                        placeholder="Selecione a questão a qual será subordinada"
-                                        options={optionsSubordinateQuestion}
-                                        onChange={handleChangeOptionsTypeSubordinateQuestion}
-                                    />
-                                    <br/>
-                                    <br/>
-                                    <p>Valores de resposta para subordinação:</p>
-                                    <TextField fullWidth variant="outlined" />
-                                </div>
-
-                                </DialogContentText>
-                            </DialogContent>
-                            <DialogActions>
-                                <Button onClick={handleClose}>Salvar</Button>
-                                <Button onClick={handleClose}>Fechar</Button>
-                            </DialogActions>
+                    open={open}
+                    onClose={handleClose}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                    fullWidth
+                    maxWidth='lg' 
+                    >
+                    <DialogTitle id="alert-dialog-title">
+                        {popupTitle}
+                    </DialogTitle>
+                    <DialogContent style={{height:'100vh'}}>
+                        <DialogContentText id="alert-dialog-description">
+                        <b>{popupBodyText}</b>
+                        <br/>
+                        <br/>
+                        <NewInput descriptionInput={"Descrição da Pergunta"} id={"descricaoPergunta"}/>
+                        <br/>
+                        <br/>
+                        <p>Selecione um tipo de questão:</p>
+                        <FormControlLabel
+                            control={
+                            <Checkbox name="newQuestionType" onChange={handleChangeCheckboxQuestionType} />
+                            }
+                            label="Criar novo tipo de lista"
+                        />
+                        <div className="newTypeQuestion">
+                            <NewInput descriptionInput={"Tipo novo de questão"} id={"tipoQuestao"}/>
+                            <br/>
+                            <br/>
+                            <NewInput descriptionInput={"Valores de resposta do novo tipo (separados por vírgula)"} id={"valoresRespostas"}/>
+                        </div>
+                        <div className="existsTypeQuestion">
+                            <ModelSelectType
+                                id={"selectExistsTypeQuestion"}
+                                placeHolder={"Selecione um tipo de questão existente"}
+                                options={options}
+                            />
+                        </div>
+                        <br/>
+                        <br/>
+                        <FormControlLabel
+                            control={
+                            <Checkbox name="subordinateQuestion" onChange={handleChangeCheckboxSubordinateQuestion} />
+                            }
+                            label="Adicionar subordinação a essa questão"
+                        />
+                        <div className="subordinateQuestion">
+                            <SingleSelect
+                                id="selectSubordinateQuestion"
+                                value={typeSubordinateQuestion}
+                                placeholder="Selecione a questão a qual será subordinada"
+                                options={optionsSubordinateQuestion}
+                                onChange={handleChangeOptionsTypeSubordinateQuestion}
+                            />
+                            <br/>
+                            <br/>
+                            <p>Valores de resposta para subordinação:</p>
+                            <NewInput descriptionInput={""} id={"valoresRespostasSubodinacao"}/>
+                        </div>
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button className="divSaveClickQuestion">Salvar</Button>
+                        <Button onClick={handleClose}>Fechar</Button>
+                    </DialogActions>
                 </Dialog>
                 <aside> 
                     <p className="sidebarTitle">Menu de navegação</p>
