@@ -20,12 +20,11 @@ function Prontuario({user, dispatch}) {
 
     const [search, setSearch] = useState('');
     const [error, setError] = useState('');
+    const [questionnaireID, setQuestionnaireID] = useState('');
     const [modules, setModules] = useState([]);
     const [modulesLoaded, setModulesLoaded] = useState(false);
     const [loadingSearch, setLoadingSearch] = useState(false);
-
     const history = useHistory();
-
     const location = useLocation();
 
     async function handleSearch(e) {
@@ -73,7 +72,13 @@ function Prontuario({user, dispatch}) {
         }
 
         setModules(response.data)
-        console.log(response.data);
+        console.log("modules", response.data);
+
+        const response1 = await api.get('/getQuestionnaireFromMedicalRecord/'+ search);
+        if (response1.data){  
+            setQuestionnaireID(response1.data[0].questionnaireID); 
+            //console.log("questionnaire data", response1.data[0].questionnaireID)
+        }
     }
 
     function toForm(prontuario) {
@@ -132,7 +137,9 @@ function Prontuario({user, dispatch}) {
                         <Button variant="outlined" color="primary" className="add-modulo" onClick={ () => {
                             history.push('/modulos', { hospitalIndex: location.state.hospitalIndex,
                                                        prontuario: modules.length > 0 ? modules[0].medicalRecord : search,
-                                                       registeredModules: modules[0].formrecordid ? modules : [] })
+                                                       registeredModules: modules[0].formrecordid ? modules : [],
+                                                       questionnaireID: questionnaireID
+                                                     }) 
                         }}>
                             <Add color="primary" />
                             Novo lançamento de módulo

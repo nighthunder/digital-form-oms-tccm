@@ -27,6 +27,7 @@ Route::group(['middleware' => 'cors:api'], function() {
 
     Route::post('insertMedicalRecord/', [MedicalRecordController::class, 'insert']);
     Route::post('searchMedicalRecord/', [MedicalRecordController::class, 'getModulesMedicalRecord']);
+    Route::get('getQuestionnaireFromMedicalRecord/{id}', [MedicalRecordController::class, 'getQuestionnaireFromMedicalRecord']);
     Route::post('editMedicalRecord/', [MedicalRecordController::class, 'edit']);
 
     Route::get('form/{id}', [FormController::class, 'show']); // obtenção das perguntas de um formulário
