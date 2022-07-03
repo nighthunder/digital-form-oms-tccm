@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 17, 2022 at 06:24 PM
+-- Generation Time: Jul 04, 2022 at 12:30 AM
 -- Server version: 10.4.22-MariaDB
 -- PHP Version: 7.4.27
 
@@ -25,6 +25,118 @@ DELIMITER $$
 --
 -- Procedures
 --
+CREATE DEFINER=`root`@`localhost` PROCEDURE `checkQuestionnairePublicationRules` (IN `p_questionnaireID` INT, IN `p_questionnaireDescription` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para checar situação de um questionário que irá ser publicado atende os requisitos
+#== As regras aplicadas nessa procedure são somente da pesquisa WHO COVID-19
+#== Se tiver mais 
+#== retorna um registro contendo a msg de retorno
+#== Alterada em 23 05 2022
+#== Criada em 22 05 2022
+#========================================================================================================================
+
+DECLARE p_userID integer;
+DECLARE p_msg_retorno varchar(500);
+DECLARE p_check_questionnaire_status integer;
+DECLARE p_check_modules_qtd  integer; # verifica se o questionário tem 3 módulos
+DECLARE p_check_admission_module_qtd varchar(500); #== Checa qtd de módulos de admissão
+DECLARE p_check_followup_module_qtd varchar(500); #== Checa qtd de módulos de Acompanhamento
+DECLARE p_check_discharged_module_qtd varchar(500); #== Checa qtd de módulos de Desfecho
+DECLARE p_check_admission_module_questions_qtd integer; #== Checa qtd de questões do módulos de admissão
+DECLARE p_check_followup_module_questions_qtd integer; #== Checa qtd de questões do módulos de Acompanhamento
+DECLARE p_check_discharged_module_questions_qtd integer; #== Checa qtd de questões do módulos de Desfecho
+
+sp:BEGIN 
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+
+    START transaction;
+	if (p_questionnaireID is null) then
+ 	    set p_msg_retorno = 'Informe um ID para a pesquisa. ';
+        leave sp;   
+    end if;
+
+	# Checando a pesquisa segundo as regras do WHO COVID-19
+    
+    SET p_check_questionnaire_status = (SELECT questionnaireStatusID from tb_questionnaire where questionnaireID = p_questionnaireID);
+    
+    if (p_check_questionnaire_status = 1) then
+    	SET p_msg_retorno = 'A pesquisa já está publicada.';
+        leave sp;
+    end if;    
+    
+   SET p_check_modules_qtd = (SELECT COUNT(crfformsID) from tb_crfforms WHERE questionnaireID = p_questionnaireID);
+        
+   if (p_check_modules_qtd is null) then
+		set p_msg_retorno = 'A pesquisa não tem módulos.';
+        leave sp;
+   end if;  
+    
+   if (p_check_modules_qtd <> 3) then  
+		set p_msg_retorno = CONCAT('A pesquisa tem ',p_check_modules_qtd,' módulos. Uma pesquisa WHO COVID-19 válida tem 3 módulos: 1 de Admissão, 1 de Acompanhamento e 1 de Desfecho.');
+		leave sp;
+  end if;  
+  
+  SET p_check_admission_module_qtd = (SELECT count(crfFormsID) FROM tb_crfforms where description = 'Admission Form' and questionnaireID = p_questionnaireID);
+  
+  if (p_check_admission_module_qtd <> 1) then
+	SET p_msg_retorno =  CONCAT('A pesquisa tem ',p_check_admission_module_qtd,' módulos de Admissão. Deveria ter 1 (um).');
+    leave sp;
+  end if;   
+  
+  SET p_check_followup_module_qtd = (SELECT count(crfFormsID) FROM tb_crfforms where description = 'Follow-up' and questionnaireID = p_questionnaireID);
+  
+  if (p_check_followup_module_qtd <> 1) then
+	SET p_msg_retorno =  CONCAT('A pesquisa tem ',p_check_followup_module_qtd,' módulos de Acompanhamento. Deveria ter 1 (um).');
+    leave sp;
+  end if;   
+  
+  SET p_check_discharged_module_qtd = (SELECT count(crfFormsID) FROM tb_crfforms where description = 'Discharge/death form' and questionnaireID = p_questionnaireID);
+  
+  if (p_check_discharged_module_qtd <> 1) then
+	SET p_msg_retorno =  CONCAT('A pesquisa ', p_questionnaireDescription,' tem ',p_check_discharged_module_qtd,' módulos de Desfecho. Deveria ter 1 (um).');
+    leave sp;
+  end if;  
+  
+  SET p_check_admission_module_questions_qtd = (SELECT count(questionID) FROM tb_questiongroupform where crfFormsID = (Select crfFormsID from tb_crfforms where questionnaireID = p_questionnaireID and description = 'Admission Form') and questionnaireID = p_questionnaireID);
+  
+  if (p_check_admission_module_questions_qtd = 0) then
+	SET p_msg_retorno =  CONCAT('A pesquisa ', p_questionnaireDescription,'não pode ser publicada porque há ',p_check_admission_module_questions_qtd,' questões no módulos de Admissão.');
+    leave sp;
+  end if;  
+  
+    SET p_check_followup_module_questions_qtd = (SELECT count(questionID) FROM tb_questiongroupform where crfFormsID = (Select crfFormsID from tb_crfforms where questionnaireID = p_questionnaireID and description = 'Follow-up') and questionnaireID = p_questionnaireID);
+  
+  if (p_check_followup_module_questions_qtd = 0) then
+	SET p_msg_retorno =  CONCAT('A pesquisa ', p_questionnaireDescription,'não pode ser publicada porque há ',p_check_followup_module_questions_qtd,' questões no módulos de Acompanhamento.');
+    leave sp;
+  end if;  
+  
+     SET p_check_discharged_module_questions_qtd = (SELECT count(questionID) FROM tb_questiongroupform where crfFormsID = (Select crfFormsID from tb_crfforms where questionnaireID = p_questionnaireID and description = 'Discharge/death form') and questionnaireID = p_questionnaireID);
+  
+  if (p_check_discharged_module_questions_qtd = 0) then
+	SET p_msg_retorno =  CONCAT('A pesquisa ', p_questionnaireDescription,'não pode ser publicada porque há ',p_check_followup_module_questions_qtd,' questões no módulos de Desfecho.');
+    leave sp;
+  end if;  
+  
+  
+ set p_msg_retorno = 'OK';
+ 
+ COMMIT;
+ 
+ 
+ 
+END sp;	
+
+ ## select inserido para tratar limitaçao do retorno de procedures no Laravel	
+select p_msg_retorno as msgRetorno from DUAL;
+  
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `CreateUserAdmin` (OUT `p_msg_retorno` VARCHAR(500))  sp:BEGIN
 
 declare v_userid integer;
@@ -90,6 +202,58 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `getcrfForms` (IN `p_questionnaireID
   from tb_crfforms t1, tb_questionnaire t2
   where t1.questionnaireID = t2.questionnaireID and
         t2.questionnaireID = p_questionnaireID;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getLastInsertedGroupID` (OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para obter o último ID inserido na tabela tb_questiongroup
+#== Criada em 25 de março de 2022
+#========================================================================================================================
+
+DECLARE v_nextid integer; 
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+    
+	SET v_nextid = (SELECT MAX(questionGroupID) + 1 FROM tb_questiongroup);
+
+    SET p_msg_retorno = v_nextid;
+	    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getLastInsertedQstID` (OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para obter o último ID inserido em uma tabela tb_Questions
+#== Criada em 25 de março de 2022
+#========================================================================================================================
+
+DECLARE v_nextid integer; 
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+    
+	SET v_nextid = (SELECT MAX(questionID) + 1 FROM tb_questions);
+
+    SET p_msg_retorno = v_nextid;
+	    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `getModulesMedicalRecord` (`p_MedicalRecord` VARCHAR(255), `p_hospitalUnitId` INTEGER)  BEGIN
@@ -161,6 +325,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `getqst_rsp_modulo` (IN `p_crfformid
                  order by tlv1.listOfValuesID) as rsp_padId,
                  cast(IdQuestaoSubordinada_A as UNSIGNED ) as idsub_qst,
 	             translate('pt-br', questaosubordinada_a) as sub_qst,
+                 subordinateValues as sub_qst_values,
                  questionTypeComment as qst_type_comment,
                  questioncomment as qst_comment,
                  questionGroupComment as qst_group_comment,
@@ -171,7 +336,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `getqst_rsp_modulo` (IN `p_crfformid
 				   (case when questiongroup is null then '' else questiongroup end) as questionGroup,
                    (case when qstgroupid is null then '' else qstgroupid end) as qstgroupid,
 				   Question,
-				   QuestionType, QuestionTypeComment, listTypeResposta, listTypeID, IdQuestaoSubordinada_A, QuestaoSubordinada_A, QuestaoReferente_A, questionGroupComment
+				   QuestionType, QuestionTypeComment, listTypeResposta, listTypeID, IdQuestaoSubordinada_A, subordinateValues, QuestaoSubordinada_A, QuestaoReferente_A, questionGroupComment
 			from (
 			select t5.crfformsid, t1.questionid, t1.comment as questioncomment, t9.questionorder,
 				   t5.description as formulario,
@@ -185,6 +350,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `getqst_rsp_modulo` (IN `p_crfformid
 				   t1.listtypeid,
                    (select t7.questionid from tb_questions t7 where t7.questionId = t1.subordinateTo) as IdQuestaoSubordinada_A,
 				   (select description from tb_questions t7 where t7.questionId = t1.subordinateTo) as QuestaoSubordinada_A,
+				   (select subordinateValues from tb_questions t7 where t7.questionId = t1.questionId) as subordinateValues,
 				   (select description from tb_questions t8 where t8.questionId = t1.isabout) as QuestaoReferente_A
 			from tb_questions t1,  tb_crfForms t5, tb_questionGroupForm t9
 			where t5.crfformsid = p_crfformid and
@@ -217,25 +383,27 @@ select   tb_Qst.crfformsid as modId, tb_Qst.questionid as qstId,
 					   # (select  GROUP_CONCAT(translate('pt-br',tlv.description), ' | ') as listofvalue from tb_listofvalues tlv
 					   #  where listtypeid = tb_Questionario.listtypeid ) as rsp_pad,
 				cast(tb_Qst.IdQuestaoSubordinada_A as UNSIGNED ) as idsub_qst,
-				translate('pt-br', tb_Qst.questaosubordinada_a) as sub_qst
+				translate('pt-br', tb_Qst.questaosubordinada_a) as sub_qst,
+                tb_Qst.subordinateValues as sub_qst_values
 				from (
 					select crfformsid, questionid, questionorder, 
 						   formulario, 
 						   (case when questiongroup is null then '' else questiongroup end) as questionGroup,
 #						   (case when commentquestiongroup is null then '' else commentquestiongroup end) as commentquestiongroup,
 						   Question,
-						   QuestionType, listTypeResposta, listTypeID, IdQuestaoSubordinada_A, QuestaoSubordinada_A, QuestaoReferente_A
+						   QuestionType, listTypeResposta, listTypeID, IdQuestaoSubordinada_A, QuestaoSubordinada_A,  QuestaoReferente_A, subordinateValues
 					from (
-					select t5.crfformsid, t1.questionid, t9.questionorder,
+					select t5.crfformsid, t1.questionid, t9.questionorder, 
 						   t5.description as formulario,
 						   (select t2.description from tb_questiongroup t2 where t2.questiongroupid = t1.questiongroupid) as questionGroup,
 						   t1.description as question,
+                           t1.subordinateValues as subordinateValues,
 						   (select t3.description as questionType from tb_questiontype t3 where t3.questiontypeid = t1.questiontypeid) as questionType,
 						   (select t6.description from tb_listType t6 where t6.listtypeid = t1.listtypeid) as listTypeResposta,
 						   t1.listtypeid,
 						   (select t7.questionid from tb_questions t7 where t7.questionId = t1.subordinateTo) as IdQuestaoSubordinada_A,
 						   (select description from tb_questions t7 where t7.questionId = t1.subordinateTo) as QuestaoSubordinada_A,
-						   (select description from tb_questions t8 where t8.questionId = t1.isabout) as QuestaoReferente_A
+                           (select description from tb_questions t8 where t8.questionId = t1.isabout) as QuestaoReferente_A
 					from tb_questions t1,  tb_crfForms t5, tb_questionGroupForm t9
 					where t5.crfformsid = v_crfformsid and
 					t9.crfformsid = t5.crfformsid and t9.questionid = t1.questionid
@@ -270,6 +438,27 @@ Select 	questionnaireID,
         WHERE questionnaireID = p_questionnaireID) as motherRelationship     
 from tb_questionnaire as t1
 where questionnaireID = p_questionnaireID;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getQuestionnaireFromMedicalRecord` (IN `p_medicalRecord` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para obter o ID de um questionário a partir de um medicalRecord (prontuário)
+#== Criada em 25 de Junho de 2022
+#========================================================================================================================
+
+# Grupos das questões
+DECLARE v_participant_id integer; # id do participante
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+       
+	set v_participant_id =	(Select participantID from tb_participant where medicalRecord = p_medicalRecord);
+    
+    Select questionnaireID from tb_assessmentquestionnaire where participantID = v_participant_id;
+
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `getQuestionnaireMotherModules` (IN `p_questionnaireID` INT)  Select 	crfFormsID,
@@ -409,7 +598,7 @@ DECLARE v_alteracao text;
 		
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `postMedicalRecord` (IN `p_userid` INT, IN `p_groupRoleid` INT, IN `p_hospitalUnitid` INT, IN `p_questionnaireId` INT, IN `p_medicalRecord` VARCHAR(255))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `postMedicalRecord` (IN `p_userid` INT, IN `p_groupRoleid` INT, IN `p_hospitalUnitid` INT, IN `p_questionnaireId` INT, IN `p_medicalRecord` VARCHAR(255), OUT `p_msg_retorno` VARCHAR(500))  BEGIN
 #========================================================================================================================
 #== Procedure criada para o registro de um participant associado a um hospital para futuro lançamento dos modulos do formulario
 #== Cria o registro na tb_participant e na tb_AssessmentQuestionnaire
@@ -540,6 +729,228 @@ END sp;
  ## select inserido para tratar limitaçao do retorno de procedures no Laravel	
 select p_msg_retorno as msgRetorno from DUAL;
   
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `postQst` (IN `p_stringquestions` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para incluir questões novas
+#== Criada em 01 maio 2021
+#========================================================================================================================
+
+# Questões
+DECLARE v_Exist integer; # Está sendo usado para checar se existe entrada em pt-br na multilanguage
+DECLARE v_question varchar(50);  # Variável auxiliar do id da pergunta
+DECLARE v_answer varchar(500); # descrição da questão nova
+DECLARE v_questionid integer; # variavel auxiliar do id da pergunta que será criada
+DECLARE v_listOfValuesid integer;
+DECLARE v_listtypeid integer;
+DECLARE v_questionGroupFormid integer;
+DECLARE v_lista text;
+DECLARE v_apoio varchar(500);
+DECLARE v_resposta varchar(500);
+DECLARE v_listofvaluesid_ant integer;
+DECLARE v_answer_ant varchar(500);
+DECLARE v_operacao varchar(01);
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+   START TRANSACTION;
+
+	# Inserindo/Alterando as questoes registro do form e a questão associada a data    
+    set v_lista = concat(p_stringquestions, ',') ;
+    
+    while length(v_lista) > 1 DO
+		set v_apoio = substring(v_lista, 1, position(',' in v_lista));
+		set v_question = substring(v_apoio, 1, position(':' in v_apoio) - 1);
+		set v_answer     = substring(v_apoio, position(':' in v_apoio) + 1, position(',' in v_apoio) - 1);
+        set v_answer     = REPLACE(v_answer, ',', '');
+		set v_questionid = CONVERT(v_question, SIGNED);  
+	
+        if v_questionid is not null then
+              
+			Insert into tb_questions (questionID, v_answer, questionTypeID,listTypeID,questionGroupID,subordinateTo,subordinateValues,isAbout,`comment`) VALUES (v_questionid,v_answer,7,NULL,NULL,NULL,NULL,NULL,NULL);
+            
+            Insert into tb_multilanguage (languageID, description, descriptionLang) values(1,v_answer, v_answer);
+            Insert into tb_multilanguage (languageID, description, descriptionLang) values(2,v_answer, v_answer);
+            
+            
+        end if;
+        
+  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
+        if position(',' in v_lista) < length(v_lista) then
+	  	   set v_lista = substring(v_lista,  position(',' in v_lista) + 1, length(v_lista));
+		else 
+           set v_lista = '';
+		end if;
+	
+	End While;
+	    
+    set p_msg_retorno = 'Questões inseridos com sucesso.';
+    
+	COMMIT;
+    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `postQst2` (IN `p_stringquestions` INT, IN `p_stringgroups` INT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para incluir grupo de questões
+#== Criada em 01 maio 2021
+#========================================================================================================================
+
+# Questões
+DECLARE v_Exist integer; # Está sendo usado para checar se existe entrada em pt-br na multilanguage
+DECLARE v_question varchar(50);  # Descrição do novo grupo
+DECLARE v_answer varchar(500); # variavel auxiliar do novo grupo
+DECLARE v_questionid integer; # variavel auxiliar do id da pergunta que será alterada
+DECLARE v_listOfValuesid integer;
+DECLARE v_listtypeid integer;
+DECLARE v_questionGroupFormid integer;
+DECLARE v_lista text;
+DECLARE v_apoio varchar(500);
+DECLARE v_resposta varchar(500);
+DECLARE v_listofvaluesid_ant integer;
+DECLARE v_answer_ant varchar(500);
+DECLARE v_operacao varchar(01);
+
+# Grupos das questões
+DECLARE v_thisgroup integer; # marcador do id do grupo da questão atual em v_lista
+DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
+DECLARE v_groupid integer; # o id do grupo da questão
+DECLARE v_lista2 text; # lista de grupos com questões: v_questionid2 : v_groupid
+DECLARE v_apoio2 varchar(500); 
+DECLARE v_questionid2 varchar(500); # o id da questão na v_lista2
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+   START TRANSACTION;
+
+	# Inserindo/Alterando as questoes registro do form e a questão associada a data    
+    set v_lista = concat(p_stringquestions, ',') ;
+    set v_lista2 = concat(p_stringgroups, ',') ;
+    
+    while length(v_lista) > 1 DO
+		set v_apoio = substring(v_lista, 1, position(',' in v_lista));
+		set v_question = substring(v_apoio, 1, position(':' in v_apoio) - 1);
+		set v_answer     = substring(v_apoio, position(':' in v_apoio) + 1, position(',' in v_apoio) - 1);
+        set v_answer     = REPLACE(v_answer, ',', '');
+		set v_questionid = CONVERT(v_question, SIGNED);
+        
+   		while length(v_lista2) > 1 DO
+			set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
+			set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
+			set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
+        	set v_groupid     = REPLACE(v_groupid, ',', '');
+			set v_questionid2 = CONVERT(v_group, SIGNED);
+            
+            if (v_questionid2 = v_questionid) then
+            	set v_thisgroup = v_groupid;
+            end if;  
+            
+        end While;     
+	
+        if v_questionid is not null then
+              
+			Insert into tb_questions (questionID, description, questionTypeID,listTypeID,questionGroupID,subordinatedTo,subordinatedValues,isAbout,`comment`) VALUES (v_questionid,v_answer,7,NULL,v_groupid,NULL,NULL,NULL,NULL);
+            
+        end if;
+        
+  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
+        if position(',' in v_lista) < length(v_lista) then
+	  	   set v_lista = substring(v_lista,  position(',' in v_lista) + 1, length(v_lista));
+		else 
+           set v_lista = '';
+		end if;
+	
+	End While;
+	    
+    set p_msg_retorno = 'Questões inseridos com sucesso.';
+    
+	COMMIT;
+    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `postQstGroup` (IN `p_stringgroups` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para incluir grupo de questões
+#== Criada em 01 maio 2021
+#========================================================================================================================
+
+DECLARE v_Exist integer; # Está sendo usado para checar se existe entrada em pt-br na multilanguage
+DECLARE v_question varchar(50);  # Descrição do novo grupo
+DECLARE v_answer varchar(500); # variavel auxiliar do novo grupo
+DECLARE v_questionid integer; # variavel auxiliar do id da pergunta que será alterada
+DECLARE v_listOfValuesid integer;
+DECLARE v_listtypeid integer;
+DECLARE v_questionGroupFormid integer;
+DECLARE v_lista text;
+DECLARE v_apoio varchar(500);
+DECLARE v_resposta varchar(500);
+DECLARE v_listofvaluesid_ant integer;
+DECLARE v_answer_ant varchar(500);
+DECLARE v_operacao varchar(01);
+ 
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+   START TRANSACTION;
+
+	# Inserindo/Alterando as questoes registro do form e a questão associada a data    
+    set v_lista = concat(p_stringgroups, ',') ;
+    
+    while length(v_lista) > 1 DO
+		set v_apoio = substring(v_lista, 1, position(',' in v_lista));
+		set v_question = substring(v_apoio, 1, position(':' in v_apoio) - 1);
+		set v_answer     = substring(v_apoio, position(':' in v_apoio) + 1, position(',' in v_apoio) - 1);
+        set v_answer     = REPLACE(v_answer, ',', '');
+		set v_questionid = CONVERT(v_question, UNSIGNED);
+	
+        if v_questionid is not null then
+              
+                        if v_questionid = 0 then
+				SET v_questionid = (Select MAX(questiongroupID)+1 from tb_questiongroup);
+			end if;
+			Insert into tb_questiongroup (questionGroupID, description, `comment`) VALUES (CONVERT(v_questionid,UNSIGNED),v_answer,"");
+            set p_msg_retorno = 'Grupos inseridos com sucesso.';
+        end if;
+        
+  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
+        if position(',' in v_lista) < length(v_lista) then
+	  	   set v_lista = substring(v_lista,  position(',' in v_lista) + 1, length(v_lista));
+		else 
+           set v_lista = '';
+		end if;
+	
+	End While;
+	    
+	COMMIT;
+    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `postqstmoduloMedicalRecord` (`p_userid` INTEGER, `p_groupRoleid` INTEGER, `p_hospitalUnitid` INTEGER, `p_participantid` INTEGER, `p_questionnaireId` INTEGER, `p_crfFormId` INTEGER, `p_stringquestions` TEXT, OUT `p_formRecordId` INTEGER, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
@@ -843,6 +1254,44 @@ DECLARE v_hospitalUnitName varchar(500);
 		
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `publishQuestionnaire` (IN `p_questionnaireID` INT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para publicar um questionário e seus módulos
+#== Criada em 26 de março de 2022
+#== Alterada em 26 de março de 2022
+#========================================================================================================================
+ 
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+   START TRANSACTION;
+
+	# Alterando o status do questionário para publicado 
+    
+    Update tb_questionnaire set questionnaireStatusID = 1 where questionnaireID = p_questionnaireID;
+    Update tb_questionnaire set version = "1.0" where questionnaireID = p_questionnaireID;
+    Update tb_questionnaire set lastModification = NOW() where questionnaireID = p_questionnaireID;
+    
+	# Alterando o status dos seus módulos para publicado
+    
+    UPDATE tb_crfforms set crfformsStatusID = 1 where questionnaireID = p_questionnaireID;
+    
+   
+	COMMIT;
+    
+    set p_msg_retorno = "Questionário publicado com sucesso.";
+    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `putMedicalRecord` (IN `p_userid` INT, IN `p_groupRoleid` INT, IN `p_hospitalUnitid` INT, IN `p_questionnaireId` INT, IN `p_participantId` INT, IN `p_medicalRecordNew` VARCHAR(255), OUT `p_msg_retorno` VARCHAR(500))  BEGIN
 #========================================================================================================================
 #== Procedure criada para o atualizar o registro de um participant associado a um hospital para futuro lançamento dos modulos do formulario
@@ -1074,6 +1523,116 @@ select p_msg_retorno as msgRetorno from DUAL;
 		
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstComment` (IN `p_stringcomment` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para alterar comentários associados às questões
+#== Criada em 25 de Maio de 2022
+#========================================================================================================================
+
+# Grupos das questões
+DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
+DECLARE v_groupid integer; # o comentário associado a questão
+DECLARE v_lista2 text; # lista de grupos com questões: v_questionid2 : v_groupid
+DECLARE v_apoio2 varchar(500); 
+DECLARE v_questionid2 varchar(500); # o id da questão na v_lista2
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+   START TRANSACTION;
+
+	# Alterando os grupos associados as questões em v_lista
+    set v_lista2 = concat(p_stringcomment, ',') ;
+        
+   	while length(v_lista2) > 1 DO
+		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
+		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
+		set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
+        set v_groupid     = REPLACE(v_groupid, ',', '');
+		set v_questionid2 = CONVERT(v_group, SIGNED);
+            
+        if v_questionid2 is not null then
+			UPDATE tb_questions set questionGroupID = CONVERT(v_groupid, SIGNED) where questionID = v_questionid2;
+        end if;
+        
+  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
+        if position(',' in v_lista2) < length(v_lista2) then
+	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
+		else 
+           set v_lista2 = '';
+		end if;
+	
+	End While;
+	    
+    set p_msg_retorno = 'Comentários associados as questões atualizados com sucesso.';
+    
+	COMMIT;
+    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstGroup` (IN `p_stringquestionsgroups` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para alterar os grupos de questões associados às questões
+#== Criada em 25 de Maio de 2022
+#========================================================================================================================
+
+# Grupos das questões
+DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
+DECLARE v_groupid integer; # o id do grupo da questão
+DECLARE v_lista2 text; # lista de grupos com questões: v_questionid2 : v_groupid
+DECLARE v_apoio2 varchar(500); 
+DECLARE v_questionid2 varchar(500); # o id da questão na v_lista2
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+   START TRANSACTION;
+
+	# Alterando os grupos associados as questões em v_lista
+    set v_lista2 = concat(p_stringquestionsgroups, ',') ;
+        
+   	while length(v_lista2) > 1 DO
+		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
+		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
+		set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
+        set v_groupid     = REPLACE(v_groupid, ',', '');
+		set v_questionid2 = CONVERT(v_group, UNSIGNED);
+            
+        if v_questionid2 is not null then
+			UPDATE tb_questions set questionGroupID = CONVERT(v_groupid, UNSIGNED) where questionID = v_questionid2;
+        end if;
+        
+  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
+        if position(',' in v_lista2) < length(v_lista2) then
+	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
+		else 
+           set v_lista2 = '';
+		end if;
+	
+	End While;
+	    
+    set p_msg_retorno = 'Associações entre grupos e questões atualizados com sucesso.';
+    
+	COMMIT;
+    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstGroupModuleDescription` (IN `p_moduleID` INT, IN `p_questionsgroupsdescriptions` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
 #========================================================================================================================
 #== Procedure criada para alterar as descrições dos grupos de questões de um determinado módulo
@@ -1137,6 +1696,116 @@ sp:BEGIN
 	
 	End While;
 	    
+	COMMIT;
+    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstIsAbout` (IN `p_stringquestionsisabout` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para alterar as associação isAbout entre as questões
+#== Criada em 25 de Maio de 2022
+#========================================================================================================================
+
+# Grupos das questões
+DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
+DECLARE v_groupid integer; # o id da questão isAbout
+DECLARE v_lista2 text; # lista de grupos com questões: v_questionid2 : v_groupid
+DECLARE v_apoio2 varchar(500); 
+DECLARE v_questionid2 varchar(500); # o id da questão na v_lista2
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+   START TRANSACTION;
+
+	# Alterando os grupos associados as questões em v_lista
+    set v_lista2 = concat(p_stringquestionsisabout, ',') ;
+        
+   	while length(v_lista2) > 1 DO
+		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
+		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
+		set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
+        set v_groupid     = REPLACE(v_groupid, ',', '');
+		set v_questionid2 = CONVERT(v_group, SIGNED);
+            
+        if v_questionid2 is not null then
+			UPDATE tb_questions set questionGroupID = CONVERT(v_groupid, SIGNED) where questionID = v_questionid2;
+        end if;
+        
+  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
+        if position(',' in v_lista2) < length(v_lista2) then
+	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
+		else 
+           set v_lista2 = '';
+		end if;
+	
+	End While;
+	    
+    set p_msg_retorno = 'Associações isAbour entre as questões atualizados com sucesso.';
+    
+	COMMIT;
+    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstListType` (IN `p_stringquestionslisttypes` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para alterar os tipos de lista associados às questões
+#== Criada em 25 de Maio de 2022
+#========================================================================================================================
+
+# Grupos das questões
+DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
+DECLARE v_groupid integer; # o id do tipo de lista
+DECLARE v_lista2 text; # lista de grupos com questões: v_questionid2 : v_groupid
+DECLARE v_apoio2 varchar(500); 
+DECLARE v_questionid2 varchar(500); # o id da questão na v_lista2
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+   START TRANSACTION;
+
+	# Alterando os grupos associados as questões em v_lista
+    set v_lista2 = concat(p_stringquestionslisttypes, ',') ;
+        
+   	while length(v_lista2) > 1 DO
+		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
+		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
+		set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
+        set v_groupid     = REPLACE(v_groupid, ',', '');
+		set v_questionid2 = CONVERT(v_group, SIGNED);
+            
+        if v_questionid2 is not null then
+			UPDATE tb_questions set listTypeID = CONVERT(v_groupid, SIGNED) where questionID = v_questionid2;
+        end if;
+        
+  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
+        if position(',' in v_lista2) < length(v_lista2) then
+	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
+		else 
+           set v_lista2 = '';
+		end if;
+	
+	End While;
+	    
+    set p_msg_retorno = 'Associações entre os tipos de lista e questões atualizadas com sucesso.';
+    
 	COMMIT;
     
 END;
@@ -1365,6 +2034,171 @@ END;
 		
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstSubordinateTo` (IN `p_stringquestionssubordinateto` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para alterar os grupos de questões associados às questões
+#== Criada em 25 de Maio de 2022
+#========================================================================================================================
+
+# Grupos das questões
+DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
+DECLARE v_groupid integer; # o id da questão a que se subordina
+DECLARE v_lista2 text; # lista de grupos com questões: v_questionid2 : v_groupid
+DECLARE v_apoio2 varchar(500); 
+DECLARE v_questionid2 varchar(500); # o id da questão na v_lista2
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+   START TRANSACTION;
+
+	# Alterando as subordinações associadas as questões em v_lista
+    set v_lista2 = concat(p_stringquestionssubordinateto, ',') ;
+        
+   	while length(v_lista2) > 1 DO
+		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
+		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
+		set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
+        set v_groupid     = REPLACE(v_groupid, ',', '');
+		set v_questionid2 = CONVERT(v_group, SIGNED);
+            
+        if v_questionid2 is not null then
+			UPDATE tb_questions set subordinateTo = CONVERT(v_groupid, SIGNED) where questionID = v_questionid2;
+        end if;
+        
+  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
+        if position(',' in v_lista2) < length(v_lista2) then
+	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
+		else 
+           set v_lista2 = '';
+		end if;
+	
+	End While;
+	    
+    set p_msg_retorno = 'Associações de subordinações entre questões atualizados com sucesso.';
+    
+	COMMIT;
+    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstSubordinateValues` (IN `p_stringquestionssudbordinatevalues` TEXT, IN `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para alterar os valores de subordinação associados às questões
+#== Criada em 25 de Maio de 2022
+#========================================================================================================================
+
+# Grupos das questões
+DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
+DECLARE v_groupid varchar(50); # os valores novos de subordinação
+DECLARE v_lista2 text; # lista de grupos com questões: v_questionid2 : v_groupid
+DECLARE v_apoio2 varchar(500); 
+DECLARE v_questionid2 varchar(500); # o id da questão na v_lista2
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+   START TRANSACTION;
+
+	# Alterando os grupos associados as questões em v_lista
+    set v_lista2 = concat(p_stringquestionssudbordinatevalues, ',') ;
+        
+   	while length(v_lista2) > 1 DO
+		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
+		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
+		set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
+        set v_groupid     = REPLACE(v_groupid, ',', '');
+		set v_questionid2 = CONVERT(v_group, SIGNED);
+            
+        if v_questionid2 is not null then
+			UPDATE tb_questions set subordinateValues = v_groupid where questionID = v_questionid2;
+        end if;
+        
+  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
+        if position(',' in v_lista2) < length(v_lista2) then
+	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
+		else 
+           set v_lista2 = '';
+		end if;
+	
+	End While;
+	    
+    set p_msg_retorno = 'Associações entre os valores de subordinação e questões atualizadas com sucesso.';
+    
+	COMMIT;
+    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstType` (IN `p_stringquestionstypes` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para alterar os tipios de questões associados às questões
+#== Criada em 25 de Maio de 2022
+#========================================================================================================================
+
+# Grupos das questões
+DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
+DECLARE v_groupid integer; # o id do tipo da questão
+DECLARE v_lista2 text; # lista de grupos com questões: v_questionid2 : v_groupid
+DECLARE v_apoio2 varchar(500); 
+DECLARE v_questionid2 varchar(500); # o id da questão na v_lista2
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+   START TRANSACTION;
+
+	# Alterando os grupos associados as questões em v_lista
+    set v_lista2 = concat(p_stringquestionstypes, ',') ;
+        
+   	while length(v_lista2) > 1 DO
+		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
+		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
+		set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
+        set v_groupid     = REPLACE(v_groupid, ',', '');
+		set v_questionid2 = CONVERT(v_group, SIGNED);
+            
+        if v_questionid2 is not null then
+			UPDATE tb_questions set questionTypeID = CONVERT(v_groupid, SIGNED) where questionID = v_questionid2;
+        end if;
+
+  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
+        if position(',' in v_lista2) < length(v_lista2) then
+	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
+		else 
+           set v_lista2 = '';
+		end if;
+	
+	End While;
+	    
+    set p_msg_retorno = 'Associações entre tipos e questões atualizadas com sucesso.';
+    
+	COMMIT;
+    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `putQuestionnaire` (IN `p_userID` INT, IN `p_groupRoleID` INT, IN `p_hospitalUnitID` INT, IN `p_questionnaireDescription` VARCHAR(500), IN `p_questionnaireVersion` VARCHAR(50), IN `p_questionnaireStatusID` INT, IN `p_questionnaireLastModification` DATETIME, IN `p_questionnaireCreationDate` DATETIME)  BEGIN
 #========================================================================================================================
 #== Procedure criada para atualizar um questionário
@@ -1534,23 +2368,19 @@ FROM tb_questionnaire as t1
 WHERE t1.description like CONCAT('%',p_descricao, '%');
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `teste` (`p_teste` VARCHAR(255))  BEGIN
-
-declare p_userid integer;
-declare p_msg_retorno varchar(500);
-declare p_participantid integer;
-declare p_formrecordid integer;
- 
-call postModule(1,1,1,"descrição", 1,2, now(), now(), @p_msg_retorno);
-
-select p_teste, p_msg_retorno;
-
- 
- END$$
-
 --
 -- Functions
 --
+CREATE DEFINER=`root`@`localhost` FUNCTION `getQuestionnaireNewVersionNumber` (`p_questionnaireID` INT) RETURNS VARCHAR(50) CHARSET utf8mb4 BEGIN
+
+   DECLARE version VARCHAR(500);
+
+   SET version = (Select version from tb_Questionnaire where questionnaireID = p_questionnaireID);
+
+   RETURN version;
+
+END$$
+
 CREATE DEFINER=`root`@`localhost` FUNCTION `getTotalMedicalRecordHospitalUnit` (`p_hospitalUnitid` INTEGER, `p_questionnaireid` INTEGER) RETURNS INT(11) BEGIN
 #========================================================================================================================
 #== Função criada para verificar se já existem prontuários/registros associados a um determinado hospital
@@ -1724,7 +2554,17 @@ INSERT INTO `tb_assessmentquestionnaire` (`participantID`, `hospitalUnitID`, `qu
 (184, 1, 1),
 (185, 1, 1),
 (186, 1, 1),
-(187, 1, 1);
+(187, 1, 1),
+(188, 1, 1),
+(189, 1, 1),
+(0, 1, 2),
+(190, 1, 4),
+(191, 1, 4),
+(203, 1, 3),
+(204, 2, 1),
+(205, 2, 3),
+(206, 1, 3),
+(207, 1, 1);
 
 -- --------------------------------------------------------
 
@@ -1738,7 +2578,7 @@ CREATE TABLE `tb_crfforms` (
   `description` varchar(255) NOT NULL COMMENT '(pt-br) Descrição .\r\n(en) description.',
   `crfformsStatusID` int(10) NOT NULL,
   `lastModification` timestamp NOT NULL DEFAULT current_timestamp(),
-  `creationDate` timestamp NOT NULL DEFAULT current_timestamp()
+  `creationDate` timestamp NULL DEFAULT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='(pt-br)\r\ntb_CRFForms identifica o tipo do formulario refere-se ao Questionnaire Subsection da Ontologia:\r\nAdmissão - Modulo 1\r\nAcompanhamento - Modulo 2\r\nDesfecho - Modulo 3\r\n(en)\r\ntb_CRFForms identifies the type of the form refers to the Questionnaire Subsection of Ontology: Admission - Module 1 Monitoring - Module 2 Outcome - Module 3';
 
 --
@@ -1762,7 +2602,7 @@ INSERT INTO `tb_crfforms` (`crfFormsID`, `questionnaireID`, `description`, `crff
 (577, 14, 'Discharge/death form', 2, '2022-01-03 20:51:58', '2022-01-03 20:51:58'),
 (578, 14, 'Admission Form', 2, '2022-01-03 20:54:48', '2022-01-03 20:54:48'),
 (579, 14, 'Follow-up', 2, '2022-01-03 21:07:01', '2022-01-03 21:07:01'),
-(0, 2, 'Discharge/death form', 2, '2022-01-07 23:53:04', '2022-01-07 23:53:04'),
+(580, 2, 'Discharge/death form', 2, '2022-01-07 23:53:04', '2022-01-07 23:53:04'),
 (581, 30, 'Admission Form', 2, '2022-01-09 19:28:23', '2022-01-09 19:28:23'),
 (582, 30, 'Admission Form', 2, '2022-01-09 19:28:28', '2022-01-09 19:28:28'),
 (583, 30, 'Follow-up', 2, '2022-01-09 19:31:01', '2022-01-09 19:31:01'),
@@ -1775,7 +2615,10 @@ INSERT INTO `tb_crfforms` (`crfFormsID`, `questionnaireID`, `description`, `crff
 (590, 35, 'Discharge/death form', 2, '2022-01-10 19:13:57', '2022-01-10 19:13:57'),
 (593, 2, 'Follow-up', 2, '2022-01-12 14:39:15', '2022-01-12 14:39:15'),
 (595, 2, 'Discharge/death form', 2, '2022-02-14 16:52:44', '2022-02-14 16:52:44'),
-(0, 3, 'Admission Form', 2, '2022-03-09 17:41:15', '2022-03-09 17:41:15');
+(596, 3, 'Admission Form', 1, '2022-03-09 17:41:15', '2022-03-09 17:41:15'),
+(597, 10, 'Admission Form', 2, '2022-04-30 17:30:42', '2022-04-30 17:30:42'),
+(598, 3, 'Follow-up', 1, '2022-05-22 19:54:20', '2022-05-22 19:54:20'),
+(599, 3, 'Discharge/death form', 1, '2022-06-19 16:36:32', '2022-06-19 16:36:32');
 
 -- --------------------------------------------------------
 
@@ -2076,7 +2919,10 @@ INSERT INTO `tb_formrecord` (`formRecordID`, `participantID`, `hospitalUnitID`, 
 (258, 186, 1, 1, 1, '2021-11-30 20:14:48'),
 (1293, NULL, 1, 28, 3, '2021-12-29 20:11:45'),
 (1292, NULL, 1, 28, 2, '2021-12-29 20:11:45'),
-(1291, NULL, 1, 28, 1, '2021-12-29 20:11:45');
+(1291, NULL, 1, 28, 1, '2021-12-29 20:11:45'),
+(1294, 168, 1, 1, 2, '2022-06-26 00:39:19'),
+(1295, 168, 1, 1, 3, '2022-06-26 01:03:55'),
+(1296, 173, 2, 1, 1, '2022-06-26 17:34:48');
 
 -- --------------------------------------------------------
 
@@ -2509,7 +3355,7 @@ INSERT INTO `tb_listtype` (`listTypeID`, `description`, `comment`) VALUES
 (14, 'Source of oxygen list', 'Este é um comentário sobre o tipo da lista'),
 (15, 'ynu_list', 'Este é um comentário sobre o tipo da lista'),
 (16, 'ynun_list', 'Este é um comentário sobre o tipo da lista'),
-(0, '', 'Este é um comentário sobre o tipo da lista');
+(17, '', 'Este é um comentário sobre o tipo da lista');
 
 -- --------------------------------------------------------
 
@@ -3121,7 +3967,11 @@ INSERT INTO `tb_multilanguage` (`languageID`, `description`, `descriptionLang`) 
 (1, 'Nome da Instalasçãod', 'Nome da Instalasçãod'),
 (1, 'Critérios Clínicos para Inclusão', 'Critérios Clínicos para Inclusão'),
 (1, 'Medicattionnn', 'Medicattionnn'),
-(1, 'Nome da Instalaçãos', 'Nome da Instalaçãos');
+(1, 'Nome da Instalaçãos', 'Nome da Instalaçãos'),
+(1, 'Paísa', 'Paísa'),
+(1, 'Nome da Instalaçãosd', 'Nome da Instalaçãosd'),
+(1, 'Medico safadinho', 'Medico safadinho'),
+(1, 'Doidera', 'Doidera');
 
 -- --------------------------------------------------------
 
@@ -3823,7 +4673,156 @@ INSERT INTO `tb_notificationrecord` (`userID`, `profileID`, `hospitalUnitID`, `t
 (20, 1, 1, 'tb_questiongroupformrecord', 1376, '2021-11-30 23:14:48', 'I', 'Inclusão de Resposta da 249:67'),
 (20, 1, 1, 'tb_questiongroupformrecord', 1377, '2021-11-30 23:14:48', 'I', 'Inclusão de Resposta da 252:Sim - 15:298'),
 (20, 1, 1, 'tb_questiongroupformrecord', 1378, '2021-11-30 23:14:48', 'I', 'Inclusão de Resposta da 253:Sim - 15:298'),
-(20, 1, 1, 'tb_questiongroupformrecord', 1379, '2021-11-30 23:14:48', 'I', 'Inclusão de Resposta da 254:Inibidor de neuraminidase - 1:4');
+(20, 1, 1, 'tb_questiongroupformrecord', 1379, '2021-11-30 23:14:48', 'I', 'Inclusão de Resposta da 254:Inibidor de neuraminidase - 1:4'),
+(20, 7, 1, 'tb_participant', 0, '2022-06-20 17:52:54', 'I', 'Inclusão de paciente: 8324234332'),
+(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-20 17:52:54', 'I', 'Inclusão do registro referente ao paciente: 0 para o hospital: 1'),
+(20, 7, 1, 'tb_participant', 0, '2022-06-25 20:50:02', 'I', 'Inclusão de paciente: 9435345'),
+(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-25 20:50:02', 'I', 'Inclusão do registro referente ao paciente: 0 para o hospital: 1'),
+(20, 7, 1, 'tb_participant', 0, '2022-06-25 20:51:17', 'I', 'Inclusão de paciente: 94353456'),
+(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-25 20:51:17', 'I', 'Inclusão do registro referente ao paciente: 0 para o hospital: 1'),
+(20, 7, 1, 'tb_participant', 0, '2022-06-25 20:58:59', 'I', 'Inclusão de paciente: 0032442345'),
+(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-25 20:58:59', 'I', 'Inclusão do registro referente ao paciente: 0 para o hospital: 1'),
+(20, 7, 1, 'tb_participant', 0, '2022-06-25 21:09:35', 'I', 'Inclusão de paciente: 45455'),
+(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-25 21:09:35', 'I', 'Inclusão do registro referente ao paciente: 0 para o hospital: 1'),
+(20, 7, 1, 'tb_participant', 0, '2022-06-25 21:09:38', 'I', 'Inclusão de paciente: 45455'),
+(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-25 21:09:38', 'I', 'Inclusão do registro referente ao paciente: 0 para o hospital: 1'),
+(20, 7, 1, 'tb_participant', 203, '2022-06-25 21:17:05', 'I', 'Inclusão de paciente: 45455345'),
+(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-25 21:17:05', 'I', 'Inclusão do registro referente ao paciente: 203 para o hospital: 1'),
+(20, 7, 1, 'tb_formRecord', 0, '2022-06-26 00:39:19', 'I', 'Inclusão de Modulo para paciente: 168'),
+(20, 7, 1, 'tb_questiongroupformrecord', 2052, '2022-06-26 00:39:20', 'A', NULL),
+(20, 7, 1, 'tb_formRecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Modulo para paciente: 168'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 30:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 31:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 32:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 33:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 34:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 35:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 36:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 37:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 39:Não - 15:296'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 66:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 67:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 68:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 69:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 70:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 71:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 72:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 73:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 74:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 75:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 76:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 77:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 78:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 80:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 81:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 117:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 119:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 120:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 122:Como antes da doença - 12:293'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 123:Internado - 9:277'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 124:2022-06-24T09:00'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 149:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 150:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 151:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 152:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 153:Desconhecido - 16:301'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 154:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 155:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 176:Desconhecido - 15:297'),
+(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 199:Não - 15:296'),
+(20, 7, 2, 'tb_participant', 204, '2022-06-26 17:28:17', 'I', 'Inclusão de paciente: 12345678'),
+(20, 7, 2, 'tb_assessmentquestionnaire', 0, '2022-06-26 17:28:17', 'I', 'Inclusão do registro referente ao paciente: 204 para o hospital: 2'),
+(20, 7, 2, 'tb_participant', 205, '2022-06-26 17:29:55', 'I', 'Inclusão de paciente: 12345678'),
+(20, 7, 2, 'tb_assessmentquestionnaire', 0, '2022-06-26 17:29:55', 'I', 'Inclusão do registro referente ao paciente: 205 para o hospital: 2'),
+(20, 7, 2, 'tb_formRecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Modulo para paciente: 173'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 29:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 33:Não - 15:296'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 34:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 35:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 36:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 37:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 38:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 39:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 47:false'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 48:false'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 49:false'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 50:Não - 15:296'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 51:Não - 15:296'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 52:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 53:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 54:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 55:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 56:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 57:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 58:Não - 15:296'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 59:Não - 6:261'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 60:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 61:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 62:Não - 15:296'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 63:false'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 64:false'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 65:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 93:2021-06-05T12:10'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 95:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 97:2020-05-10T10:00'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 107:2020-05-10T10:04'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 108:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 109:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 110:Não - 16:300'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 111:Feminino - 13:284'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 117:Não - 15:296'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 119:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 120:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 127:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 128:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 129:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 130:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 132:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 133:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 134:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 135:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 136:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 137:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 138:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 139:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 140:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 149:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 150:Não - 15:296'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 151:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 152:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 153:Não - 16:300'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 154:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 155:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 167:2020-06-07T10:05'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 189:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 190:Dor - 2:7'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 196:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 199:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 200:Não - 15:296'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 201:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 202:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 203:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 204:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 205:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 206:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 207:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 208:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 209:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 210:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 211:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 213:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 214:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 215:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 225:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 241:Desconhecido - 15:297'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 242:Textão desnecessário'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 252:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 253:Sim - 15:298'),
+(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 254:Ribavirina - 1:5'),
+(20, 7, 1, 'tb_participant', 206, '2022-06-26 17:35:46', 'I', 'Inclusão de paciente: 12345678'),
+(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-26 17:35:46', 'I', 'Inclusão do registro referente ao paciente: 206 para o hospital: 1'),
+(20, 7, 1, 'tb_participant', 207, '2022-06-26 17:36:12', 'I', 'Inclusão de paciente: 769769'),
+(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-26 17:36:12', 'I', 'Inclusão do registro referente ao paciente: 207 para o hospital: 1');
 
 -- --------------------------------------------------------
 
@@ -3966,7 +4965,27 @@ INSERT INTO `tb_participant` (`participantID`, `medicalRecord`) VALUES
 (184, '1234355345'),
 (185, '6575675778'),
 (186, '94564563'),
-(187, '54654654');
+(187, '54654654'),
+(188, '8324234332'),
+(189, '9435345'),
+(190, '94353456'),
+(191, '34234234'),
+(192, '34234234'),
+(193, '23423434'),
+(194, '93453454'),
+(195, '93453453'),
+(196, '23123123'),
+(197, '23123123'),
+(198, '0032442345'),
+(199, '45455'),
+(200, '45455'),
+(201, '45455'),
+(202, '45455'),
+(203, '45455345'),
+(204, '12345678'),
+(205, '12345678'),
+(206, '12345678'),
+(207, '769769');
 
 -- --------------------------------------------------------
 
@@ -4014,12 +5033,13 @@ INSERT INTO `tb_questiongroup` (`questionGroupID`, `description`, `comment`) VAL
 (6, 'Demographics', ''),
 (7, 'Diagnostic/pathogen testing', ''),
 (8, 'Laboratory results', ''),
-(9, 'Medicattionnn', 'Is the patient CURRENTLY receiving any of the following?'),
+(9, 'Medication', 'Is the patient CURRENTLY receiving any of the following?'),
 (10, 'Outcome', ''),
 (11, 'Pre-admission & chronic medication', 'Were any of the following taken within 14 days of admission?'),
 (12, 'Signs and symptoms on admission', ''),
 (13, 'Supportive care', 'Is the patient CURRENTLY receiving any of the following?'),
-(14, 'Vital signs', '');
+(14, 'Vital signs', ''),
+(234, 'testado', '');
 
 -- --------------------------------------------------------
 
@@ -4038,147 +5058,147 @@ CREATE TABLE `tb_questiongroupform` (
 --
 
 INSERT INTO `tb_questiongroupform` (`crfFormsID`, `questionID`, `questionOrder`) VALUES
-(1, 29, 10629),
-(1, 33, 10710),
-(1, 34, 10711),
-(1, 35, 10703),
-(1, 36, 10706),
-(1, 37, 10713),
-(1, 38, 10627),
-(1, 39, 10802),
-(1, 40, 10310),
-(1, 47, 10102),
-(1, 48, 10105),
-(1, 49, 10101),
-(1, 50, 10404),
-(1, 51, 10412),
-(1, 52, 10401),
-(1, 53, 10405),
-(1, 54, 10406),
-(1, 55, 10407),
-(1, 56, 10403),
-(1, 57, 10410),
-(1, 58, 10409),
-(1, 59, 10408),
-(1, 60, 10402),
-(1, 61, 10413),
-(1, 62, 10414),
-(1, 63, 10104),
-(1, 64, 10103),
-(1, 65, 10411),
-(1, 82, 10707),
-(1, 87, 10708),
-(1, 89, 10803),
-(1, 90, 10805),
-(1, 91, 10628),
-(1, 92, 10804),
-(1, 93, 10302),
-(1, 94, 10316),
-(1, 95, 10314),
-(1, 96, 10315),
-(1, 97, 10301),
-(1, 98, 10317),
-(1, 100, 10712),
-(1, 101, 10704),
-(1, 103, 10714),
-(1, 104, 10705),
-(1, 107, 10202),
-(1, 108, 10205),
-(1, 109, 10206),
-(1, 110, 10207),
-(1, 111, 10201),
-(1, 113, 10208),
-(1, 114, 10908),
-(1, 115, 10905),
-(1, 116, 10910),
-(1, 117, 10709),
-(1, 118, 10921),
-(1, 119, 10702),
-(1, 120, 10701),
-(1, 127, 10619),
-(1, 128, 10604),
-(1, 129, 10611),
-(1, 130, 10616),
-(1, 132, 10601),
-(1, 133, 10626),
-(1, 134, 10610),
-(1, 135, 10615),
-(1, 136, 10625),
-(1, 137, 10606),
-(1, 138, 10623),
-(1, 139, 10624),
-(1, 140, 10607),
-(1, 141, 10311),
-(1, 143, 10630),
-(1, 144, 10204),
-(1, 145, 10919),
-(1, 146, 10913),
-(1, 147, 10917),
-(1, 148, 10922),
-(1, 149, 10815),
-(1, 150, 10801),
-(1, 151, 10814),
-(1, 152, 10808),
-(1, 153, 10806),
-(1, 154, 10807),
-(1, 155, 10816),
-(1, 156, 10923),
-(1, 157, 10903),
-(1, 158, 10901),
-(1, 159, 10924),
-(1, 160, 10907),
-(1, 161, 10912),
-(1, 162, 10918),
-(1, 163, 10904),
-(1, 164, 10915),
-(1, 165, 10916),
-(1, 166, 1002),
-(1, 167, 10004),
-(1, 169, 10906),
-(1, 170, 10914),
-(1, 171, 10909),
-(1, 172, 10920),
-(1, 174, 10911),
-(1, 189, 10308),
-(1, 190, 10312),
-(1, 191, 10304),
-(1, 192, 10307),
-(1, 193, 10313),
-(1, 194, 10305),
-(1, 195, 10306),
-(1, 196, 10309),
-(1, 198, 10303),
-(1, 199, 10715),
-(1, 200, 10716),
-(1, 201, 10717),
-(1, 202, 10501),
-(1, 203, 10502),
-(1, 204, 10503),
-(1, 205, 10614),
-(1, 206, 10620),
-(1, 207, 10617),
-(1, 208, 10621),
-(1, 209, 10609),
-(1, 210, 10602),
-(1, 211, 10618),
-(1, 212, 10203),
-(1, 213, 10622),
-(1, 214, 10608),
-(1, 215, 10605),
-(1, 225, 10603),
-(1, 226, 10902),
-(1, 227, 10415),
-(1, 241, 10718),
-(1, 242, 1003),
-(1, 245, 10810),
-(1, 246, 10813),
-(1, 247, 10812),
-(1, 248, 10811),
-(1, 249, 10809),
-(1, 252, 10613),
-(1, 253, 10612),
-(1, 254, 10504),
 (1, 255, 10505),
+(1, 254, 10504),
+(1, 253, 10612),
+(1, 252, 10613),
+(1, 249, 10809),
+(1, 248, 10811),
+(1, 247, 10812),
+(1, 246, 10813),
+(1, 245, 10810),
+(1, 242, 10002),
+(1, 241, 10718),
+(1, 227, 10415),
+(1, 226, 10902),
+(1, 225, 10603),
+(1, 215, 10605),
+(1, 214, 10608),
+(1, 213, 10622),
+(1, 212, 10203),
+(1, 211, 10618),
+(1, 210, 10602),
+(1, 209, 10609),
+(1, 208, 10621),
+(1, 207, 10617),
+(1, 206, 10620),
+(1, 205, 10614),
+(1, 204, 10503),
+(1, 203, 10502),
+(1, 202, 10501),
+(1, 201, 10717),
+(1, 200, 10716),
+(1, 199, 10715),
+(1, 198, 10303),
+(1, 196, 10309),
+(1, 195, 10306),
+(1, 194, 10305),
+(1, 193, 10313),
+(1, 192, 10307),
+(1, 191, 10304),
+(1, 190, 10312),
+(1, 189, 10308),
+(1, 174, 10911),
+(1, 172, 10920),
+(1, 171, 10909),
+(1, 170, 10914),
+(1, 169, 10906),
+(1, 167, 10004),
+(1, 166, 10002),
+(1, 165, 10916),
+(1, 164, 10915),
+(1, 163, 10904),
+(1, 162, 10918),
+(1, 161, 10912),
+(1, 160, 10907),
+(1, 159, 10924),
+(1, 158, 10901),
+(1, 157, 10903),
+(1, 156, 10923),
+(1, 155, 10816),
+(1, 154, 10807),
+(1, 153, 10806),
+(1, 152, 10808),
+(1, 151, 10814),
+(1, 150, 10801),
+(1, 149, 10815),
+(1, 148, 10922),
+(1, 147, 10917),
+(1, 146, 10913),
+(1, 145, 10919),
+(1, 144, 10204),
+(1, 143, 10630),
+(1, 141, 10311),
+(1, 140, 10607),
+(1, 139, 10624),
+(1, 138, 10623),
+(1, 137, 10606),
+(1, 136, 10625),
+(1, 135, 10615),
+(1, 134, 10610),
+(1, 133, 10626),
+(1, 132, 10601),
+(1, 130, 10616),
+(1, 129, 10611),
+(1, 128, 10604),
+(1, 127, 10619),
+(1, 120, 10701),
+(1, 119, 10702),
+(1, 118, 10921),
+(1, 117, 10709),
+(1, 116, 10910),
+(1, 115, 10905),
+(1, 114, 10908),
+(1, 113, 10208),
+(1, 111, 10201),
+(1, 110, 10207),
+(1, 109, 10206),
+(1, 108, 10205),
+(1, 107, 10202),
+(1, 104, 10705),
+(1, 103, 10714),
+(1, 101, 10704),
+(1, 100, 10712),
+(1, 98, 10317),
+(1, 97, 10301),
+(1, 96, 10315),
+(1, 95, 10314),
+(1, 94, 10316),
+(1, 93, 10302),
+(1, 92, 10804),
+(1, 91, 10628),
+(1, 90, 10805),
+(1, 89, 10803),
+(1, 87, 10708),
+(1, 82, 10707),
+(1, 65, 10411),
+(1, 64, 10103),
+(1, 63, 10104),
+(1, 62, 10414),
+(1, 61, 10413),
+(1, 60, 10402),
+(1, 59, 10408),
+(1, 58, 10409),
+(1, 57, 10410),
+(1, 56, 10403),
+(1, 55, 10407),
+(1, 54, 10406),
+(1, 53, 10405),
+(1, 52, 10401),
+(1, 51, 10412),
+(1, 50, 10404),
+(1, 49, 10101),
+(1, 48, 10105),
+(1, 47, 10102),
+(1, 40, 10310),
+(1, 39, 10802),
+(1, 38, 10627),
+(1, 37, 10713),
+(1, 36, 10706),
+(1, 35, 10703),
+(1, 34, 10711),
+(1, 33, 10710),
+(1, 29, 10629),
 (2, 28, 20214),
 (2, 33, 20410),
 (2, 34, 20411),
@@ -4203,13 +5223,13 @@ INSERT INTO `tb_questiongroupform` (`crfFormsID`, `questionID`, `questionOrder`)
 (2, 116, 20310),
 (2, 117, 20409),
 (2, 118, 20321),
-(2, 119, 20402),
-(2, 120, 20401),
+(2, 119, 10702),
+(2, 120, 10702),
 (2, 142, 20215),
 (2, 145, 20319),
 (2, 146, 20313),
 (2, 147, 20317),
-(2, 148, 20322),
+(2, 148, 10924),
 (2, 149, 20516),
 (2, 150, 20501),
 (2, 151, 20517),
@@ -4217,10 +5237,10 @@ INSERT INTO `tb_questiongroupform` (`crfFormsID`, `questionID`, `questionOrder`)
 (2, 153, 20508),
 (2, 154, 20509),
 (2, 155, 20518),
-(2, 156, 20323),
+(2, 156, 10924),
 (2, 157, 20303),
 (2, 158, 20301),
-(2, 159, 20324),
+(2, 159, 10924),
 (2, 160, 20307),
 (2, 161, 20312),
 (2, 162, 20318),
@@ -4314,8 +5334,8 @@ INSERT INTO `tb_questiongroupform` (`crfFormsID`, `questionID`, `questionOrder`)
 (3, 105, 30113),
 (3, 106, 30108),
 (3, 117, 30306),
-(3, 119, 30302),
-(3, 120, 30301),
+(3, 119, 10702),
+(3, 120, 10702),
 (3, 121, 30105),
 (3, 122, 30503),
 (3, 123, 30501),
@@ -5845,7 +6865,7 @@ INSERT INTO `tb_questiongroupformrecord` (`questionGroupFormRecordID`, `formReco
 (2055, 0, 1, 29, 296, NULL),
 (2054, 0, 1, 109, 298, NULL),
 (2053, 0, 2, 187, 297, NULL),
-(2052, 0, 2, 28, 297, NULL),
+(2052, 0, 2, 28, 297, ''),
 (2051, 0, 1, 109, 296, NULL),
 (2050, 0, 1, 108, 296, NULL),
 (2049, 0, 1, 60, 298, NULL),
@@ -5941,7 +6961,130 @@ INSERT INTO `tb_questiongroupformrecord` (`questionGroupFormRecordID`, `formReco
 (2162, 0, 1, 247, NULL, NULL),
 (2163, 0, 1, 248, NULL, NULL),
 (2164, 0, 1, 249, NULL, NULL),
-(2165, 0, 1, 254, 4, NULL);
+(2165, 0, 1, 254, 4, NULL),
+(0, 1295, 3, 30, 297, ''),
+(0, 1295, 3, 31, 297, ''),
+(0, 1295, 3, 32, 297, ''),
+(0, 1295, 3, 33, 297, ''),
+(0, 1295, 3, 34, 297, ''),
+(0, 1295, 3, 35, 297, ''),
+(0, 1295, 3, 36, 297, ''),
+(0, 1295, 3, 37, 297, ''),
+(0, 1295, 3, 39, 296, ''),
+(0, 1295, 3, 66, 297, ''),
+(0, 1295, 3, 67, 297, ''),
+(0, 1295, 3, 68, 297, ''),
+(0, 1295, 3, 69, 297, ''),
+(0, 1295, 3, 70, 297, ''),
+(0, 1295, 3, 71, 297, ''),
+(0, 1295, 3, 72, 297, ''),
+(0, 1295, 3, 73, 297, ''),
+(0, 1295, 3, 74, 297, ''),
+(0, 1295, 3, 75, 297, ''),
+(0, 1295, 3, 76, 297, ''),
+(0, 1295, 3, 77, 297, ''),
+(0, 1295, 3, 78, 297, ''),
+(0, 1295, 3, 80, 297, ''),
+(0, 1295, 3, 81, 297, ''),
+(0, 1295, 3, 117, 297, ''),
+(0, 1295, 3, 119, 297, ''),
+(0, 1295, 3, 120, 297, ''),
+(0, 1295, 3, 122, 293, ''),
+(0, 1295, 3, 123, 277, ''),
+(0, 1295, 3, 124, NULL, '2022-06-24T09:00'),
+(0, 1295, 3, 149, 297, ''),
+(0, 1295, 3, 150, 297, ''),
+(0, 1295, 3, 151, 297, ''),
+(0, 1295, 3, 152, 297, ''),
+(0, 1295, 3, 153, 301, ''),
+(0, 1295, 3, 154, 297, ''),
+(0, 1295, 3, 155, 297, ''),
+(0, 1295, 3, 176, 297, ''),
+(0, 1295, 3, 199, 296, ''),
+(0, 1296, 1, 29, 297, ''),
+(0, 1296, 1, 33, 296, ''),
+(0, 1296, 1, 34, 297, ''),
+(0, 1296, 1, 35, 297, ''),
+(0, 1296, 1, 36, 297, ''),
+(0, 1296, 1, 37, 297, ''),
+(0, 1296, 1, 38, 297, ''),
+(0, 1296, 1, 39, 297, ''),
+(0, 1296, 1, 47, NULL, 'false'),
+(0, 1296, 1, 48, NULL, 'false'),
+(0, 1296, 1, 49, NULL, 'false'),
+(0, 1296, 1, 50, 296, ''),
+(0, 1296, 1, 51, 296, ''),
+(0, 1296, 1, 52, 297, ''),
+(0, 1296, 1, 53, 297, ''),
+(0, 1296, 1, 54, 297, ''),
+(0, 1296, 1, 55, 297, ''),
+(0, 1296, 1, 56, 297, ''),
+(0, 1296, 1, 57, 297, ''),
+(0, 1296, 1, 58, 296, ''),
+(0, 1296, 1, 59, 261, ''),
+(0, 1296, 1, 60, 297, ''),
+(0, 1296, 1, 61, 297, ''),
+(0, 1296, 1, 62, 296, ''),
+(0, 1296, 1, 63, NULL, 'false'),
+(0, 1296, 1, 64, NULL, 'false'),
+(0, 1296, 1, 65, 297, ''),
+(0, 1296, 1, 93, NULL, '2021-06-05T12:10'),
+(0, 1296, 1, 95, 297, ''),
+(0, 1296, 1, 97, NULL, '2020-05-10T10:00'),
+(0, 1296, 1, 107, NULL, '2020-05-10T10:04'),
+(0, 1296, 1, 108, 297, ''),
+(0, 1296, 1, 109, 297, ''),
+(0, 1296, 1, 110, 300, ''),
+(0, 1296, 1, 111, 284, ''),
+(0, 1296, 1, 117, 296, ''),
+(0, 1296, 1, 119, 297, ''),
+(0, 1296, 1, 120, 297, ''),
+(0, 1296, 1, 127, 298, ''),
+(0, 1296, 1, 128, 298, ''),
+(0, 1296, 1, 129, 298, ''),
+(0, 1296, 1, 130, 298, ''),
+(0, 1296, 1, 132, 298, ''),
+(0, 1296, 1, 133, 298, ''),
+(0, 1296, 1, 134, 298, ''),
+(0, 1296, 1, 135, 298, ''),
+(0, 1296, 1, 136, 298, ''),
+(0, 1296, 1, 137, 298, ''),
+(0, 1296, 1, 138, 298, ''),
+(0, 1296, 1, 139, 298, ''),
+(0, 1296, 1, 140, 298, ''),
+(0, 1296, 1, 149, 297, ''),
+(0, 1296, 1, 150, 296, ''),
+(0, 1296, 1, 151, 297, ''),
+(0, 1296, 1, 152, 297, ''),
+(0, 1296, 1, 153, 300, ''),
+(0, 1296, 1, 154, 297, ''),
+(0, 1296, 1, 155, 297, ''),
+(0, 1296, 1, 167, NULL, '2020-06-07T10:05'),
+(0, 1296, 1, 189, 297, ''),
+(0, 1296, 1, 190, 7, ''),
+(0, 1296, 1, 196, 297, ''),
+(0, 1296, 1, 199, 297, ''),
+(0, 1296, 1, 200, 296, ''),
+(0, 1296, 1, 201, 297, ''),
+(0, 1296, 1, 202, 297, ''),
+(0, 1296, 1, 203, 297, ''),
+(0, 1296, 1, 204, 298, ''),
+(0, 1296, 1, 205, 298, ''),
+(0, 1296, 1, 206, 298, ''),
+(0, 1296, 1, 207, 298, ''),
+(0, 1296, 1, 208, 298, ''),
+(0, 1296, 1, 209, 298, ''),
+(0, 1296, 1, 210, 298, ''),
+(0, 1296, 1, 211, 298, ''),
+(0, 1296, 1, 213, 298, ''),
+(0, 1296, 1, 214, 298, ''),
+(0, 1296, 1, 215, 298, ''),
+(0, 1296, 1, 225, 298, ''),
+(0, 1296, 1, 241, 297, ''),
+(0, 1296, 1, 242, NULL, 'Textão desnecessário'),
+(0, 1296, 1, 252, 298, ''),
+(0, 1296, 1, 253, 298, ''),
+(0, 1296, 1, 254, 5, '');
 
 -- --------------------------------------------------------
 
@@ -5952,7 +7095,7 @@ INSERT INTO `tb_questiongroupformrecord` (`questionGroupFormRecordID`, `formReco
 CREATE TABLE `tb_questionnaire` (
   `questionnaireID` int(255) NOT NULL,
   `description` varchar(255) NOT NULL,
-  `questionnaireStatusID` int(10) DEFAULT NULL,
+  `questionnaireStatusID` int(10) NOT NULL,
   `isNewVersionOf` int(11) DEFAULT NULL,
   `IsBasedOn` int(10) DEFAULT NULL,
   `version` varchar(50) NOT NULL,
@@ -5965,9 +7108,9 @@ CREATE TABLE `tb_questionnaire` (
 --
 
 INSERT INTO `tb_questionnaire` (`questionnaireID`, `description`, `questionnaireStatusID`, `isNewVersionOf`, `IsBasedOn`, `version`, `lastModification`, `creationDate`) VALUES
-(1, 'WHO COVID-19 Rapid Version CRF', 1, 0, 0, '1.0', '2021-11-17 21:06:57', '2022-02-28 22:20:37'),
+(1, 'WHO COVID-19 Rapid Version CRF', 1, 0, 0, '1.0', '2022-06-19 20:08:43', '2022-06-19 20:08:43'),
 (2, 'Pesquisa de teste 2', 3, 0, 1, '2.0', '2021-11-17 23:16:07', '2022-03-02 00:35:35'),
-(3, 'Nova Pesquisa', 2, 0, 4, '0.0', '2022-02-14 17:45:19', '2022-03-09 18:19:38'),
+(3, 'Nova Pesquisa', 1, 0, 4, '1.0', '2022-06-19 20:08:10', '2022-06-19 20:08:10'),
 (4, 'WHO COVID-19 Full Version CRF', 2, 1, 0, '0.0', '2022-02-28 22:05:39', '2022-03-09 18:19:34'),
 (10, 'SDF', 2, 0, 0, '0.0', '2022-03-09 18:24:45', '2022-03-09 18:24:45');
 
@@ -6040,270 +7183,272 @@ CREATE TABLE `tb_questions` (
   `listTypeID` int(10) DEFAULT NULL,
   `questionGroupID` int(10) DEFAULT NULL,
   `subordinateTo` int(10) DEFAULT NULL,
+  `subordinateValues` varchar(100) DEFAULT NULL,
   `isAbout` int(10) DEFAULT NULL,
-  `comment` varchar(500) NOT NULL
+  `comment` varchar(500) DEFAULT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `tb_questions`
 --
 
-INSERT INTO `tb_questions` (`questionID`, `description`, `questionTypeID`, `listTypeID`, `questionGroupID`, `subordinateTo`, `isAbout`, `comment`) VALUES
-(1, 'Age', 5, NULL, 6, NULL, NULL, 'Este é um comentário sobre a questão'),
-(2, 'Altered consciousness/confusion', 8, 15, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(3, 'Angiotensin converting enzyme inhibitors (ACE inhibitors)', 8, 15, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(4, 'Angiotensin II receptor blockers (ARBs)', 8, 15, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(5, 'AVPU scale', 4, 2, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(6, 'BP (diastolic)', 5, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(7, 'BP (systolic)', 5, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(8, 'Chest pain', 8, 15, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(9, 'Conjunctivitis', 8, 15, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(10, 'Cough', 8, 15, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(11, 'Cough with sputum', 8, 15, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(12, 'Diarrhoea', 8, 15, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(13, 'Glasgow Coma Score (GCS /15)', 5, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(14, 'Heart rate', 5, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(15, 'Muscle aches (myalgia)', 8, 15, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(16, 'Non-steroidal anti-inflammatory (NSAID)', 8, 15, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(17, 'Other signs or symptoms', 8, 15, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(18, 'Oxygen saturation', 5, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(19, 'Respiratory rate', 5, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(20, 'Seizures', 8, 15, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(21, 'Severe dehydration', 8, 15, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(22, 'Shortness of breath', 8, 15, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(23, 'Sore throat', 8, 15, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(24, 'Sternal capillary refill time >2seconds', 8, 15, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(25, 'Temperature', 5, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(26, 'Vomiting/Nausea', 8, 15, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(27, 'Which sign or symptom', 7, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(28, 'Other signs or symptoms', 8, 15, 4, NULL, 17, 'Este é um comentário sobre a questão'),
-(29, 'Other signs or symptoms', 8, 15, 12, NULL, 17, 'Este é um comentário sobre a questão'),
-(30, 'Other complication', 8, 15, 3, NULL, NULL, 'Este é um comentário sobre a questão'),
-(31, 'Chest X-Ray /CT performed', 8, 15, 7, NULL, NULL, 'Este é um comentário sobre a questão'),
-(32, 'Was pathogen testing done during this illness episode', 8, 15, 7, NULL, NULL, 'Este é um comentário sobre a questão'),
-(33, 'Antifungal agent', 8, 15, 9, NULL, NULL, 'Este é um comentário sobre a questão'),
-(34, 'Antimalarial agent', 8, 15, 9, NULL, NULL, 'Este é um comentário sobre a questão'),
-(35, 'Antiviral', 8, 15, 9, NULL, NULL, 'Este é um comentário sobre a questão'),
-(36, 'Corticosteroid', 8, 15, 9, NULL, NULL, 'Este é um comentário sobre a questão'),
-(37, 'Experimental agent', 8, 15, 9, NULL, NULL, 'Este é um comentário sobre a questão'),
-(38, 'Bleeding (Haemorrhage)', 8, 15, 12, NULL, NULL, 'Este é um comentário sobre a questão'),
-(39, 'Oxygen therapy', 8, 15, 13, NULL, NULL, 'Este é um comentário sobre a questão'),
-(40, 'Oxygen saturation', 5, NULL, 5, NULL, 18, 'Este é um comentário sobre a questão'),
-(41, 'Oxygen saturation', 5, NULL, 14, NULL, 18, 'Este é um comentário sobre a questão'),
-(42, 'Other respiratory pathogen', 6, 11, 7, 32, NULL, 'Este é um comentário sobre a questão'),
-(43, 'Viral haemorrhagic fever', 6, 11, 7, 32, NULL, 'Este é um comentário sobre a questão'),
-(44, 'Coronavirus', 6, 11, 7, 32, NULL, 'Este é um comentário sobre a questão'),
-(45, 'Which coronavirus', 4, 3, 7, 44, NULL, 'Este é um comentário sobre a questão'),
-(46, 'Influenza virus', 6, 11, 7, 32, NULL, 'Este é um comentário sobre a questão'),
-(47, 'A history of self-reported feverishness or measured fever of ≥ 38 degrees Celsius', 1, NULL, 1, NULL, NULL, 'Este é um comentário sobre a questão'),
-(48, 'Clinical suspicion of ARI despite not meeting criteria above', 1, NULL, 1, NULL, NULL, 'Este é um comentário sobre a questão'),
-(49, 'Proven or suspected infection with pathogen of Public Health Interest', 1, NULL, 1, NULL, NULL, 'Este é um comentário sobre a questão'),
-(50, 'Ashtma', 8, 15, 2, NULL, NULL, 'Este é um comentário sobre a questão'),
-(51, 'Asplenia', 8, 15, 2, NULL, NULL, 'Este é um comentário sobre a questão'),
-(52, 'Chronic cardiac disease (not hypertension)', 8, 15, 2, NULL, NULL, 'Este é um comentário sobre a questão'),
-(53, 'Chronic kidney disease', 8, 15, 2, NULL, NULL, 'Este é um comentário sobre a questão'),
-(54, 'Chronic liver disease', 8, 15, 2, NULL, NULL, 'Este é um comentário sobre a questão'),
-(55, 'Chronic neurological disorder', 8, 15, 2, NULL, NULL, 'Este é um comentário sobre a questão'),
-(56, 'Chronic pulmonary disease', 8, 15, 2, NULL, NULL, 'Este é um comentário sobre a questão'),
-(57, 'Current smoking', 8, 15, 2, NULL, NULL, 'Este é um comentário sobre a questão'),
-(58, 'Diabetes', 8, 15, 2, NULL, NULL, 'Este é um comentário sobre a questão'),
-(59, 'HIV', 4, 6, 2, NULL, NULL, 'Este é um comentário sobre a questão'),
-(60, 'Hypertension', 8, 15, 2, NULL, NULL, 'Este é um comentário sobre a questão'),
-(61, 'Malignant neoplasm', 8, 15, 2, NULL, NULL, 'Este é um comentário sobre a questão'),
-(62, 'Other co-morbidities', 8, 15, 2, NULL, NULL, 'Este é um comentário sobre a questão'),
-(63, 'Dyspnoea (shortness of breath) OR Tachypnoea', 1, NULL, 1, NULL, NULL, 'Este é um comentário sobre a questão'),
-(64, 'Cough', 1, NULL, 1, NULL, NULL, 'Este é um comentário sobre a questão'),
-(65, 'Tuberculosis', 8, 15, 2, NULL, NULL, 'Este é um comentário sobre a questão'),
-(66, 'Acute renal injury', 8, 15, 3, NULL, NULL, 'Este é um comentário sobre a questão'),
-(67, 'Acute Respiratory Distress Syndrome', 8, 15, 3, NULL, NULL, 'Este é um comentário sobre a questão'),
-(68, 'Anaemia', 8, 15, 3, NULL, NULL, 'Este é um comentário sobre a questão'),
-(69, 'Bacteraemia', 8, 15, 3, NULL, NULL, 'Este é um comentário sobre a questão'),
-(70, 'Bleeding', 8, 15, 3, NULL, NULL, 'Este é um comentário sobre a questão'),
-(71, 'Bronchiolitis', 8, 15, 3, NULL, NULL, 'Este é um comentário sobre a questão'),
-(72, 'Cardiac arrest', 8, 15, 3, NULL, NULL, 'Este é um comentário sobre a questão'),
-(73, 'Cardiac arrhythmia', 8, 15, 3, NULL, NULL, 'Este é um comentário sobre a questão'),
-(74, 'Cardiomyopathy', 8, 15, 3, NULL, NULL, 'Este é um comentário sobre a questão'),
-(75, 'Endocarditis', 8, 15, 3, NULL, NULL, 'Este é um comentário sobre a questão'),
-(76, 'Liver dysfunction', 8, 15, 3, NULL, NULL, 'Este é um comentário sobre a questão'),
-(77, 'Meningitis/Encephalitis', 8, 15, 3, NULL, NULL, 'Este é um comentário sobre a questão'),
-(78, 'Myocarditis/Pericarditis', 8, 15, 3, NULL, NULL, 'Este é um comentário sobre a questão'),
-(79, 'Pancreatitis', 8, 15, 3, NULL, NULL, 'Este é um comentário sobre a questão'),
-(80, 'Pneumonia', 8, 15, 3, NULL, NULL, 'Este é um comentário sobre a questão'),
-(81, 'Shock', 8, 15, 3, NULL, NULL, 'Este é um comentário sobre a questão'),
-(82, 'Which corticosteroid route', 4, 4, 9, 36, NULL, 'Este é um comentário sobre a questão'),
-(83, 'Confusion', 8, 15, 4, NULL, NULL, 'Este é um comentário sobre a questão'),
-(84, 'Falciparum malaria', 6, 11, 7, 32, NULL, 'Este é um comentário sobre a questão'),
-(85, 'HIV', 6, 11, 7, 32, NULL, 'Este é um comentário sobre a questão'),
-(86, 'Infiltrates present', 8, 15, 7, 31, NULL, 'Este é um comentário sobre a questão'),
-(87, 'Maximum daily corticosteroid dose', 7, NULL, 9, 36, NULL, 'Este é um comentário sobre a questão'),
-(88, 'Non-Falciparum malaria', 6, 11, 7, 32, NULL, 'Este é um comentário sobre a questão'),
-(89, 'O2 flow', 4, 8, 13, 39, NULL, 'Este é um comentário sobre a questão'),
-(90, 'Oxygen interface', 4, 7, 13, 39, NULL, 'Este é um comentário sobre a questão'),
-(91, 'Site name', 7, NULL, 12, 38, NULL, 'Este é um comentário sobre a questão'),
-(92, 'Source of oxygen', 4, 14, 13, 39, NULL, 'Este é um comentário sobre a questão'),
-(93, 'Admission date at this facility', 2, NULL, 5, NULL, NULL, 'Este é um comentário sobre a questão'),
-(94, 'Height', 5, NULL, 5, NULL, NULL, 'Este é um comentário sobre a questão'),
-(95, 'Malnutrition', 8, 15, 5, NULL, NULL, 'Este é um comentário sobre a questão'),
-(96, 'Mid-upper arm circumference', 5, NULL, 5, NULL, NULL, 'Este é um comentário sobre a questão'),
-(97, 'Symptom onset (date of first/earliest symptom)', 2, NULL, 5, NULL, NULL, 'Este é um comentário sobre a questão'),
-(98, 'Weight', 5, NULL, 5, NULL, NULL, 'Este é um comentário sobre a questão'),
-(99, 'Which antifungal agent', 7, NULL, 9, 33, NULL, 'Este é um comentário sobre a questão'),
-(100, 'Which antimalarial agent', 7, NULL, 9, 34, NULL, 'Este é um comentário sobre a questão'),
-(101, 'Which antiviral', 4, 1, 9, 35, NULL, 'Este é um comentário sobre a questão'),
-(102, 'Which complication', 7, NULL, 3, 30, NULL, 'Este é um comentário sobre a questão'),
-(103, 'Which experimental agent', 7, NULL, 9, 37, NULL, 'Este é um comentário sobre a questão'),
-(104, 'Which other antiviral', 7, NULL, 9, 35, NULL, 'Este é um comentário sobre a questão'),
-(105, 'Which other pathogen of public health interest detected', 7, NULL, 7, 32, NULL, 'Este é um comentário sobre a questão'),
-(106, 'Other corona virus', 7, NULL, 7, 44, NULL, 'Este é um comentário sobre a questão'),
-(107, 'Date of Birth', 2, NULL, 6, NULL, NULL, 'Este é um comentário sobre a questão'),
-(108, 'Healthcare worker', 8, 15, 6, NULL, NULL, 'Este é um comentário sobre a questão'),
-(109, 'Laboratory Worker', 8, 15, 6, NULL, NULL, 'Este é um comentário sobre a questão'),
-(110, 'Grávida?', 9, 16, 6, NULL, NULL, 'Este é um comentário sobre a questão'),
-(111, 'Sex at Birth', 4, 13, 6, NULL, NULL, 'Este é um comentário sobre a questão'),
-(112, 'Oxygen saturation expl', 4, 10, 14, 41, NULL, 'Este é um comentário sobre a questão'),
-(113, 'Gestational weeks assessment', 5, NULL, 6, 110, NULL, 'Este é um comentário sobre a questão'),
-(114, 'ALT/SGPT measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(115, 'APTT/APTR measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(116, 'AST/SGOT measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(117, 'Antibiotic', 8, 15, 9, NULL, NULL, 'Este é um comentário sobre a questão'),
-(118, 'ESR measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(119, 'Intravenous fluids', 8, 15, 9, NULL, NULL, 'Este é um comentário sobre a questão'),
-(120, 'Oral/orogastric fluids', 8, 15, 9, NULL, NULL, 'Este é um comentário sobre a questão'),
-(121, 'Influenza virus type', 7, NULL, 7, 46, NULL, 'Este é um comentário sobre a questão'),
-(122, 'Ability to self-care at discharge versus before illness', 4, 12, 10, NULL, NULL, 'Este é um comentário sobre a questão'),
-(123, 'Outcome', 4, 9, 10, NULL, NULL, 'Este é um comentário sobre a questão'),
-(124, 'Outcome date', 2, NULL, 10, NULL, NULL, 'Este é um comentário sobre a questão'),
-(125, 'Which respiratory pathogen', 7, NULL, 7, 42, NULL, 'Este é um comentário sobre a questão'),
-(126, 'Which virus', 7, NULL, 7, 43, NULL, 'Este é um comentário sobre a questão'),
-(127, 'Abdominal pain', 8, 15, 12, NULL, NULL, 'Este é um comentário sobre a questão'),
-(128, 'Cough with haemoptysis', 8, 15, 12, NULL, NULL, 'Este é um comentário sobre a questão'),
-(129, 'Fatigue/Malaise', 8, 15, 12, NULL, NULL, 'Este é um comentário sobre a questão'),
-(130, 'Headache', 8, 15, 12, NULL, NULL, 'Este é um comentário sobre a questão'),
-(131, 'duration in weeks', 5, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(132, 'History of fever', 8, 15, 12, NULL, NULL, 'Este é um comentário sobre a questão'),
-(133, 'Inability to walk', 8, 15, 12, NULL, NULL, 'Este é um comentário sobre a questão'),
-(134, 'Joint pain (arthralgia)', 8, 15, 12, NULL, NULL, 'Este é um comentário sobre a questão'),
-(135, 'Lower chest wall indrawing', 8, 15, 12, NULL, NULL, 'Este é um comentário sobre a questão'),
-(136, 'Lymphadenopathy', 8, 15, 12, NULL, NULL, 'Este é um comentário sobre a questão'),
-(137, 'Runny nose (rhinorrhoea)', 8, 15, 12, NULL, NULL, 'Este é um comentário sobre a questão'),
-(138, 'Skin rash', 8, 15, 12, NULL, NULL, 'Este é um comentário sobre a questão'),
-(139, 'Skin ulcers', 8, 15, 12, NULL, NULL, 'Este é um comentário sobre a questão'),
-(140, 'Wheezing', 8, 15, 12, NULL, NULL, 'Este é um comentário sobre a questão'),
-(141, 'Oxygen saturation expl', 4, 10, 5, 40, NULL, 'Este é um comentário sobre a questão'),
-(142, 'Which sign or symptom', 7, NULL, 4, 28, 27, 'Este é um comentário sobre a questão'),
-(143, 'Which sign or symptom', 7, NULL, 12, 29, 27, 'Este é um comentário sobre a questão'),
-(144, 'Age (years)', 5, NULL, 6, NULL, 1, 'Este é um comentário sobre a questão'),
-(145, 'Creatine kinase measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(146, 'Creatinine measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(147, 'CRP measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(148, 'D-dimer measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(149, 'Extracorporeal (ECMO) support', 8, 15, 13, NULL, NULL, 'Este é um comentário sobre a questão'),
-(150, 'ICU or High Dependency Unit admission', 8, 15, 13, NULL, NULL, 'Este é um comentário sobre a questão'),
-(151, 'Inotropes/vasopressors', 8, 15, 13, NULL, NULL, 'Este é um comentário sobre a questão'),
-(152, 'Invasive ventilation', 8, 15, 13, NULL, NULL, 'Este é um comentário sobre a questão'),
-(153, 'Non-invasive ventilation', 9, 16, 13, NULL, NULL, 'Este é um comentário sobre a questão'),
-(154, 'Prone position', 8, 15, 13, NULL, NULL, 'Este é um comentário sobre a questão'),
-(155, 'Renal replacement therapy (RRT) or dialysis', 8, 15, 13, NULL, NULL, 'Este é um comentário sobre a questão'),
-(156, 'Ferritin measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(157, 'Haematocrit measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(158, 'Haemoglobin measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(159, 'IL-6 measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(160, 'INR measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(161, 'Lactate measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(162, 'LDH measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(163, 'Platelets measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(164, 'Potassium measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(165, 'Procalcitonin measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(166, 'Country', 4, 5, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(167, 'Date of enrolment', 2, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(168, 'Date of follow up', 2, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(169, 'PT measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(170, 'Sodium measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(171, 'Total bilirubin measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(172, 'Troponin measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(173, 'duration in days', 5, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(174, 'Urea (BUN) measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(175, 'specific response', 7, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(176, 'Seizures', 8, 15, 3, NULL, 20, 'Este é um comentário sobre a questão'),
-(177, 'Chest pain', 8, 15, 4, NULL, 8, 'Este é um comentário sobre a questão'),
-(178, 'Seizures', 8, 15, 4, NULL, 20, 'Este é um comentário sobre a questão'),
-(179, 'Altered consciousness/confusion', 8, 15, 4, NULL, 2, 'Este é um comentário sobre a questão'),
-(180, 'Which NSAID', 7, NULL, 9, 16, NULL, 'Este é um comentário sobre a questão'),
-(181, 'Oxygen saturation expl', 4, 10, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(182, 'Vomiting/Nausea', 8, 15, 4, NULL, 26, 'Este é um comentário sobre a questão'),
-(183, 'Cough', 8, 15, 4, NULL, 10, 'Este é um comentário sobre a questão'),
-(184, 'Sore throat', 8, 15, 4, NULL, 23, 'Este é um comentário sobre a questão'),
-(185, 'Shortness of breath', 8, 15, 4, NULL, 22, 'Este é um comentário sobre a questão'),
-(186, 'Diarrhoea', 8, 15, 4, NULL, 12, 'Este é um comentário sobre a questão'),
-(187, 'Muscle aches (myalgia)', 8, 15, 4, NULL, 15, 'Este é um comentário sobre a questão'),
-(188, 'Conjunctivitis', 8, 15, 4, NULL, 9, 'Este é um comentário sobre a questão'),
-(189, 'Severe dehydration', 8, 15, 5, NULL, 21, 'Este é um comentário sobre a questão'),
-(190, 'AVPU scale', 4, 2, 5, NULL, 5, 'Este é um comentário sobre a questão'),
-(191, 'Heart rate', 5, NULL, 5, NULL, 14, 'Este é um comentário sobre a questão'),
-(192, 'BP (diastolic)', 5, NULL, 5, NULL, 6, 'Este é um comentário sobre a questão'),
-(193, 'Glasgow Coma Score (GCS /15)', 5, NULL, 5, NULL, 13, 'Este é um comentário sobre a questão'),
-(194, 'Respiratory rate', 5, NULL, 5, NULL, 19, 'Este é um comentário sobre a questão'),
-(195, 'BP (systolic)', 5, NULL, 5, NULL, 7, 'Este é um comentário sobre a questão'),
-(196, 'Sternal capillary refill time >2seconds', 8, 15, 5, NULL, 24, 'Este é um comentário sobre a questão'),
-(197, 'Cough with sputum production', 8, 15, 4, NULL, 11, 'Este é um comentário sobre a questão'),
-(198, 'Temperature', 5, NULL, 5, NULL, 25, 'Este é um comentário sobre a questão'),
-(199, 'Non-steroidal anti-inflammatory (NSAID)', 8, 15, 9, NULL, 16, 'Este é um comentário sobre a questão'),
-(200, 'Angiotensin converting enzyme inhibitors (ACE inhibitors)', 8, 15, 9, NULL, 3, 'Este é um comentário sobre a questão'),
-(201, 'Angiotensin II receptor blockers (ARBs)', 8, 15, 9, NULL, 4, 'Este é um comentário sobre a questão'),
-(202, 'Angiotensin converting enzyme inhibitors (ACE inhibitors)', 8, 15, 11, NULL, 3, 'Este é um comentário sobre a questão'),
-(203, 'Angiotensin II receptor blockers (ARBs)', 8, 15, 11, NULL, 4, 'Este é um comentário sobre a questão'),
-(204, 'Non-steroidal anti-inflammatory (NSAID)', 8, 15, 11, NULL, 16, 'Este é um comentário sobre a questão'),
-(205, 'Shortness of breath', 8, 15, 12, NULL, 22, 'Este é um comentário sobre a questão'),
-(206, 'Vomiting/Nausea', 8, 15, 12, NULL, 26, 'Este é um comentário sobre a questão'),
-(207, 'Altered consciousness/confusion', 8, 15, 12, NULL, 2, 'Este é um comentário sobre a questão'),
-(208, 'Diarrhoea', 8, 15, 12, NULL, 12, 'Este é um comentário sobre a questão'),
-(209, 'Muscle aches (myalgia)', 8, 15, 12, NULL, 15, 'Este é um comentário sobre a questão'),
-(210, 'Cough', 8, 15, 12, NULL, 10, 'Este é um comentário sobre a questão'),
-(211, 'Seizures', 8, 15, 12, NULL, 20, 'Este é um comentário sobre a questão'),
-(212, 'Age (months)', 5, NULL, 6, NULL, 1, 'Este é um comentário sobre a questão'),
-(213, 'Conjunctivitis', 8, 15, 12, NULL, 9, 'Este é um comentário sobre a questão'),
-(214, 'Chest pain', 8, 15, 12, NULL, 8, 'Este é um comentário sobre a questão'),
-(215, 'Sore throat', 8, 15, 12, NULL, 23, 'Este é um comentário sobre a questão'),
-(216, 'AVPU scale', 4, 2, 14, NULL, 5, 'Este é um comentário sobre a questão'),
-(217, 'Temperature', 5, NULL, 14, NULL, 25, 'Este é um comentário sobre a questão'),
-(218, 'Sternal capillary refill time >2seconds', 8, 15, 14, NULL, 24, 'Este é um comentário sobre a questão'),
-(219, 'BP (diastolic)', 5, NULL, 14, NULL, 6, 'Este é um comentário sobre a questão'),
-(220, 'Severe dehydration', 8, 15, 14, NULL, 21, 'Este é um comentário sobre a questão'),
-(221, 'Heart rate', 5, NULL, 14, NULL, 14, 'Este é um comentário sobre a questão'),
-(222, 'BP (systolic)', 5, NULL, 14, NULL, 7, 'Este é um comentário sobre a questão'),
-(223, 'Glasgow Coma Score (GCS /15)', 5, NULL, 14, NULL, 13, 'Este é um comentário sobre a questão'),
-(224, 'Respiratory rate', 5, NULL, 14, NULL, 19, 'Este é um comentário sobre a questão'),
-(225, 'Cough with sputum production', 8, 15, 12, NULL, 11, 'Este é um comentário sobre a questão'),
-(226, 'WBC count measurement', 3, NULL, 8, NULL, NULL, 'Este é um comentário sobre a questão'),
-(227, 'Which other co-morbidities', 7, NULL, 2, 62, NULL, 'Este é um comentário sobre a questão'),
-(228, 'Date of ICU/HDU admission', 2, NULL, 13, 150, NULL, 'Este é um comentário sobre a questão'),
-(229, 'ICU/HDU discharge date', 2, NULL, 13, 150, NULL, 'Este é um comentário sobre a questão'),
-(230, 'Date of ICU/HDU admission', 2, NULL, 13, 150, NULL, 'Este é um comentário sobre a questão'),
-(231, 'ICU/HDU discharge date', 2, NULL, 13, 150, NULL, 'Este é um comentário sobre a questão'),
-(232, 'Which antibiotic', 7, NULL, 9, 117, NULL, 'Este é um comentário sobre a questão'),
-(233, 'Total duration ICU/HCU', 5, NULL, 13, 150, 173, 'Este é um comentário sobre a questão'),
-(234, 'Total duration Oxygen Therapy', 5, NULL, 13, 39, 173, 'Este é um comentário sobre a questão'),
-(235, 'Total duration Non-invasive ventilation', 5, NULL, 13, 153, 173, 'Este é um comentário sobre a questão'),
-(236, 'Total duration Invasive ventilation', 5, NULL, 13, 152, 173, 'Este é um comentário sobre a questão'),
-(237, 'Total duration ECMO', 5, NULL, 13, 149, 173, 'Este é um comentário sobre a questão'),
-(238, 'Total duration Prone position', 5, NULL, 13, 154, 173, 'Este é um comentário sobre a questão'),
-(239, 'Total duration RRT or dyalysis', 5, NULL, 13, 155, 173, 'Este é um comentário sobre a questão'),
-(240, 'Total duration Inotropes/vasopressors', 5, NULL, 13, 151, 173, 'Este é um comentário sobre a questão'),
-(241, 'Systemic anticoagulation', 8, 15, 9, NULL, NULL, 'Este é um comentário sobre a questão'),
-(242, 'Nome da Instalaçãos', 7, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(243, 'Loss of smell', 8, 15, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(244, 'Loss of taste', 8, 15, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
-(245, 'FiO2 value', 10, NULL, 13, 152, NULL, 'Este é um comentário sobre a questão'),
-(246, 'PaO2 value', 10, NULL, 13, 152, NULL, 'Este é um comentário sobre a questão'),
-(247, 'PaCO2 value', 10, NULL, 13, 152, NULL, 'Este é um comentário sobre a questão'),
-(248, 'Plateau pressure value', 10, NULL, 13, 152, NULL, 'Este é um comentário sobre a questão'),
-(249, 'PEEP value', 10, NULL, 13, 152, NULL, 'Este é um comentário sobre a questão'),
-(250, 'Loss of smell daily', 8, 15, 4, NULL, 243, 'Este é um comentário sobre a questão'),
-(251, 'Loss of taste daily', 8, 15, 4, NULL, 244, 'Este é um comentário sobre a questão'),
-(252, 'Loss of smell signs', 8, 15, 12, NULL, 243, 'Este é um comentário sobre a questão'),
-(253, 'Loss of taste signs', 8, 15, 12, NULL, 244, 'Este é um comentário sobre a questão'),
-(254, 'Which antiviral', 4, 1, 11, NULL, 101, 'Este é um comentário sobre a questão'),
-(255, 'Which other antiviral', 7, NULL, 11, 254, 104, 'Este é um comentário sobre a questão');
+INSERT INTO `tb_questions` (`questionID`, `description`, `questionTypeID`, `listTypeID`, `questionGroupID`, `subordinateTo`, `subordinateValues`, `isAbout`, `comment`) VALUES
+(1, 'Age', 5, NULL, 6, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(2, 'Altered consciousness/confusion', 8, 15, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(3, 'Angiotensin converting enzyme inhibitors (ACE inhibitors)', 8, 15, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(4, 'Angiotensin II receptor blockers (ARBs)', 8, 15, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(5, 'AVPU scale', 4, 2, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(6, 'BP (diastolic)', 5, NULL, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(7, 'BP (systolic)', 5, NULL, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(8, 'Chest pain', 8, 15, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(9, 'Conjunctivitis', 8, 15, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(10, 'Cough', 8, 15, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(11, 'Cough with sputum', 8, 15, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(12, 'Diarrhoea', 8, 15, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(13, 'Glasgow Coma Score (GCS /15)', 5, NULL, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(14, 'Heart rate', 5, NULL, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(15, 'Muscle aches (myalgia)', 8, 15, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(16, 'Non-steroidal anti-inflammatory (NSAID)', 8, 15, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(17, 'Other signs or symptoms', 8, 15, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(18, 'Oxygen saturation', 5, NULL, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(19, 'Respiratory rate', 5, NULL, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(20, 'Seizures', 8, 15, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(21, 'Severe dehydration', 8, 15, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(22, 'Shortness of breath', 8, 15, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(23, 'Sore throat', 8, 15, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(24, 'Sternal capillary refill time >2seconds', 8, 15, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(25, 'Temperature', 5, NULL, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(26, 'Vomiting/Nausea', 8, 15, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(27, 'Which sign or symptom', 7, NULL, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(28, 'Other signs or symptoms', 8, 15, 4, NULL, NULL, 17, 'Este é um comentário sobre a questão'),
+(29, 'Other signs or symptoms', 8, 15, 12, NULL, NULL, 17, 'Este é um comentário sobre a questão'),
+(30, 'Other complication', 8, 15, 3, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(31, 'Chest X-Ray /CT performed', 8, 15, 7, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(32, 'Was pathogen testing done during this illness episode', 8, 15, 7, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(33, 'Antifungal agent', 8, 15, 9, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(34, 'Antimalarial agent', 8, 15, 9, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(35, 'Antiviral', 8, 15, 9, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(36, 'Corticosteroid', 8, 15, 9, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(37, 'Experimental agent', 8, 15, 9, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(38, 'Bleeding (Haemorrhage)', 8, 15, 12, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(39, 'Oxygen therapy', 8, 15, 13, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(40, 'Oxygen saturation', 5, NULL, 5, NULL, NULL, 18, 'Este é um comentário sobre a questão'),
+(41, 'Oxygen saturation', 5, NULL, 14, NULL, NULL, 18, 'Este é um comentário sobre a questão'),
+(42, 'Other respiratory pathogen', 6, 11, 7, 32, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(43, 'Viral haemorrhagic fever', 6, 11, 7, 32, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(44, 'Coronavirus', 6, 11, 7, 32, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(45, 'Which coronavirus', 4, 3, 7, 44, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(46, 'Influenza virus', 6, 11, 7, 32, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(47, 'A history of self-reported feverishness or measured fever of ≥ 38 degrees Celsius', 1, NULL, 1, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(48, 'Clinical suspicion of ARI despite not meeting criteria above', 1, NULL, 1, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(49, 'Proven or suspected infection with pathogen of Public Health Interest', 1, NULL, 1, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(50, 'Ashtma', 8, 15, 2, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(51, 'Asplenia', 8, 15, 2, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(52, 'Chronic cardiac disease (not hypertension)', 8, 15, 2, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(53, 'Chronic kidney disease', 8, 15, 2, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(54, 'Chronic liver disease', 8, 15, 2, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(55, 'Chronic neurological disorder', 8, 15, 2, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(56, 'Chronic pulmonary disease', 8, 15, 2, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(57, 'Current smoking', 8, 15, 2, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(58, 'Diabetes', 8, 15, 2, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(59, 'HIV', 4, 6, 2, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(60, 'Hypertension', 8, 15, 2, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(61, 'Malignant neoplasm', 8, 15, 2, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(62, 'Other co-morbidities', 8, 15, 2, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(63, 'Dyspnoea (shortness of breath) OR Tachypnoea', 1, NULL, 1, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(64, 'Cough', 1, NULL, 1, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(65, 'Tuberculosis', 8, 15, 2, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(66, 'Acute renal injury', 8, 15, 3, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(67, 'Acute Respiratory Distress Syndrome', 8, 15, 3, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(68, 'Anaemia', 8, 15, 3, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(69, 'Bacteraemia', 8, 15, 3, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(70, 'Bleeding', 8, 15, 3, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(71, 'Bronchiolitis', 8, 15, 3, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(72, 'Cardiac arrest', 8, 15, 3, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(73, 'Cardiac arrhythmia', 8, 15, 3, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(74, 'Cardiomyopathy', 8, 15, 3, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(75, 'Endocarditis', 8, 15, 3, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(76, 'Liver dysfunction', 8, 15, 3, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(77, 'Meningitis/Encephalitis', 8, 15, 3, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(78, 'Myocarditis/Pericarditis', 8, 15, 3, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(79, 'Pancreatitis', 8, 15, 3, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(80, 'Pneumonia', 8, 15, 3, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(81, 'Shock', 8, 15, 3, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(82, 'Which corticosteroid route', 4, 4, 9, 36, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(83, 'Confusion', 8, 15, 4, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(84, 'Falciparum malaria', 6, 11, 7, 32, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(85, 'HIV', 6, 11, 7, 32, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(86, 'Infiltrates present', 8, 15, 7, 31, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(87, 'Maximum daily corticosteroid dose', 7, NULL, 9, 36, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(88, 'Non-Falciparum malaria', 6, 11, 7, 32, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(89, 'O2 flow', 4, 8, 13, 39, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(90, 'Oxygen interface', 4, 7, 13, 39, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(91, 'Site name', 7, NULL, 12, 38, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(92, 'Source of oxygen', 4, 14, 13, 39, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(93, 'Admission date at this facility', 2, NULL, 5, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(94, 'Height', 5, NULL, 5, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(95, 'Malnutrition', 8, 15, 5, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(96, 'Mid-upper arm circumference', 5, NULL, 5, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(97, 'Symptom onset (date of first/earliest symptom)', 2, NULL, 5, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(98, 'Weight', 5, NULL, 5, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(99, 'Which antifungal agent', 7, NULL, 9, 33, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(100, 'Which antimalarial agent', 7, NULL, 9, 34, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(101, 'Which antiviral', 4, 1, 9, 35, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(102, 'Which complication', 7, NULL, 3, 30, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(103, 'Which experimental agent', 7, NULL, 9, 37, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(104, 'Which other antiviral', 7, NULL, 9, 35, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(105, 'Which other pathogen of public health interest detected', 7, NULL, 7, 32, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(106, 'Other corona virus', 7, NULL, 7, 44, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(107, 'Date of Birth', 2, NULL, 6, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(108, 'Healthcare worker', 8, 15, 6, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(109, 'Laboratory Worker', 8, 15, 6, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(110, 'Grávida?', 9, 16, 6, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(111, 'Sex at Birth', 4, 13, 6, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(112, 'Oxygen saturation expl', 4, 10, 14, 41, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(113, 'Gestational weeks assessment', 5, NULL, 6, 110, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(114, 'ALT/SGPT measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(115, 'APTT/APTR measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(116, 'AST/SGOT measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(117, 'Antibiotic', 8, 15, 9, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(118, 'ESR measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(119, 'Intravenous fluids', 8, 15, 9, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(120, 'Oral/orogastric fluids', 8, 15, 9, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(121, 'Influenza virus type', 7, NULL, 7, 46, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(122, 'Ability to self-care at discharge versus before illness', 4, 12, 10, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(123, 'Outcome', 4, 9, 10, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(124, 'Outcome date', 2, NULL, 10, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(125, 'Which respiratory pathogen', 7, NULL, 7, 42, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(126, 'Which virus', 7, NULL, 7, 43, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(127, 'Abdominal pain', 8, 15, 12, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(128, 'Cough with haemoptysis', 8, 15, 12, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(129, 'Fatigue/Malaise', 8, 15, 12, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(130, 'Headache', 8, 15, 12, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(131, 'duration in weeks', 5, NULL, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(132, 'History of fever', 8, 15, 12, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(133, 'Inability to walk', 8, 15, 12, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(134, 'Joint pain (arthralgia)', 8, 15, 12, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(135, 'Lower chest wall indrawing', 8, 15, 12, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(136, 'Lymphadenopathy', 8, 15, 12, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(137, 'Runny nose (rhinorrhoea)', 8, 15, 12, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(138, 'Skin rash', 8, 15, 12, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(139, 'Skin ulcers', 8, 15, 12, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(140, 'Wheezing', 8, 15, 12, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(141, 'Oxygen saturation expl', 4, 10, 5, 40, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(142, 'Which sign or symptom', 7, NULL, 4, 28, 'Sim', 27, 'Este é um comentário sobre a questão'),
+(143, 'Which sign or symptom', 7, NULL, 12, 29, 'Sim', 27, 'Este é um comentário sobre a questão'),
+(144, 'Age (years)', 5, NULL, 6, NULL, NULL, 1, 'Este é um comentário sobre a questão'),
+(145, 'Creatine kinase measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(146, 'Creatinine measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(147, 'CRP measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(148, 'D-dimer measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(149, 'Extracorporeal (ECMO) support', 8, 15, 13, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(150, 'ICU or High Dependency Unit admission', 8, 15, 13, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(151, 'Inotropes/vasopressors', 8, 15, 13, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(152, 'Invasive ventilation', 8, 15, 13, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(153, 'Non-invasive ventilation', 9, 16, 13, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(154, 'Prone position', 8, 15, 13, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(155, 'Renal replacement therapy (RRT) or dialysis', 8, 15, 13, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(156, 'Ferritin measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(157, 'Haematocrit measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(158, 'Haemoglobin measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(159, 'IL-6 measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(160, 'INR measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(161, 'Lactate measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(162, 'LDH measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(163, 'Platelets measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(164, 'Potassium measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(165, 'Procalcitonin measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(166, 'Country', 4, 5, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(167, 'Date of enrolment', 2, NULL, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(168, 'Date of follow up', 2, NULL, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(169, 'PT measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(170, 'Sodium measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(171, 'Total bilirubin measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(172, 'Troponin measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(173, 'duration in days', 5, NULL, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(174, 'Urea (BUN) measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(175, 'specific response', 7, NULL, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(176, 'Seizures', 8, 15, 3, NULL, NULL, 20, 'Este é um comentário sobre a questão'),
+(177, 'Chest pain', 8, 15, 4, NULL, NULL, 8, 'Este é um comentário sobre a questão'),
+(178, 'Seizures', 8, 15, 4, NULL, NULL, 20, 'Este é um comentário sobre a questão'),
+(179, 'Altered consciousness/confusion', 8, 15, 4, NULL, NULL, 2, 'Este é um comentário sobre a questão'),
+(180, 'Which NSAID', 7, NULL, 9, 16, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(181, 'Oxygen saturation expl', 4, 10, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(182, 'Vomiting/Nausea', 8, 15, 4, NULL, NULL, 26, 'Este é um comentário sobre a questão'),
+(183, 'Cough', 8, 15, 4, NULL, NULL, 10, 'Este é um comentário sobre a questão'),
+(184, 'Sore throat', 8, 15, 4, NULL, NULL, 23, 'Este é um comentário sobre a questão'),
+(185, 'Shortness of breath', 8, 15, 4, NULL, NULL, 22, 'Este é um comentário sobre a questão'),
+(186, 'Diarrhoea', 8, 15, 4, NULL, NULL, 12, 'Este é um comentário sobre a questão'),
+(187, 'Muscle aches (myalgia)', 8, 15, 4, NULL, NULL, 15, 'Este é um comentário sobre a questão'),
+(188, 'Conjunctivitis', 8, 15, 4, NULL, NULL, 9, 'Este é um comentário sobre a questão'),
+(189, 'Severe dehydration', 8, 15, 5, NULL, NULL, 21, 'Este é um comentário sobre a questão'),
+(190, 'AVPU scale', 4, 2, 5, NULL, NULL, 5, 'Este é um comentário sobre a questão'),
+(191, 'Heart rate', 5, NULL, 5, NULL, NULL, 14, 'Este é um comentário sobre a questão'),
+(192, 'BP (diastolic)', 5, NULL, 5, NULL, NULL, 6, 'Este é um comentário sobre a questão'),
+(193, 'Glasgow Coma Score (GCS /15)', 5, NULL, 5, NULL, NULL, 13, 'Este é um comentário sobre a questão'),
+(194, 'Respiratory rate', 5, NULL, 5, NULL, NULL, 19, 'Este é um comentário sobre a questão'),
+(195, 'BP (systolic)', 5, NULL, 5, NULL, NULL, 7, 'Este é um comentário sobre a questão'),
+(196, 'Sternal capillary refill time >2seconds', 8, 15, 5, NULL, NULL, 24, 'Este é um comentário sobre a questão'),
+(197, 'Cough with sputum production', 8, 15, 4, NULL, NULL, 11, 'Este é um comentário sobre a questão'),
+(198, 'Temperature', 5, NULL, 5, NULL, NULL, 25, 'Este é um comentário sobre a questão'),
+(199, 'Non-steroidal anti-inflammatory (NSAID)', 8, 15, 9, NULL, NULL, 16, 'Este é um comentário sobre a questão'),
+(200, 'Angiotensin converting enzyme inhibitors (ACE inhibitors)', 8, 15, 9, NULL, NULL, 3, 'Este é um comentário sobre a questão'),
+(201, 'Angiotensin II receptor blockers (ARBs)', 8, 15, 9, NULL, NULL, 4, 'Este é um comentário sobre a questão'),
+(202, 'Angiotensin converting enzyme inhibitors (ACE inhibitors)', 8, 15, 11, NULL, NULL, 3, 'Este é um comentário sobre a questão'),
+(203, 'Angiotensin II receptor blockers (ARBs)', 8, 15, 11, NULL, NULL, 4, 'Este é um comentário sobre a questão'),
+(204, 'Non-steroidal anti-inflammatory (NSAID)', 8, 15, 11, NULL, NULL, 16, 'Este é um comentário sobre a questão'),
+(205, 'Shortness of breath', 8, 15, 12, NULL, NULL, 22, 'Este é um comentário sobre a questão'),
+(206, 'Vomiting/Nausea', 8, 15, 12, NULL, NULL, 26, 'Este é um comentário sobre a questão'),
+(207, 'Altered consciousness/confusion', 8, 15, 12, NULL, NULL, 2, 'Este é um comentário sobre a questão'),
+(208, 'Diarrhoea', 8, 15, 12, NULL, NULL, 12, 'Este é um comentário sobre a questão'),
+(209, 'Muscle aches (myalgia)', 8, 15, 12, NULL, NULL, 15, 'Este é um comentário sobre a questão'),
+(210, 'Cough', 8, 15, 12, NULL, NULL, 10, 'Este é um comentário sobre a questão'),
+(211, 'Seizures', 8, 15, 12, NULL, NULL, 20, 'Este é um comentário sobre a questão'),
+(212, 'Age (months)', 5, NULL, 6, NULL, NULL, 1, 'Este é um comentário sobre a questão'),
+(213, 'Conjunctivitis', 8, 15, 12, NULL, NULL, 9, 'Este é um comentário sobre a questão'),
+(214, 'Chest pain', 8, 15, 12, NULL, NULL, 8, 'Este é um comentário sobre a questão'),
+(215, 'Sore throat', 8, 15, 12, NULL, NULL, 23, 'Este é um comentário sobre a questão'),
+(216, 'AVPU scale', 4, 2, 14, NULL, NULL, 5, 'Este é um comentário sobre a questão'),
+(217, 'Temperature', 5, NULL, 14, NULL, NULL, 25, 'Este é um comentário sobre a questão'),
+(218, 'Sternal capillary refill time >2seconds', 8, 15, 14, NULL, NULL, 24, 'Este é um comentário sobre a questão'),
+(219, 'BP (diastolic)', 5, NULL, 14, NULL, NULL, 6, 'Este é um comentário sobre a questão'),
+(220, 'Severe dehydration', 8, 15, 14, NULL, NULL, 21, 'Este é um comentário sobre a questão'),
+(221, 'Heart rate', 5, NULL, 14, NULL, NULL, 14, 'Este é um comentário sobre a questão'),
+(222, 'BP (systolic)', 5, NULL, 14, NULL, NULL, 7, 'Este é um comentário sobre a questão'),
+(223, 'Glasgow Coma Score (GCS /15)', 5, NULL, 14, NULL, NULL, 13, 'Este é um comentário sobre a questão'),
+(224, 'Respiratory rate', 5, NULL, 14, NULL, NULL, 19, 'Este é um comentário sobre a questão'),
+(225, 'Cough with sputum production', 8, 15, 12, NULL, NULL, 11, 'Este é um comentário sobre a questão'),
+(226, 'WBC count measurement', 3, NULL, 8, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(227, 'Which other co-morbidities', 7, NULL, 2, 62, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(228, 'Date of ICU/HDU admission', 2, NULL, 13, 150, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(229, 'ICU/HDU discharge date', 2, NULL, 13, 150, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(230, 'Date of ICU/HDU admission', 2, NULL, 13, 150, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(231, 'ICU/HDU discharge date', 2, NULL, 13, 150, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(232, 'Which antibiotic', 7, NULL, 9, 117, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(233, 'Total duration ICU/HCU', 5, NULL, 13, 150, 'Sim', 173, 'Este é um comentário sobre a questão'),
+(234, 'Total duration Oxygen Therapy', 5, NULL, 13, 39, 'Sim', 173, 'Este é um comentário sobre a questão'),
+(235, 'Total duration Non-invasive ventilation', 5, NULL, 13, 153, 'Sim', 173, 'Este é um comentário sobre a questão'),
+(236, 'Total duration Invasive ventilation', 5, NULL, 13, 152, 'Sim', 173, 'Este é um comentário sobre a questão'),
+(237, 'Total duration ECMO', 5, NULL, 13, 149, 'Sim', 173, 'Este é um comentário sobre a questão'),
+(238, 'Total duration Prone position', 5, NULL, 13, 154, 'Sim', 173, 'Este é um comentário sobre a questão'),
+(239, 'Total duration RRT or dyalysis', 5, NULL, 13, 155, 'Sim', 173, 'Este é um comentário sobre a questão'),
+(240, 'Total duration Inotropes/vasopressors', 5, NULL, 13, 151, 'Sim', 173, 'Este é um comentário sobre a questão'),
+(241, 'Systemic anticoagulation', 8, 15, 9, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(242, 'Facility Name', 7, NULL, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(243, 'Loss of smell', 8, 15, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(244, 'Loss of taste', 8, 15, NULL, NULL, NULL, NULL, 'Este é um comentário sobre a questão'),
+(245, 'FiO2 value', 10, NULL, 13, 152, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(246, 'PaO2 value', 10, NULL, 13, 152, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(247, 'PaCO2 value', 10, NULL, 13, 152, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(248, 'Plateau pressure value', 10, NULL, 13, 152, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(249, 'PEEP value', 10, NULL, 13, 152, 'Sim', NULL, 'Este é um comentário sobre a questão'),
+(250, 'Loss of smell daily', 8, 15, 4, NULL, NULL, 243, 'Este é um comentário sobre a questão'),
+(251, 'Loss of taste daily', 8, 15, 4, NULL, NULL, 244, 'Este é um comentário sobre a questão'),
+(252, 'Loss of smell signs', 8, 15, 12, NULL, NULL, 243, 'Este é um comentário sobre a questão'),
+(253, 'Loss of taste signs', 8, 15, 12, NULL, NULL, 244, 'Este é um comentário sobre a questão'),
+(254, 'Which antiviral', 4, 1, 11, NULL, NULL, 101, 'Este é um comentário sobre a questão'),
+(255, 'Which other antiviral', 7, NULL, 11, 254, 'Sim', 104, 'Este é um comentário sobre a questão'),
+(256, ' Questão fresquinha', 7, NULL, 8, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -6322,16 +7467,16 @@ CREATE TABLE `tb_questiontype` (
 --
 
 INSERT INTO `tb_questiontype` (`questionTypeID`, `description`, `comment`) VALUES
-(1, 'Boolean_Question', 'Questões do tipo Sim ou Não'),
-(2, 'Date question', 'Questões do tipo data'),
-(3, 'Laboratory question', 'Questões de exame de sangue'),
-(4, 'List question', 'Questões de lista com valores fechados '),
-(5, 'Number question', 'Questões númericas'),
-(6, 'PNNot_done_Question', 'Questões ....'),
-(7, 'Text_Question', 'Questões textuais'),
-(8, 'YNU_Question', 'Questões de lista com valores fechados'),
-(9, 'YNUN_Question', 'Questões ....'),
-(10, 'Ventilation question', 'Questões de ventilação de paciente');
+(1, 'Boolean_Question', 'Lista de respostas: Sim ou Não'),
+(2, 'Date question', 'Questão do tipo data com mês e ano'),
+(3, 'Laboratory question', 'Questão de exame de sangue'),
+(4, 'List question', 'Lista de respostas com valores predefinidos'),
+(5, 'Number question', 'Questão númerica'),
+(6, 'PNNot_done_Question', 'Lista de respostas: Não realizado, Negativo ou Positivo'),
+(7, 'Text_Question', 'Questão textual'),
+(8, 'YNU_Question', 'Lista de respostas: Sim, Não ou Desconhecido'),
+(9, 'YNUN_Question', 'Lista de respostas: Não informado, Não, Desconhecido ou Sim'),
+(10, 'Ventilation question', 'Questão de ventilação de paciente');
 
 -- --------------------------------------------------------
 
@@ -6409,63 +7554,10 @@ INSERT INTO `tb_userrole` (`userID`, `groupRoleID`, `hospitalUnitID`, `creationD
 (17, 6, 1, '2021-03-16 18:20:12', NULL),
 (18, 6, 1, '2021-03-16 18:24:26', NULL),
 (19, 6, 1, '2021-04-30 18:24:42', NULL),
-(20, 3, 1, '2022-03-09 17:09:59', NULL),
+(20, 7, 1, '2022-05-13 22:01:26', NULL),
 (21, 7, 1, '2021-10-15 08:33:36', NULL),
 (22, 6, 1, '2021-10-15 08:34:34', NULL),
-(20, 3, 2, '2022-03-09 17:09:59', '2022-03-09 17:09:01');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `teste`
---
-
-CREATE TABLE `teste` (
-  `id` int(11) NOT NULL,
-  `question` varchar(500) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
---
--- Dumping data for table `teste`
---
-
-INSERT INTO `teste` (`id`, `question`) VALUES
-(0, '243'),
-(1, '0'),
-(2, '0'),
-(3, '0'),
-(4, '0'),
-(5, '0'),
-(6, '243'),
-(7, '243'),
-(8, '0'),
-(9, '214'),
-(10, '214'),
-(11, '0'),
-(12, '0'),
-(13, '1'),
-(14, '11'),
-(15, '0'),
-(16, '0'),
-(17, '0'),
-(18, '0'),
-(20, 'grávida'),
-(21, 'GRávida'),
-(22, 'Número da reserva'),
-(24, 'oi'),
-(64, 'Tosse e pigarro'),
-(110, 'Grávida'),
-(114, 'ALT/TGPe'),
-(166, 'Paísa'),
-(167, 'Datinha de inscrição'),
-(171, 'Bilirrubina totale'),
-(226, 'Leucócitositos'),
-(242, 'Nomin da Instalaução'),
-(243, '0'),
-(244, '243'),
-(415, '220'),
-(416, '224'),
-(417, '225');
+(20, 7, 2, '2022-05-13 22:01:26', '2022-03-09 17:09:01');
 
 -- --------------------------------------------------------
 
@@ -6552,26 +7644,224 @@ CREATE TABLE `vw_questiontype_covidcrfrapid` (
 --
 
 --
+-- Indexes for table `tb_assessmentquestionnaire`
+--
+ALTER TABLE `tb_assessmentquestionnaire`
+  ADD PRIMARY KEY (`participantID`);
+
+--
+-- Indexes for table `tb_crfforms`
+--
+ALTER TABLE `tb_crfforms`
+  ADD PRIMARY KEY (`crfFormsID`);
+
+--
+-- Indexes for table `tb_crfformsstatus`
+--
+ALTER TABLE `tb_crfformsstatus`
+  ADD PRIMARY KEY (`crfformsStatusID`);
+
+--
+-- Indexes for table `tb_formrecord`
+--
+ALTER TABLE `tb_formrecord`
+  ADD PRIMARY KEY (`formRecordID`);
+
+--
+-- Indexes for table `tb_hospitalunit`
+--
+ALTER TABLE `tb_hospitalunit`
+  ADD PRIMARY KEY (`hospitalUnitID`);
+
+--
+-- Indexes for table `tb_language`
+--
+ALTER TABLE `tb_language`
+  ADD PRIMARY KEY (`languageID`);
+
+--
+-- Indexes for table `tb_listofvalues`
+--
+ALTER TABLE `tb_listofvalues`
+  ADD PRIMARY KEY (`listOfValuesID`);
+
+--
+-- Indexes for table `tb_listtype`
+--
+ALTER TABLE `tb_listtype`
+  ADD PRIMARY KEY (`listTypeID`);
+
+--
+-- Indexes for table `tb_ontology`
+--
+ALTER TABLE `tb_ontology`
+  ADD PRIMARY KEY (`ontologyID`);
+
+--
+-- Indexes for table `tb_participant`
+--
+ALTER TABLE `tb_participant`
+  ADD PRIMARY KEY (`participantID`);
+
+--
+-- Indexes for table `tb_questiongroup`
+--
+ALTER TABLE `tb_questiongroup`
+  ADD PRIMARY KEY (`questionGroupID`);
+
+--
 -- Indexes for table `tb_questionnaire`
 --
 ALTER TABLE `tb_questionnaire`
   ADD PRIMARY KEY (`questionnaireID`);
 
 --
--- Indexes for table `teste`
+-- Indexes for table `tb_questionnairepartsontology`
 --
-ALTER TABLE `teste`
-  ADD PRIMARY KEY (`id`);
+ALTER TABLE `tb_questionnairepartsontology`
+  ADD PRIMARY KEY (`ontologyID`);
+
+--
+-- Indexes for table `tb_questionnairepartstable`
+--
+ALTER TABLE `tb_questionnairepartstable`
+  ADD PRIMARY KEY (`questionnairePartsTableID`);
+
+--
+-- Indexes for table `tb_questionnairestatus`
+--
+ALTER TABLE `tb_questionnairestatus`
+  ADD PRIMARY KEY (`questionnaireStatusID`);
+
+--
+-- Indexes for table `tb_questions`
+--
+ALTER TABLE `tb_questions`
+  ADD PRIMARY KEY (`questionID`);
+
+--
+-- Indexes for table `tb_questiontype`
+--
+ALTER TABLE `tb_questiontype`
+  ADD PRIMARY KEY (`questionTypeID`);
+
+--
+-- Indexes for table `tb_user`
+--
+ALTER TABLE `tb_user`
+  ADD PRIMARY KEY (`userID`);
 
 --
 -- AUTO_INCREMENT for dumped tables
 --
 
 --
+-- AUTO_INCREMENT for table `tb_assessmentquestionnaire`
+--
+ALTER TABLE `tb_assessmentquestionnaire`
+  MODIFY `participantID` int(10) NOT NULL AUTO_INCREMENT COMMENT '(pt-br)  Chave estrangeira para a tabela tb_Patient.\r\n(en) Foreign key to the tb_Patient table.', AUTO_INCREMENT=208;
+
+--
+-- AUTO_INCREMENT for table `tb_crfforms`
+--
+ALTER TABLE `tb_crfforms`
+  MODIFY `crfFormsID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=600;
+
+--
+-- AUTO_INCREMENT for table `tb_crfformsstatus`
+--
+ALTER TABLE `tb_crfformsstatus`
+  MODIFY `crfformsStatusID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `tb_formrecord`
+--
+ALTER TABLE `tb_formrecord`
+  MODIFY `formRecordID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1297;
+
+--
+-- AUTO_INCREMENT for table `tb_hospitalunit`
+--
+ALTER TABLE `tb_hospitalunit`
+  MODIFY `hospitalUnitID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `tb_language`
+--
+ALTER TABLE `tb_language`
+  MODIFY `languageID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `tb_listofvalues`
+--
+ALTER TABLE `tb_listofvalues`
+  MODIFY `listOfValuesID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=308;
+
+--
+-- AUTO_INCREMENT for table `tb_listtype`
+--
+ALTER TABLE `tb_listtype`
+  MODIFY `listTypeID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+
+--
+-- AUTO_INCREMENT for table `tb_ontology`
+--
+ALTER TABLE `tb_ontology`
+  MODIFY `ontologyID` int(10) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tb_participant`
+--
+ALTER TABLE `tb_participant`
+  MODIFY `participantID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=208;
+
+--
+-- AUTO_INCREMENT for table `tb_questiongroup`
+--
+ALTER TABLE `tb_questiongroup`
+  MODIFY `questionGroupID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=235;
+
+--
 -- AUTO_INCREMENT for table `tb_questionnaire`
 --
 ALTER TABLE `tb_questionnaire`
   MODIFY `questionnaireID` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT for table `tb_questionnairepartsontology`
+--
+ALTER TABLE `tb_questionnairepartsontology`
+  MODIFY `ontologyID` int(10) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tb_questionnairepartstable`
+--
+ALTER TABLE `tb_questionnairepartstable`
+  MODIFY `questionnairePartsTableID` int(10) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tb_questionnairestatus`
+--
+ALTER TABLE `tb_questionnairestatus`
+  MODIFY `questionnaireStatusID` int(19) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `tb_questions`
+--
+ALTER TABLE `tb_questions`
+  MODIFY `questionID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=257;
+
+--
+-- AUTO_INCREMENT for table `tb_questiontype`
+--
+ALTER TABLE `tb_questiontype`
+  MODIFY `questionTypeID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT for table `tb_user`
+--
+ALTER TABLE `tb_user`
+  MODIFY `userID` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
