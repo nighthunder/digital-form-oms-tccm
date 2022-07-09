@@ -1,0 +1,25 @@
+.MuiButtonBase-root.form-group-button{
+    position: absolute !important;
+    bottom: 20px;
+    right: 20px;   
+}
+form.formNewQuestions{
+    width: auto !important;
+    padding: 0px 0px !important;
+}
+.TipoQuestao{
+    border: 1px solid #aaaaaa;
+    padding: 10px 10px 10px 10px; 
+    border-radius: 5px;
+    width: 100%;
+    overflow: hidden;
+    /* border-style: dashed; */
+}
+.SubordinacaoQuestao{
+    border: 1px solid #aaaaaa;
+    padding: 10px 10px 10px 10px; 
+    border-radius: 5px;
+    width: 100%;
+    overflow: hidden;
+    /* border-style: dashed; */
+}

@@ -28,6 +28,7 @@ import ReactDOM from 'react-dom'
 import ReactDOMServer from "react-dom/server";
 import { SingleSelect } from "react-select-material-ui";
 import FormControlLabel from '@mui/material/FormControlLabel';
+import { Container } from '../../components/ContainerNewQuestions';
 
 
 const useStyles = makeStyles({
@@ -64,40 +65,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
     const [questionComment, setQuestionComment] = useState('');
     const [questionListTypeComment, setQuestionListTypeComment] = useState('');
     const [questionGroupComment, setQuestionGroupComment] = useState('');
-    const [popupBodyText, setPopupBodyText] = useState('');
-
-    //select de tipo de questao
-    const [typeQuestions, setTypeQuestions] = useState();
-    const options = [
-        { label: "Questões do tipo Sim ou Não", value: "Boolean_Question" },
-        { label: "Questões do tipo data", value: "Date question" },
-        { label: "Questões de exame de sangue", value: "Laboratory question" },
-        { label: "Questões de lista com valores fechados", value: "List question" },
-        { label: "Questões númericas", value: "Number question" },
-        { label: "Questões PNNot_done", value: "PNNot_done_Question" },
-        { label: "Questões textuais", value: "Text_Question" },
-        { label: "Questões YNU", value: "YNU_Question" },
-        { label: "Questões YNUN", value: "YNUN_Question" },
-        { label: "Questões de ventilação de paciente", value: "Ventilation question" }
-    ];
-    const handleChangeOptionsTypeQuestions = value => {
-        setTypeQuestions[0]=value;
-        console.log(value);
-    };
-    var newQuestionType = false;
-    var existsQuestionType = true;
-    const handleChangeCheckboxQuestionType = (event) => {
-        newQuestionType=event.target.checked;
-        existsQuestionType=!event.target.checked;
-        if(event.target.checked){
-            document.querySelectorAll('.newTypeQuestion')[0].setAttribute("style","display:inline;");
-            document.querySelectorAll('.existsTypeQuestion')[0].setAttribute("style","display:none;");
-        }else{
-            document.querySelectorAll('.newTypeQuestion')[0].setAttribute("style","display:none;");
-            document.querySelectorAll('.existsTypeQuestion')[0].setAttribute("style","display:inline;");
-        }
-    }
-    
+    const [popupBodyText, setPopupBodyText] = useState('');    
 
     useEffect(() => {
         async function loadForm() {
@@ -112,23 +80,20 @@ function EditUnpublishedForm({logged, user, participantId}) {
         setHospitalName(user[location.state.hospitalIndex].hospitalName);
     }, [])
 
-    const [typeSubordinateQuestion, setTypeSubordinateQuestion] = useState();
+    //Options para os selects do form de novas questões
     const optionsSubordinateQuestion = []
     questions.map(
         (ref, index) => optionsSubordinateQuestion.push({ label: ref.dsc_qst, value: ref.qstId })
     )
-    const handleChangeOptionsTypeSubordinateQuestion = value => {
-        setTypeSubordinateQuestion[0]=value;
-        console.log(value);
-    };
-    const handleChangeCheckboxSubordinateQuestion = (event) => {
-        if(event.target.checked){
-            document.querySelectorAll('.subordinateQuestion')[0].setAttribute("style","display:inline;");
-        }else{
-            document.querySelectorAll('.subordinateQuestion')[0].setAttribute("style","display:none;");
-
-        }
-    }
+    const dictOption = [];
+    const options = [];
+    questions.forEach(element => {
+        if(!dictOption.includes(element.qst_type)){
+            console.log('element.qst_type', element.qst_type);
+            options.push({ label: element.qst_type_comment + " - " + element.qst_type, value: element.qst_type })
+            dictOption.push(element.qst_type)
+        }        
+    });
 
     function handleChange(e) {
         const target = e.target;
@@ -205,23 +170,11 @@ function EditUnpublishedForm({logged, user, participantId}) {
         //setQuestionListTypeComment(`rere \n asdssss`);
         setOpen(true);
     };
-    // const handleInfo = (e) => {
-    //     console.log("e", e);
-    //     setOpen(false);
-    //     setPopupTitle("[Atenção] Informações sobre a edição");
-    //     setPopupBodyText("Neste modo de edição só é possível reodernar questões e agrupamentos ou alterar suas descrições. Para ser possível fazer mais alterações é necessário criar uma pesquisa derivada.");
-    //     setQuestionComment("");
-    //     setQuestionTypeComment("");
-    //     setQuestionListTypeComment("");
-    //     setQuestionGroupComment("");
-    //     setOpen(true);
-    // };
-
     const handleInfo = (e) => {
         console.log("e", e);
         setOpen(false);
-        setPopupTitle("Adicione uma nova pergunta");
-        setPopupBodyText("Configure a sua nova pergunta.");
+        setPopupTitle("[Atenção] Informações sobre a edição");
+        setPopupBodyText("Neste modo de edição só é possível reodernar questões e agrupamentos ou alterar suas descrições. Para ser possível fazer mais alterações é necessário criar uma pesquisa derivada.");
         setQuestionComment("");
         setQuestionTypeComment("");
         setQuestionListTypeComment("");
@@ -445,41 +398,15 @@ function EditUnpublishedForm({logged, user, participantId}) {
         return <p className="error error2">{props.formOk}</p>
     }
 
-    // const [newGroup, setNewGroup] = useState();
-
-    // function NewGroup() {
-        
-    //     return (
-    //         <div className="groupQuestion">
-    //             <div className="qst qst2 qst3">
-    //                 <div className="qstBodyGroup qstIconArea">
-    //                     <PlusOne className="Icon plusIcon" onClick={() => handleClickNewGroup("group")}></PlusOne>
-    //                     {/* <PlusOne className="Icon plusIcon"></PlusOne> */}
-    //                 </div>
-    //             </div>
-    //             {/* <div className="groupHeader" id={question.qstId}> */}
-    //             <div className="groupHeader" >
-    //                 {/* <TextField className="inputQst inputQst3" name={String(question.qstGroupId)} value={qstgroups[question.qstGroupId] ? qstgroups[question.qstGroupId] : question.dsc_qst_grp } onChange={handleChangeGroups}>{question.dsc_qst_grp}</TextField> */}
-    //                 <TextField className="inputQst inputQst3" name="teste" placeholder="Novo Grupo" value="">Novo Grupo</TextField>
-    //                 {/* <Edit className="Icon ediIcon" onClick={handleInfo}></Edit> */}
-    //                 <Edit className="Icon ediIcon"></Edit>
-    //                 <QuestionMark className="Icon qstIcon"></QuestionMark>
-    //                 {/* <QuestionMark className="Icon qstIcon" onClick={() => handleClickOpen(question, "group")}></QuestionMark> */}
-    //                 <VisibilityIcon className="Icon visIcon" ></VisibilityIcon>
-    //                 {/* <VisibilityIcon className="Icon visIcon"  onClick={() => handleToogle(question.dsc_qst_grp)}></VisibilityIcon> */}
-    //                 <p className="questionType groupType">Grupo de questões</p>
-    //             </div>
-    //             <div className="qst qst2">
-    //                 <div className="qstBody qstIconArea">
-    //                     <PlusOne className="Icon plusIcon" onClick={handleInfo}></PlusOne>
-    //                 </div>
-    //             </div>
-    //         </div>
-    //     );
-        
-    // }
-
-    async function handleSaveNewQuestion(id, descricaoPergunta, selectExistsTypeQuestion) {
+    async function handleSaveNewQuestion(
+        idQuestion, 
+        descricaoPergunta, 
+        selectExistsTypeQuestion,
+        tipoQuestao,
+        valoresRespostas,
+        selectSubordinateQuestion,
+        valoresRespostasSubodinacao
+    ) {
 
         let lastGroupId = await api.get('/formgroupid/');
         lastGroupId = parseInt(lastGroupId.data[0].msgRetorno);
@@ -487,8 +414,8 @@ function EditUnpublishedForm({logged, user, participantId}) {
         let lastQuestionId = await api.get('/formqstid/');
         lastQuestionId = parseInt(lastQuestionId.data[0].msgRetorno);
 
-        let myObj = questions.find(obj => obj.qstId === id);
-        let myObjIndex = questions.findIndex(obj => obj.qstId === id);
+        let myObj = questions.find(obj => parseInt(obj.qstId) === parseInt(idQuestion));
+        let myObjIndex = questions.findIndex(obj => parseInt(obj.qstId) === parseInt(idQuestion));
         console.log("myObjIndex", myObjIndex);
 
         let left = questions.slice(0, myObjIndex)
@@ -504,9 +431,19 @@ function EditUnpublishedForm({logged, user, participantId}) {
         objCopy.dsc_qst = descricaoPergunta
         objCopy.qstId = lastQuestionId + contI
         objCopy.qstOrder = ""
-        objCopy.qst_type = selectExistsTypeQuestion
-        // objCopy.rsp_pad = null
-        // objCopy.rsp_padId = null
+        if(selectExistsTypeQuestion){
+            objCopy.qst_type = selectExistsTypeQuestion
+        }
+        if(tipoQuestao){
+            objCopy.qst_type = tipoQuestao
+            objCopy.qst_type_comment = "Sem comentário ainda"
+            objCopy.rsp_pad = valoresRespostas
+            objCopy.rsp_padId = "Sem id para respostas ainda"
+        }
+        if(selectSubordinateQuestion){
+            objCopy.sub_qst = selectSubordinateQuestion
+            objCopy.sub_qst_values = valoresRespostasSubodinacao
+        }
 
         left.push(objCopy);
         console.log("left", left);
@@ -514,8 +451,6 @@ function EditUnpublishedForm({logged, user, participantId}) {
         console.log("mergeArrays", mergeArrays);
 
         setQuestions(mergeArrays)
-        setOpen(false);
-        
     }
     function handleClickNewQuestion(id) {
 
@@ -659,6 +594,38 @@ function EditUnpublishedForm({logged, user, participantId}) {
         // //         this.setState({ emails: [...emails, input]});
     }
 
+    // Submit do formulário de criação de novas questões 
+    const onSubmit = (event) => {
+        event.preventDefault(event);
+        var idQuestion = event.target.idQuestion.value
+        var descricaoPergunta = event.target.descricaoPergunta.value
+        try {
+            var selectExistsTypeQuestion = event.target.selectExistsTypeQuestion.value
+            var tipoQuestao = null
+            var valoresRespostas = null
+        } catch (error) {
+            var selectExistsTypeQuestion = null
+            var tipoQuestao = event.target.tipoQuestao.value
+            var valoresRespostas = event.target.valoresRespostas.value
+        }
+        try {
+            var selectSubordinateQuestion = event.target.selectSubordinateQuestion.value
+            var valoresRespostasSubodinacao = event.target.valoresRespostasSubodinacao.value
+        } catch (error) {
+            var selectSubordinateQuestion = ""
+            var valoresRespostasSubodinacao = null
+        }
+        handleSaveNewQuestion(
+            idQuestion, 
+            descricaoPergunta, 
+            selectExistsTypeQuestion,
+            tipoQuestao,
+            valoresRespostas,
+            selectSubordinateQuestion,
+            valoresRespostasSubodinacao
+        )
+    };
+
     return (
         <main className="container">
             <div>
@@ -689,12 +656,13 @@ function EditUnpublishedForm({logged, user, participantId}) {
                                 <div className="groupQuestion" id={question.qstId} value={question.qstGroupId}>
                                     <div className="qst qst2 qst3">
                                         <div className="qstBodyGroup qstIconArea">
-                                            <PlusOne className="Icon plusIcon" onClick={() => handleClickNewGroup(question.qstId)}></PlusOne>
+                                            {/* <PlusOne className="Icon plusIcon" onClick={() => handleClickNewGroup(question.qstId)}></PlusOne> */}
+                                            <Container onSubmit={onSubmit} optionsSubordinateQuestion={optionsSubordinateQuestion} options={options} idQuestion={question.qstId}/>
                                         </div>
                                     </div>
                                     <div className="groupHeader" id={question.qstId}>
                                         <TextField className="inputQst inputQst3" name={String(question.qstGroupId)} value={qstgroups[question.qstGroupId] ? qstgroups[question.qstGroupId] : question.dsc_qst_grp } onChange={handleChangeGroups}>{question.dsc_qst_grp}</TextField>
-                                        {/* <Edit className="Icon ediIcon" onClick={handleInfo}></Edit> */}
+                                        <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
                                         <QuestionMark className="Icon qstIcon" onClick={() => handleClickOpen(question, "group")}></QuestionMark>
                                         <VisibilityIcon className="Icon visIcon"  onClick={() => handleToogle(question.dsc_qst_grp)}></VisibilityIcon>
                                         <p className="questionType groupType">Grupo de questões</p>
@@ -705,7 +673,8 @@ function EditUnpublishedForm({logged, user, participantId}) {
                                 <div className="qst qst2" key={question.qstId} >
                                     <div className="qst qst2">
                                         <div className="qstBody qstIconArea">
-                                            <PlusOne className="Icon plusIcon" onClick={() => handleClickNewQuestion(question.qstId)}></PlusOne>
+                                            {/* <PlusOne className="Icon plusIcon" onClick={() => handleClickNewQuestion(question.qstId)}></PlusOne> */}
+                                            <Container onSubmit={onSubmit} optionsSubordinateQuestion={optionsSubordinateQuestion} options={options} idQuestion={question.qstId}/>
                                         </div>
                                     </div>
                                     <div className="qstBody">
@@ -714,7 +683,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                                     { (question.qst_type === "Date question") && 
                                     <div>
                                         <InputLabel className="qstLabel">Questão</InputLabel>
-                                        {/* <Edit className="Icon ediIcon" onClick={handleInfo}></Edit> */}
+                                        <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
                                         <QuestionMark className="Icon qstIcon" onClick={() => handleClickOpen(question, "question")}></QuestionMark>
                                         <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
                                         <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
@@ -734,7 +703,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                                     <div>
                                     {/*<TextField  type="number" name={String(question.qstId)} label={question.dsc_qst} onChange={handleChange} value={form[question.qstId] ? form[question.qstId] : question.dsc_qst } />*/}
                                     <InputLabel className="qstLabel">Questão:</InputLabel>
-                                    {/* <Edit className="Icon ediIcon" onClick={handleInfo}></Edit> */}
+                                    <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
                                     <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
                                     <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
                                     <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
@@ -753,7 +722,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                                     { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length < 6 ) &&
                                     <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
                                         <InputLabel className="qstLabel">Questão:</InputLabel>
-                                        {/* <Edit className="Icon ediIcon" onClick={handleInfo}></Edit> */}
+                                        <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
                                         <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
                                         <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
                                         <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
@@ -778,7 +747,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                                     { (question.qst_type === "List question" || question.qst_type === "YNU_Question" || question.qst_type === "YNUN_Question") && ( (question.rsp_pad.split(',')).length >= 6 ) &&
                                     <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
                                         <InputLabel className="qstLabel">Questão:</InputLabel>
-                                        {/* <Edit className="Icon ediIcon" onClick={handleInfo}></Edit> */}
+                                        <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
                                         <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
                                         <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
                                         <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
@@ -803,7 +772,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                                     { (question.qst_type === "Text_Question" || question.qst_type === "Laboratory question" || question.qst_type === "Ventilation question") && 
                                     <div>
                                     <InputLabel className="qstLabel">Questão:</InputLabel>
-                                    {/* <Edit className="Icon ediIcon" onClick={handleInfo}></Edit> */}
+                                    <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
                                     <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
                                     <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
                                     <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
@@ -822,7 +791,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                                     { (question.qst_type === "Boolean_Question") && 
                                     <div className="MuiTextField-root  MuiTextField-root2 MuiForm">
                                         <InputLabel className="qstLabel">Questão:</InputLabel>
-                                        {/* <Edit className="Icon ediIcon" onClick={handleInfo}></Edit> */}
+                                        <Edit className="Icon ediIcon" onClick={handleInfo}></Edit>
                                         <QuestionMark className="Icon qstIcon" onClick={ ( ) => handleClickOpen(question, "question") }></QuestionMark>
                                         <ArrowUpwardIcon className="ArrowUp2 Icon" onClick={() => handleClickUpDown(index, "UP", question)} />
                                         <ArrowDownwardIcon className="ArrowUp1 Icon" onClick={() => handleClickUpDown(index, "DOWN", question)} />
@@ -852,10 +821,10 @@ function EditUnpublishedForm({logged, user, participantId}) {
                         { formOk?   <FormOk formOk={formOk}></FormOk> : ''  } 
                         {/* <Button variant="contained" type="submit" color="primary">Salvar</Button> */}
                         {/* <Button onClick={handleReorder} type="submit" variant="contained" color="primary">Salvar</Button> */}
-                        <Button onClick={handleReorder} type="submit" variant="contained" color="primary">Salvar</Button>
+                        <Button onClick={handleReorder} variant="contained" color="primary">Salvar</Button>
                     </div>
                 </form>
-                {/* <Dialog key={Math.random()}
+                <Dialog key={Math.random()}
                             open={open}
                             onClose={handleClose}
                             aria-labelledby="alert-dialog-title"
@@ -880,78 +849,6 @@ function EditUnpublishedForm({logged, user, participantId}) {
                             <DialogActions>
                                 <Button onClick={handleClose}>Fechar [x]</Button>
                             </DialogActions>
-                </Dialog> */}
-                <Dialog key={Math.random()}
-                    open={open}
-                    onClose={handleClose}
-                    aria-labelledby="alert-dialog-title"
-                    aria-describedby="alert-dialog-description"
-                    fullWidth
-                    maxWidth='lg' 
-                    >
-                    <DialogTitle id="alert-dialog-title">
-                        {popupTitle}
-                    </DialogTitle>
-                    <DialogContent style={{height:'100vh'}}>
-                        <DialogContentText id="alert-dialog-description">
-                        <b>{popupBodyText}</b>
-                        <br/>
-                        <br/>
-                        <NewInput descriptionInput={"Descrição da Pergunta"} id={"descricaoPergunta"}/>
-                        <br/>
-                        <br/>
-                        <p>Selecione um tipo de questão:</p>
-                        <FormControlLabel
-                            control={
-                            <Checkbox name="newQuestionType" onChange={handleChangeCheckboxQuestionType} />
-                            }
-                            label="Criar novo tipo de lista"
-                        />
-                        <div className="newTypeQuestion">
-                            <NewInput descriptionInput={"Tipo novo de questão"} id={"tipoQuestao"}/>
-                            <br/>
-                            <br/>
-                            <NewInput descriptionInput={"Valores de resposta do novo tipo (separados por vírgula)"} id={"valoresRespostas"}/>
-                        </div>
-                        <div className="existsTypeQuestion">
-                            <ModelSelectType
-                                id={"selectExistsTypeQuestion"}
-                                placeHolder={"Selecione um tipo de questão existente"}
-                                options={options}
-                            />
-                        </div>
-                        <br/>
-                        <br/>
-                        <FormControlLabel
-                            control={
-                            <Checkbox name="subordinateQuestion" onChange={handleChangeCheckboxSubordinateQuestion} />
-                            }
-                            label="Adicionar subordinação a essa questão"
-                        />
-                        <div className="subordinateQuestion">
-                            <ModelSelectType
-                                id={"selectSubordinateQuestion"}
-                                placeHolder={"Selecione a questão a qual será subordinada"}
-                                options={optionsSubordinateQuestion}
-                            />
-                            {/* <SingleSelect
-                                id="selectSubordinateQuestion"
-                                value={typeSubordinateQuestion}
-                                placeholder="Selecione a questão a qual será subordinada"
-                                options={optionsSubordinateQuestion}
-                                onChange={handleChangeOptionsTypeSubordinateQuestion}
-                            /> */}
-                            <br/>
-                            <br/>
-                            <p>Valores de resposta para subordinação:</p>
-                            <NewInput descriptionInput={""} id={"valoresRespostasSubodinacao"}/>
-                        </div>
-                        </DialogContentText>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button className="divSaveClickQuestion">Salvar</Button>
-                        <Button onClick={handleClose}>Fechar</Button>
-                    </DialogActions>
                 </Dialog>
                 <aside> 
                     <p className="sidebarTitle">Menu de navegação</p>

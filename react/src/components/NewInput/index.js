@@ -21,8 +21,10 @@ class NewInput extends React.Component {
             id={this.props.id} 
             label={this.props.descriptionInput} 
             variant="outlined" 
+            size="small"
             value={this.state.value}
-            onChange={this.handleChange} 
+            onChange={this.handleChange}
+            required="required"
         />
       );
     }

@@ -1,31 +1,6 @@
 import React from 'react';
 import './styles.css';
-import { SingleSelect } from "react-select-material-ui";
-// import Select from '@mui/material/Select';
-import Select from 'react-select';
-
 class ModelSelectType extends React.Component {
-  // state = {
-  //   selectedOption: null,
-  // };
-  // handleChange = (selectedOption) => {
-  //   this.setState({ selectedOption }, () =>
-  //     console.log(`Option selected:`, this.state.selectedOption)
-  //   );
-  // };
-  // render() {
-  //   const { selectedOption } = this.state;
-
-  //   return (
-  //     <Select
-  //           id={this.props.id}
-  //           placeholder={this.props.placeHolder} 
-  //           options={this.props.options} 
-  //           value={selectedOption}
-  //           onChange={this.handleChange} 
-  //       />
-  //   );
-  // }
 
   constructor(props) {
     super(props);
@@ -43,18 +18,18 @@ class ModelSelectType extends React.Component {
     return (
       <div id="App">
         <div className="select-container">
-          <SingleSelect
-            id={this.props.id}
-            value={this.state.value}
-            placeholder={this.props.placeHolder}
-            options={this.props.options}
-            onChange={this.handleChange}
-          />
-          {/* <select value={this.state.value} onChange={this.handleChange} placeholder={this.props.placeHolder} id={this.props.id}>
+          <select 
+            value={this.state.value} 
+            onChange={this.handleChange} 
+            placeholder={this.props.placeHolder} 
+            id={this.props.id} 
+            className="select-container-options"
+            required="required"
+          >
             {this.props.options.map((option) => (
               <option value={option.value}>{option.label}</option>
             ))}
-          </select> */}
+          </select>
         </div>
       </div>
     );
