@@ -142,6 +142,25 @@ class FormStructureController extends Controller
 
     }
 
+    public function putQstListType(Request $request) // Altera associação entre tipos e questões
+    {
+        try {
+
+          $respostas = str_replace("{", "", $request->stringqstlisttypes);
+          $respostas = str_replace("}", "", $respostas);
+          $respostas = str_replace('"', "", $respostas);
+
+          $query_msg = DB::select("CALL putQstListType('{$respostas}',@p_msg_retorno)");
+        
+          return response()->json($query_msg);
+
+       } catch (Exception $e) {
+         return response()->json($e, 500);
+       }
+
+    }
+
+
     public function postQstListOfValues(Request $request) // Altera associação entre tipos e questões
     {
         try {
