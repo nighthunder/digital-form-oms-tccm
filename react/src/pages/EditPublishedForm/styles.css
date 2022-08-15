@@ -120,23 +120,28 @@ aside{
     left: 0;
     top: 0px;
     background: #fff;
-    margin-top: 20px;
-    margin: 60px 10px 10px;
-    width: 350px;
-	margin-top: 90px;
-	border-radius: 10px;
-	box-shadow: 3px 2px 1px #d7d0d0;
+    /* margin-top: 20px; */
+    /* margin: 60px 10px 10px; */
+    /* width: 300px; */
+	max-width: 300px;
+	/* margin-top: 90px; */
+	top: 50%;
+	transform: translateY(-50%); 
+	border-bottom-right-radius: 10px;
+	border-top-right-radius: 10px;
+	/* box-shadow: 3px 2px 1px #d7d0d0; */
 }
 .anchor{
 	padding: 0px 10px;
 	text-align: left;
 }
 .anchorLink{
-	font-size: 0.90rem;
+	font-size: 1.00rem;
     color:  #373737;
-	background: #ffd7d5;
-	padding: 10px 10px;
-	border-radius: 3px;
+	background: #f7e0e0;
+	padding: 8px 8px;
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
 	cursor: pointer;
 	margin: 10px;
 }
@@ -147,10 +152,12 @@ aside{
 	color: #fff;
 	padding-bottom: 15px;
 	border-bottom: 0.5px solid;
-	font-size: 14px;
+	font-size: 16px;
 	background: #0052d2;
-	border-radius:5px;
+	/* border-radius:5px; */
+	border-top-right-radius: 10px;
 	letter-spacing: 0.04em;
+	/* font-weight: bold */
 }
 .scrollchorlink{
 	text-decoration: none;

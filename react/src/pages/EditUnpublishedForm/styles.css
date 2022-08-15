@@ -13,3 +13,9 @@ main.container.unpublished{
 .subordinateQuestion{
 	display: none;
 }
+.MuiDialogTitle-root+.css-ypiqx9-MuiDialogContent-root {
+    padding-top: 5px !important;
+}
+.descricaoNovoGrupo{
+	margin-bottom: 25px;
+}
