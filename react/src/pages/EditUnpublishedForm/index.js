@@ -68,6 +68,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
     const [popupBodyText, setPopupBodyText] = useState('');   
     
     const [idQuestion, setIdQuestion] = useState()
+    const [openNewQuestion, setOpenNewQuestion] = React.useState(false);
 
     useEffect(() => {
         async function loadForm() {
@@ -477,17 +478,22 @@ function EditUnpublishedForm({logged, user, participantId}) {
 
         setQuestions(mergeArrays)
     }
+
+    const handleCloseNewQuestion = () => {
+        setOpenNewQuestion(false);
+    };
+
     function handleClickNewQuestion(id, descricaoNovoGrupo) {
         setDescricaoNovoGrupoShow(descricaoNovoGrupo)
         setIdQuestion(id);
-        setOpen(false);
+        setOpenNewQuestion(false);
         setPopupTitle("Adicione uma nova pergunta");
         setPopupBodyText("Configure a sua nova pergunta.");
         setQuestionComment("");
         setQuestionTypeComment("");
         setQuestionListTypeComment("");
         setQuestionGroupComment("");
-        setOpen(true);
+        setOpenNewQuestion(true);
 
     }
 
@@ -527,7 +533,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
             selectSubordinateQuestion,
             valoresRespostasSubodinacao
         )
-        setOpen(false)
+        setOpenNewQuestion(false)
     };
 
     const [descricaoNovoGrupoShow, setDescricaoNovoGrupoShow] = React.useState(false);
@@ -747,7 +753,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                         <Button onClick={handleReorder} variant="contained" color="primary">Salvar</Button>
                     </div>
                 </form>
-                {/* <Dialog key={Math.random()}
+                <Dialog key={Math.random()}
                             open={open}
                             onClose={handleClose}
                             aria-labelledby="alert-dialog-title"
@@ -758,7 +764,6 @@ function EditUnpublishedForm({logged, user, participantId}) {
                             </DialogTitle>
                             <DialogContent>
                                 <DialogContentText id="alert-dialog-description">
-                                <Container onSubmit={onSubmit} optionsSubordinateQuestion={optionsSubordinateQuestion} options={options}/>
                                 {popupBodyText}
                                 <b>{questionComment}</b><br/>
                                 <b>{questionGroupComment}</b><br/>
@@ -773,11 +778,11 @@ function EditUnpublishedForm({logged, user, participantId}) {
                             <DialogActions>
                                 <Button onClick={handleClose}>Fechar [x]</Button>
                             </DialogActions>
-                </Dialog> */}
+                </Dialog>
 
                 <Dialog key={Math.random()}
-                            open={open}
-                            onClose={handleClose}
+                            open={openNewQuestion}
+                            onClose={handleCloseNewQuestion}
                             aria-labelledby="alert-dialog-title"
                             aria-describedby="alert-dialog-description"
                             PaperProps={{
@@ -864,7 +869,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                                         <Button className="form-group-button" variant="contained" color="primary" type="submit">
                                             Adicionar
                                         </Button>
-                                        <Button className="form-group-button" variant="contained" color="danger" onClick={handleClose}>Fechar</Button>
+                                        <Button className="form-group-button" variant="contained" color="danger" onClick={handleCloseNewQuestion}>Fechar</Button>
                                     </div>
                                 </DialogActions>
                             </form>

@@ -124,9 +124,9 @@ aside{
     /* margin: 60px 10px 10px; */
     /* width: 300px; */
 	max-width: 300px;
-	/* margin-top: 90px; */
-	top: 50%;
-	transform: translateY(-50%); 
+	margin-top: 90px;
+	/* top: 50%;
+	transform: translateY(-50%);  */
 	border-bottom-right-radius: 10px;
 	border-top-right-radius: 10px;
 	/* box-shadow: 3px 2px 1px #d7d0d0; */
@@ -136,14 +136,14 @@ aside{
 	text-align: left;
 }
 .anchorLink{
-	font-size: 1.00rem;
-    color:  #373737;
+	font-size: 0.9rem;
+    color:  #000000;
 	background: #f7e0e0;
 	padding: 8px 8px;
 	border-top-right-radius: 5px;
 	border-bottom-right-radius: 5px;
 	cursor: pointer;
-	margin: 10px;
+	margin: 7px;
 }
 .sidebarTitle{
 	text-align: center;
