@@ -486,6 +486,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
             objCopy.rsp_pad = valoresRespostas
             objCopy.rsp_padId = "Sem id para respostas ainda"
         }else{
+            let id_q = {}
             // questionListType.push({id_q:null})
             setQuestionListType(questionListType => [...questionListType,id_q] );
 
