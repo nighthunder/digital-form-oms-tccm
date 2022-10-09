@@ -456,8 +456,6 @@ function EditUnpublishedForm({logged, user, participantId}) {
         objCopy.qstId = lastQuestionId + contI
         objCopy.qstOrder = ""
 
-        var id_q = lastQuestionId + contI
-
         if(selectExistsTypeQuestion){
             objCopy.qst_type = selectExistsTypeQuestion
             if(selectExistsTypeQuestion == "YNU_Question"){
@@ -474,11 +472,14 @@ function EditUnpublishedForm({logged, user, participantId}) {
             }
         }
         if(tipoQuestao){
+            let id_q = {}
+            id_q[lastQuestionId + contI] = 'TODO' // não tenho o id do tipo da questão
+
             setNewListType(newListType => [...newListType,id_q] );
             setQuestionListType(questionListType => [...questionListType,id_q] );
 
             // newListType.push({'TODO':tipoQuestao}) // não tenho o id do tipo da questão
-            // questionListType.push({id_q:'TODO'}) // não tenho o id do tipo da questão
+            // questionListType.push({id_q:'TODO'}) 
 
             objCopy.qst_type = tipoQuestao
             objCopy.qst_type_comment = "Sem comentário ainda"
