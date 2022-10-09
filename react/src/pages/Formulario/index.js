@@ -121,7 +121,7 @@ function Formulario({logged, user, participantId}) {
     // test one of the marked value matches the acepted answers
     function handleMultiSubordinated(selectedValue, sub_qst_values){ 
 
-        let validAnswers = sub_qst_values.split(",")
+        let validAnswers = sub_qst_values.split(";")
         //console.log("Respostas",validAnswers)
         //console.log("SelectedValue",selectedValue)
         let aux = false;
