@@ -230,7 +230,7 @@ class FormStructureController extends Controller
        }
     }
 
-    public function getLastInsertedGroupID(Request $request) // Cria uma lista de novos grupos
+    public function getLastInsertedGroupID(Request $request) 
     {
         try {
 
@@ -243,10 +243,34 @@ class FormStructureController extends Controller
        }
     }
 
-    public function getLastInsertedQstID(Request $request) // Cria uma lista de novos grupos
+    public function getLastInsertedQstID(Request $request) 
     {
         try {
           $query_msg = DB::select("CALL getLastInsertedQstID(@p_msg_retorno)");
+        
+          return response()->json($query_msg);
+
+       } catch (Exception $e) {
+         return response()->json($e, 500);
+       }
+    }
+
+    public function getLastInsertedListTypeID(Request $request) 
+    {
+        try {
+          $query_msg = DB::select("CALL getLastInsertedListTypeID(@p_msg_retorno)");
+        
+          return response()->json($query_msg);
+
+       } catch (Exception $e) {
+         return response()->json($e, 500);
+       }
+    }
+
+    public function getLastInsertedListOfValuesID(Request $request) 
+    {
+        try {
+          $query_msg = DB::select("CALL getLastInsertedListOfValuesID(@p_msg_retorno)");
         
           return response()->json($query_msg);
 

@@ -58,13 +58,15 @@ Route::group(['middleware' => 'cors:api'], function() {
     Route::put('formqst/', [FormStructureController::class, 'postQst']);
     Route::put('formqstgroup/', [FormStructureController::class, 'putQstGroup']);
     Route::put('formqsttype/', [FormStructureController::class, 'putQstType']);
-    Route::put('formqstlisttype/', [FormStructureController::class, 'putQstListType']);
+    Route::put('formqstlisttype/', [FormStructureController::class, 'putQstListType']); // 6)
     Route::post('formqstlisttype/', [FormStructureController::class, 'postQstListType']);
     Route::post('formqstlistofvalues/', [FormStructureController::class, 'postQstListOfValues']);
-    Route::put('formqstlisttypelistofvalues/', [FormStructureController::class, 'putQstListTypeListOfValues']);
-    Route::put('formqstsubordinateto/', [FormStructureController::class, 'putQstSubordinateTo']);
-    Route::put('formqstsubordinatevalues/', [FormStructureController::class, 'putQstSubordinateValues']);
+    Route::put('formqstlisttypelistofvalues/', [FormStructureController::class, 'putQstListTypeListOfValues']); //5)
+    Route::put('formqstsubordinateto/', [FormStructureController::class, 'putQstSubordinateTo']); // 7)
+    Route::put('formqstsubordinatevalues/', [FormStructureController::class, 'putQstSubordinateValues']);  // 8)
     Route::get('formgroupid/', [FormStructureController::class, 'getLastInsertedGroupID']);
+    Route::get('formlisttypeid/', [FormStructureController::class, 'getLastInsertedListTypeID']);
+    Route::get('formlistofvaluesid/', [FormStructureController::class, 'getLastInsertedListOfValuesID']);
     Route::get('formqstid/', [FormStructureController::class, 'getLastInsertedQstID']);
 
     Route::get('checkpublication/{id}', [FormStructureController::class, 'checkQuestionnairePublicationRules']); //verifica se o questionário tem condições de ser publicado
