@@ -70,6 +70,17 @@ function EditUnpublishedForm({logged, user, participantId}) {
     const [idQuestion, setIdQuestion] = useState()
     const [openNewQuestion, setOpenNewQuestion] = React.useState(false);
 
+    const [newListType, setNewListType] = useState([]) // novos tipos de lista - Formato: [id_listtype: descricao]
+    const [questionListType, setQuestionListType] = useState([]) // questões/tipo de lista - Formato: [id_questao: id_listtype]
+    // const newListType = []; // novos tipos de lista - Formato: [id_listtype: descricao]
+    // const questionListType = []; // questões/tipo de lista - Formato: [id_questao: id_listtype]
+    const [answerListType, setAnswerListType] = useState([]) // respostas dos tipos de lista - [id_listofvalues: descricao]
+    const [answerListType2, setAnswerListType2] = useState([]) // respostas dos tipos de lista - Formato: [id_listofvalues: id_listtype]
+    const [listSubordinate, setListSubordinate] = useState([]) // Formato: [id_questaosubordinada: id_questaosubordinante]
+    const [listValueSubordinate, setListValueSubordinate] = useState([]) // Formato: [id_daquestao: id_dovalor1, id_dovalor2, id_dovalor3]
+
+
+
     useEffect(() => {
         async function loadForm() {
             const response = await api.get('/form/' + location.state.modulo);
@@ -254,7 +265,9 @@ function EditUnpublishedForm({logged, user, participantId}) {
         console.log("listQuestions", listQuestions);
         console.log("listGroupsQuestions", listGroupsQuestions);
         console.log("listGroups", listGroups);
-        // console.log("qstsorder", qstsorder);
+        console.log("qstsorder", qstsorder);
+        console.log("newListType", newListType);
+        console.log("questionListType", questionListType);
         // console.log("location.state.description", location);
         // console.log("location.state.questionnaireDescription", location.state.questionnaireDescription);
     };
@@ -442,6 +455,9 @@ function EditUnpublishedForm({logged, user, participantId}) {
         objCopy.dsc_qst = descricaoPergunta
         objCopy.qstId = lastQuestionId + contI
         objCopy.qstOrder = ""
+
+        var id_q = lastQuestionId + contI
+
         if(selectExistsTypeQuestion){
             objCopy.qst_type = selectExistsTypeQuestion
             if(selectExistsTypeQuestion == "YNU_Question"){
@@ -458,11 +474,23 @@ function EditUnpublishedForm({logged, user, participantId}) {
             }
         }
         if(tipoQuestao){
+            setNewListType(newListType => [...newListType,id_q] );
+            setQuestionListType(questionListType => [...questionListType,id_q] );
+
+            // newListType.push({'TODO':tipoQuestao}) // não tenho o id do tipo da questão
+            // questionListType.push({id_q:'TODO'}) // não tenho o id do tipo da questão
+
             objCopy.qst_type = tipoQuestao
             objCopy.qst_type_comment = "Sem comentário ainda"
             objCopy.rsp_pad = valoresRespostas
             objCopy.rsp_padId = "Sem id para respostas ainda"
+        }else{
+            // questionListType.push({id_q:null})
+            setQuestionListType(questionListType => [...questionListType,id_q] );
+
         }
+        console.log("newListType", newListType);
+        console.log("questionListType", questionListType);
         if(selectSubordinateQuestion){
             objCopy.sub_qst = selectSubordinateQuestion
             objCopy.sub_qst_values = valoresRespostasSubodinacao
