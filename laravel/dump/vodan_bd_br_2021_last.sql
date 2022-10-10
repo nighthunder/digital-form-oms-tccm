@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 10-Out-2022 às 00:08
+-- Tempo de geração: 10-Out-2022 às 23:25
 -- Versão do servidor: 10.4.22-MariaDB
 -- versão do PHP: 7.4.27
 
@@ -202,6 +202,32 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `getcrfForms` (IN `p_questionnaireID
   from tb_crfforms t1, tb_questionnaire t2
   where t1.questionnaireID = t2.questionnaireID and
         t2.questionnaireID = p_questionnaireID;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getLastInsertedCrfformsID` (OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+#========================================================================================================================
+#== Procedure criada para obter o último ID inserido na tabela tb_crfformsid
+#== Criada em 10 de outubro de 2022
+#========================================================================================================================
+
+DECLARE v_nextid integer; 
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
+    BEGIN
+		ROLLBACK;
+        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
+    END;
+    
+sp:BEGIN		
+    
+	SET v_nextid = (SELECT MAX(crfFormsID) + 1 FROM tb_crfforms);
+
+    SET p_msg_retorno = v_nextid;
+	    
+END;
+
+select p_msg_retorno as msgRetorno from DUAL;
+		
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `getLastInsertedGroupID` (OUT `p_msg_retorno` VARCHAR(500))  BEGIN
