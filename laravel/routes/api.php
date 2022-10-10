@@ -65,6 +65,7 @@ Route::group(['middleware' => 'cors:api'], function() {
     Route::put('formqstsubordinateto/', [FormStructureController::class, 'putQstSubordinateTo']); // 7)
     Route::put('formqstsubordinatevalues/', [FormStructureController::class, 'putQstSubordinateValues']);  // 8)
     Route::get('formgroupid/', [FormStructureController::class, 'getLastInsertedGroupID']);
+    Route::get('formqstid/', [FormStructureController::class, 'getLastInsertedCrfformsID']);
     Route::get('formlisttypeid/', [FormStructureController::class, 'getLastInsertedListTypeID']);
     Route::get('formlistofvaluesid/', [FormStructureController::class, 'getLastInsertedListOfValuesID']);
     Route::get('formqstid/', [FormStructureController::class, 'getLastInsertedQstID']);

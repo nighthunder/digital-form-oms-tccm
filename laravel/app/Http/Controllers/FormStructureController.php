@@ -279,6 +279,18 @@ class FormStructureController extends Controller
        }
     }
 
+    public function getLastInsertedCrfformsID(Request $request) 
+    {
+        try {
+          $query_msg = DB::select("CALL getLastInsertedCrfformsID(@p_msg_retorno)");
+        
+          return response()->json($query_msg);
+
+       } catch (Exception $e) {
+         return response()->json($e, 500);
+       }
+    }
+
     public function checkQuestionnairePublicationRules(Request $request) // Cria uma lista de novos grupos
     {
         try {
