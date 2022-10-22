@@ -72,12 +72,10 @@ function EditUnpublishedForm({logged, user, participantId}) {
 
     const [newListType, setNewListType] = useState([]) // novos tipos de lista - Formato: [id_listtype: descricao]
     const [questionListType, setQuestionListType] = useState([]) // questões/tipo de lista - Formato: [id_questao: id_listtype]
-    // const newListType = []; // novos tipos de lista - Formato: [id_listtype: descricao]
-    // const questionListType = []; // questões/tipo de lista - Formato: [id_questao: id_listtype]
     const [answerListType, setAnswerListType] = useState([]) // respostas dos tipos de lista - [id_listofvalues: descricao]
     const [answerListType2, setAnswerListType2] = useState([]) // respostas dos tipos de lista - Formato: [id_listofvalues: id_listtype]
-    const [listSubordinate, setListSubordinate] = useState([]) // Formato: [id_questaosubordinada: id_questaosubordinante]
-    const [listValueSubordinate, setListValueSubordinate] = useState([]) // Formato: [id_daquestao: id_dovalor1, id_dovalor2, id_dovalor3]
+    // const [listSubordinate, setListSubordinate] = useState([]) // Formato: [id_questaosubordinada: id_questaosubordinante]
+    // const [listValueSubordinate, setListValueSubordinate] = useState([]) // Formato: [id_daquestao: id_dovalor1, id_dovalor2, id_dovalor3]
 
 
 
@@ -204,6 +202,8 @@ function EditUnpublishedForm({logged, user, participantId}) {
             var listGroups = [];
             var listQuestions = [];
             var listGroupsQuestions = [];
+            var listSubordinate = [];
+            var listValueSubordinate = [];
 
             var pairKeyGroupId = {}
 
@@ -261,15 +261,49 @@ function EditUnpublishedForm({logged, user, participantId}) {
                 // setFormError(response.data[0].msgRetorno);
                 console.log("deu certo!");
             }
+            qstsorder.forEach((element,index )=> {
+                if(element.sub_qst.length > 0){
+                    var found_subordinante;
+                    var found_subordinada;
+                    listQuestions.forEach((el,index_2) => {
+                        let obj = Object.values(el);
+                        if (obj == element.sub_qst){
+                            // console.log("obj", obj[0]);
+                            // var found_obj = listQuestions.find(el => el === obj[0]);
+                            found_subordinante = Object.keys(el);
+                            // console.log("found_obj", found_obj);
+                        }
+                        if(obj == element.dsc_qst){
+                            found_subordinada = Object.keys(el);
+                        }
+                        // console.log("found_subordinante", found_subordinante);
+                        // console.log("found_subordinada", found_subordinada);
+                    })
+
+                    let sub_q = {};
+                    sub_q[found_subordinada[0]] = found_subordinante[0];
+                    listSubordinate.push(sub_q)
+
+                    let str_sub = '' + element.sub_qst_values;
+                    let str_array_replace_sub = str_sub.replace(",", ';');
+                    let sub_q_2 = {};
+                    sub_q_2[found_subordinada[0]] = str_array_replace_sub;
+                    listValueSubordinate.push(sub_q_2)
+    
+                }
+                
+            });
         }
+        console.log("qstsorder", qstsorder);
+        console.log("listGroups", listGroups);
         console.log("listQuestions", listQuestions);
         console.log("listGroupsQuestions", listGroupsQuestions);
-        console.log("listGroups", listGroups);
-        console.log("qstsorder", qstsorder);
         console.log("newListType", newListType);
         console.log("questionListType", questionListType);
-        // console.log("location.state.description", location);
-        // console.log("location.state.questionnaireDescription", location.state.questionnaireDescription);
+        console.log("answerListType", answerListType);
+        console.log("answerListType2", answerListType2);
+        console.log("listSubordinate", listSubordinate);
+        console.log("listValueSubordinate", listValueSubordinate);
     };
     const handleAddSurvey = () => {
         history.push('/add-survey');
@@ -416,6 +450,8 @@ function EditUnpublishedForm({logged, user, participantId}) {
         return <p className="error error2">{props.formOk}</p>
     }
 
+    const [countLastListTypeId, setCountLastListTypeId] = useState(0);
+
     // Função para criar novas perguntas e novos grupos
     async function handleSaveNewQuestion(
         idQuestion, 
@@ -423,6 +459,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
         descricaoPergunta, 
         selectExistsTypeQuestion,
         tipoQuestao,
+        tipoQuestaoDescricao,
         valoresRespostas,
         selectSubordinateQuestion,
         valoresRespostasSubodinacao
@@ -433,6 +470,12 @@ function EditUnpublishedForm({logged, user, participantId}) {
 
         let lastQuestionId = await api.get('/formqstid/');
         lastQuestionId = parseInt(lastQuestionId.data[0].msgRetorno);
+
+        var lastListTypeId = await api.get('/formlisttypeid/');
+        lastListTypeId = parseInt(lastListTypeId.data[0].msgRetorno);
+
+        var lastListOfValuesId = await api.get('/formlistofvaluesid/');
+        lastListOfValuesId = parseInt(lastListOfValuesId.data[0].msgRetorno);
 
         let myObj = questions.find(obj => parseInt(obj.qstId) === parseInt(idQuestion));
         let myObjIndex = questions.findIndex(obj => parseInt(obj.qstId) === parseInt(idQuestion));
@@ -472,27 +515,53 @@ function EditUnpublishedForm({logged, user, participantId}) {
             }
         }
         if(tipoQuestao){
+            // console.log("tipoQuestao", tipoQuestao);
+            
             let id_q = {}
-            id_q[lastQuestionId + contI] = 'TODO' // não tenho o id do tipo da questão
+            id_q[lastQuestionId + contI] = lastListTypeId + countLastListTypeId
+            
+            let id_q_desc = {}
+            id_q_desc[lastQuestionId + contI] = tipoQuestaoDescricao
 
-            setNewListType(newListType => [...newListType,id_q] );
+            let str = valoresRespostas;
+            let str_array_split = str.split(',');
+            console.log("str_array_split", str_array_split);
+            let idValoresResposta = ""
+
+            str_array_split.forEach((element,index )=> {
+                if(index == 0){
+                    idValoresResposta += (lastListOfValuesId + index);
+                }else{
+                    idValoresResposta += ("," + (lastListOfValuesId + index));
+                }
+            });
+
+            setNewListType(newListType => [...newListType,id_q_desc] );
             setQuestionListType(questionListType => [...questionListType,id_q] );
 
-            // newListType.push({'TODO':tipoQuestao}) // não tenho o id do tipo da questão
-            // questionListType.push({id_q:'TODO'}) 
-
             objCopy.qst_type = tipoQuestao
-            objCopy.qst_type_comment = "Sem comentário ainda"
+            objCopy.qst_type_comment = tipoQuestaoDescricao
             objCopy.rsp_pad = valoresRespostas
-            objCopy.rsp_padId = "Sem id para respostas ainda"
+            // objCopy.rsp_padId = "Sem id para respostas ainda"
+            objCopy.rsp_padId = idValoresResposta
+            setCountLastListTypeId(countLastListTypeId + 1);
+
+            let id_q_listOfValues = {}
+            id_q_listOfValues[idValoresResposta] = tipoQuestaoDescricao
+            setAnswerListType(answerListType => [...answerListType,id_q_listOfValues] );
+
+            let id_q_listOfValues2 = {}
+            id_q_listOfValues2[idValoresResposta] = lastQuestionId + contI
+            setAnswerListType2(answerListType2 => [...answerListType2,id_q_listOfValues2] );
+
         }else{
             let id_q = {}
-            // questionListType.push({id_q:null})
+            id_q[lastQuestionId + contI] = null
             setQuestionListType(questionListType => [...questionListType,id_q] );
 
         }
-        console.log("newListType", newListType);
-        console.log("questionListType", questionListType);
+
+ 
         if(selectSubordinateQuestion){
             objCopy.sub_qst = selectSubordinateQuestion
             objCopy.sub_qst_values = valoresRespostasSubodinacao
@@ -544,6 +613,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
             var selectExistsTypeQuestion = null
             // var tipoQuestao = event.target.tipoQuestao.value
             var tipoQuestao = "List question";
+            var tipoQuestaoDescricao = event.target.tipoQuestao.value;
             var valoresRespostas = event.target.valoresRespostas.value
         }
         try {
@@ -559,6 +629,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
             descricaoPergunta, 
             selectExistsTypeQuestion,
             tipoQuestao,
+            tipoQuestaoDescricao,
             valoresRespostas,
             selectSubordinateQuestion,
             valoresRespostasSubodinacao
