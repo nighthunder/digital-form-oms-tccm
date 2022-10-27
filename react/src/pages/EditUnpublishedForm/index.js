@@ -263,6 +263,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
             }
             qstsorder.forEach((element,index )=> {
                 if(element.sub_qst.length > 0){
+                    console.log("element", element);
                     var found_subordinante;
                     var found_subordinada;
                     listQuestions.forEach((el,index_2) => {
@@ -272,23 +273,30 @@ function EditUnpublishedForm({logged, user, participantId}) {
                             // var found_obj = listQuestions.find(el => el === obj[0]);
                             found_subordinante = Object.keys(el);
                             // console.log("found_obj", found_obj);
+                            // console.log("found_subordinante", found_subordinante);
                         }
                         if(obj == element.dsc_qst){
                             found_subordinada = Object.keys(el);
+                            // console.log("found_subordinada", found_subordinada);
                         }
-                        // console.log("found_subordinante", found_subordinante);
-                        // console.log("found_subordinada", found_subordinada);
                     })
 
-                    let sub_q = {};
-                    sub_q[found_subordinada[0]] = found_subordinante[0];
-                    listSubordinate.push(sub_q)
+                    try {
+                        let sub_q = {};
+                        // console.log("found_subordinada", found_subordinada);
+                        sub_q[found_subordinada[0]] = found_subordinante[0];
+                        listSubordinate.push(sub_q)
 
-                    let str_sub = '' + element.sub_qst_values;
-                    let str_array_replace_sub = str_sub.replace(",", ';');
-                    let sub_q_2 = {};
-                    sub_q_2[found_subordinada[0]] = str_array_replace_sub;
-                    listValueSubordinate.push(sub_q_2)
+                        let str_sub = '' + element.sub_qst_values;
+                        let str_array_replace_sub = str_sub.replace(",", ';');
+                        let sub_q_2 = {};
+                        // console.log("found_subordinada", found_subordinada);
+                        sub_q_2[found_subordinada[0]] = str_array_replace_sub;
+                        listValueSubordinate.push(sub_q_2)
+                        
+                    } catch (error) {
+                        console.log("error", error);
+                    }
     
                 }
                 
@@ -563,7 +571,9 @@ function EditUnpublishedForm({logged, user, participantId}) {
 
  
         if(selectSubordinateQuestion){
-            objCopy.sub_qst = selectSubordinateQuestion
+            let found_sub = questions.find(element => element.qstId === parseInt(selectSubordinateQuestion));
+            // console.log("found_sub", found_sub);
+            objCopy.sub_qst = found_sub.dsc_qst
             objCopy.sub_qst_values = valoresRespostasSubodinacao
         }else{
             objCopy.sub_qst = ""
