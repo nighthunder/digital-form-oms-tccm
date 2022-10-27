@@ -74,6 +74,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
     const [questionListType, setQuestionListType] = useState([]) // questões/tipo de lista - Formato: [id_questao: id_listtype]
     const [answerListType, setAnswerListType] = useState([]) // respostas dos tipos de lista - [id_listofvalues: descricao]
     const [answerListType2, setAnswerListType2] = useState([]) // respostas dos tipos de lista - Formato: [id_listofvalues: id_listtype]
+    // const [countLastListOfValuesId, setCountLastListOfValuesId] = useState(0)
     // const [listSubordinate, setListSubordinate] = useState([]) // Formato: [id_questaosubordinada: id_questaosubordinante]
     // const [listValueSubordinate, setListValueSubordinate] = useState([]) // Formato: [id_daquestao: id_dovalor1, id_dovalor2, id_dovalor3]
 
@@ -459,6 +460,9 @@ function EditUnpublishedForm({logged, user, participantId}) {
     }
 
     const [countLastListTypeId, setCountLastListTypeId] = useState(0);
+    const [countLastListOfValuesId, setCountLastListOfValuesId] = useState(0);
+
+    // var countLastListOfValuesId = 0;
 
     // Função para criar novas perguntas e novos grupos
     async function handleSaveNewQuestion(
@@ -542,11 +546,14 @@ function EditUnpublishedForm({logged, user, participantId}) {
             console.log("str_array_split", str_array_split);
             let idValoresResposta = ""
 
-            str_array_split.forEach((element,index )=> {
+            str_array_split.forEach((element,index,array )=> {
                 if(index == 0){
-                    idValoresResposta += (lastListOfValuesId + index);
+                    idValoresResposta += (lastListOfValuesId + countLastListOfValuesId + index);
                 }else{
-                    idValoresResposta += ("," + (lastListOfValuesId + index));
+                    idValoresResposta += ("," + (lastListOfValuesId + countLastListOfValuesId + index));
+                }
+                if (index === array.length - 1){
+                    setCountLastListOfValuesId(countLastListOfValuesId + index + 1);
                 }
             });
 
