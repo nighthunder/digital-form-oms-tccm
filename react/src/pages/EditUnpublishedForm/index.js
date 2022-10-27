@@ -288,7 +288,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                         listSubordinate.push(sub_q)
 
                         let str_sub = '' + element.sub_qst_values;
-                        let str_array_replace_sub = str_sub.replace(",", ';');
+                        let str_array_replace_sub = str_sub.replaceAll(",", ';');
                         let sub_q_2 = {};
                         // console.log("found_subordinada", found_subordinada);
                         sub_q_2[found_subordinada[0]] = str_array_replace_sub;
@@ -489,8 +489,14 @@ function EditUnpublishedForm({logged, user, participantId}) {
         let myObjIndex = questions.findIndex(obj => parseInt(obj.qstId) === parseInt(idQuestion));
         console.log("myObjIndex", myObjIndex);
 
-        let left = questions.slice(0, myObjIndex)
-        let right = questions.slice(myObjIndex)
+        if(descricaoNovoGrupo){
+            var left = questions.slice(0, myObjIndex)
+            var right = questions.slice(myObjIndex)
+        }else{
+            var left = questions.slice(0, (myObjIndex + 1))
+            var right = questions.slice((myObjIndex + 1))
+        }
+
 
         console.log("questions", questions);
         console.log("right", right);
@@ -711,12 +717,6 @@ function EditUnpublishedForm({logged, user, participantId}) {
                             }
                             <div ref={usernameRefs.current[index]} id={question.qstId} value={question.dsc_qst_grp} className="uniQuestion" name={question.qstOrder}>
                                 <div className="qst qst2" key={question.qstId} >
-                                    <div className="qst qst2">
-                                        <div className="qstBody qstIconArea">
-                                            <PlusOne className="Icon plusIcon" onClick={() => handleClickNewQuestion(question.qstId, false)}></PlusOne>
-                                            {/* <Container onSubmit={onSubmit} optionsSubordinateQuestion={optionsSubordinateQuestion} options={options} idQuestion={question.qstId}/> */}
-                                        </div>
-                                    </div>
                                     <div className="qstBody">
                                     
                                     {/* Se for do tipo Date question*/}
@@ -850,6 +850,12 @@ function EditUnpublishedForm({logged, user, participantId}) {
                                         }
                                     </div>
                                     } 
+                                    </div>
+                                    <div className="qst qst2">
+                                        <div className="qstBody qstIconArea">
+                                            <PlusOne className="Icon plusIcon" onClick={() => handleClickNewQuestion(question.qstId, false)}></PlusOne>
+                                            {/* <Container onSubmit={onSubmit} optionsSubordinateQuestion={optionsSubordinateQuestion} options={options} idQuestion={question.qstId}/> */}
+                                        </div>
                                     </div>    
                                 </div>
                             </div>
