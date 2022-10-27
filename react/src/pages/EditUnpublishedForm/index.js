@@ -103,7 +103,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
     questions.forEach(element => {
         if(!dictOption.includes(element.qst_type)){
             if(element.qst_type != "List question"){
-                console.log('element.qst_type', element.qst_type);
+                // console.log('element.qst_type', element.qst_type);
                 options.push({ label: element.qst_type_comment + " - " + element.qst_type, value: element.qst_type })
                 dictOption.push(element.qst_type)
             }
@@ -264,7 +264,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
             }
             qstsorder.forEach((element,index )=> {
                 if(element.sub_qst.length > 0){
-                    console.log("element", element);
+                    // console.log("element", element);
                     var found_subordinante;
                     var found_subordinada;
                     listQuestions.forEach((el,index_2) => {
