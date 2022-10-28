@@ -52,9 +52,9 @@ function AddModule({user}) {
             userid : user[0].userid,    
             grouproleid : user[0].grouproleid,    
             hospitalunitid : user[0].hospitalunitid,    
-            questionnaireID: location.state.questionnaireID,
             description: selectModule,
-            moduleStatusID: "2", // New
+            moduleStatusID: "2", 
+            questionnaireID: location.state.questionnaireID,
             lastModification: convertToDate(new Date()),
             creationDate: convertToDate(new Date())
        }
@@ -70,33 +70,10 @@ function AddModule({user}) {
             }
         });
 
-        const param2 = {
-            userid : user[0].userid,    
-            grouproleid : user[0].grouproleid,    
-            hospitalunitid : user[0].hospitalunitid,    
-            questionnaireID: location.state.questionnaireID,
-            description: location.state.description,
-            status: location.state.questionnaireStatus, // New
-            lastModification: convertToDate(new Date()),
-            creationDate: location.state.creationDate
-        }
-
-        console.log("param2", param2);
-
-        /*const response = await api.post('/survey/', param2).catch( function (error) {
-            setLoading(false);
-            console.log(error)
-            if(error.response.data.Message) {
-                setError(error.response.data.Message);
-            } else {
-                setError(error.response.data.msgRetorno);
-            }
-        });*/
-
        if(response) {
             setLoading(false);
             setSuccess(response.data.msgRetorno);
-            history.goBack();
+            //history.goBack();
        }
     }
 
