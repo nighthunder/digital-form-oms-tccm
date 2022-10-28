@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 28-Out-2022 às 18:55
--- Versão do servidor: 10.4.22-MariaDB
--- versão do PHP: 7.4.27
+-- Generation Time: May 25, 2022 at 08:02 PM
+-- Server version: 10.4.22-MariaDB
+-- PHP Version: 7.4.27
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,16 +18,16 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Banco de dados: `vodan_bd_br_2021`
+-- Database: `vodan_bd_br_2021`
 --
 
 DELIMITER $$
 --
--- Procedimentos
+-- Procedures
 --
-CREATE DEFINER=`root`@`localhost` PROCEDURE `checkQuestionnairePublicationRules` (IN `p_questionnaireID` INT, IN `p_questionnaireDescription` VARCHAR(500))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `checkQuestionnairePublicationRules` (IN `p_questionnaireID` INT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
 #========================================================================================================================
-#== Procedure criada para checar situação de um questionário que irá ser publicado atende os requisitos
+#== Procedure criada para checar se um questionário que irá ser publicado atende os requisitos
 #== As regras aplicadas nessa procedure são somente da pesquisa WHO COVID-19
 #== Se tiver mais 
 #== retorna um registro contendo a msg de retorno
@@ -42,9 +42,6 @@ DECLARE p_check_modules_qtd  integer; # verifica se o questionário tem 3 módul
 DECLARE p_check_admission_module_qtd varchar(500); #== Checa qtd de módulos de admissão
 DECLARE p_check_followup_module_qtd varchar(500); #== Checa qtd de módulos de Acompanhamento
 DECLARE p_check_discharged_module_qtd varchar(500); #== Checa qtd de módulos de Desfecho
-DECLARE p_check_admission_module_questions_qtd integer; #== Checa qtd de questões do módulos de admissão
-DECLARE p_check_followup_module_questions_qtd integer; #== Checa qtd de questões do módulos de Acompanhamento
-DECLARE p_check_discharged_module_questions_qtd integer; #== Checa qtd de questões do módulos de Desfecho
 
 sp:BEGIN 
 
@@ -65,19 +62,19 @@ sp:BEGIN
     SET p_check_questionnaire_status = (SELECT questionnaireStatusID from tb_questionnaire where questionnaireID = p_questionnaireID);
     
     if (p_check_questionnaire_status = 1) then
-    	SET p_msg_retorno = 'A pesquisa já está publicada.';
+    	SET p_msg_retorno = 'A pesquisa já está publicada';
         leave sp;
     end if;    
     
    SET p_check_modules_qtd = (SELECT COUNT(crfformsID) from tb_crfforms WHERE questionnaireID = p_questionnaireID);
         
    if (p_check_modules_qtd is null) then
-		set p_msg_retorno = 'A pesquisa não tem módulos.';
+		set p_msg_retorno = 'A pesquisa não tem módulos';
         leave sp;
    end if;  
     
    if (p_check_modules_qtd <> 3) then  
-		set p_msg_retorno = CONCAT('A pesquisa tem ',p_check_modules_qtd,' módulos. Uma pesquisa WHO COVID-19 válida tem 3 módulos: 1 de Admissão, 1 de Acompanhamento e 1 de Desfecho.');
+		set p_msg_retorno = CONCAT('A pesquisa tem ',p_check_modules_qtd,' módulos enquanto uma pesquisa WHO COVID-19 válida tem 3 módulos: 1 de Admissão, 1 de Acompanhamento e 1 de Desfecho.');
 		leave sp;
   end if;  
   
@@ -102,33 +99,28 @@ sp:BEGIN
     leave sp;
   end if;  
   
-  SET p_check_admission_module_questions_qtd = (SELECT count(questionID) FROM tb_questiongroupform where crfFormsID = (Select crfFormsID from tb_crfforms where questionnaireID = p_questionnaireID and description = 'Admission Form') and questionnaireID = p_questionnaireID);
-  
-  if (p_check_admission_module_questions_qtd = 0) then
-	SET p_msg_retorno =  CONCAT('A pesquisa ', p_questionnaireDescription,'não pode ser publicada porque há ',p_check_admission_module_questions_qtd,' questões no módulos de Admissão.');
-    leave sp;
-  end if;  
-  
-    SET p_check_followup_module_questions_qtd = (SELECT count(questionID) FROM tb_questiongroupform where crfFormsID = (Select crfFormsID from tb_crfforms where questionnaireID = p_questionnaireID and description = 'Follow-up') and questionnaireID = p_questionnaireID);
-  
-  if (p_check_followup_module_questions_qtd = 0) then
-	SET p_msg_retorno =  CONCAT('A pesquisa ', p_questionnaireDescription,'não pode ser publicada porque há ',p_check_followup_module_questions_qtd,' questões no módulos de Acompanhamento.');
-    leave sp;
-  end if;  
-  
-     SET p_check_discharged_module_questions_qtd = (SELECT count(questionID) FROM tb_questiongroupform where crfFormsID = (Select crfFormsID from tb_crfforms where questionnaireID = p_questionnaireID and description = 'Discharge/death form') and questionnaireID = p_questionnaireID);
-  
-  if (p_check_discharged_module_questions_qtd = 0) then
-	SET p_msg_retorno =  CONCAT('A pesquisa ', p_questionnaireDescription,'não pode ser publicada porque há ',p_check_followup_module_questions_qtd,' questões no módulos de Desfecho.');
-    leave sp;
-  end if;  
-  
-  
- set p_msg_retorno = 'OK';
+   /*SET p_check_modules_types = (SELECT DISTINCT (SELECT count(crfFormsID) FROM tb_crfforms where description = 'Admission Form' and questionnaireID = p_questionnaireID) as count_admission,
+(SELECT count(crfFormsID) FROM tb_crfforms where description = 'Follow-up' and questionnaireID = p_questionnaireID) as count_followup ,
+(SELECT count(crfFormsID) FROM tb_crfforms where description = 'Discharge/death form' and questionnaireID = p_questionnaireID) as count_discharged from tb_crfforms);
+
+  if (p_check_modules_types) then
+	set p_msg_retorno = concat('A pesquisa 1',p_questionnaireDescription,' tem Formulários de admissão entretanto somente deveria ter 1 (um)');
+	leave sp;
+ end if;
+ 
+if (p_check_modules_types) then
+	set p_msg_retorno = concat('A pesquisa 2',p_questionnaireDescription ,' tem Formulários de acompanhamento entretanto somente deveria ter 1 (um)');
+	leave sp;
+ end if;
+ 
+ if (p_check_modules_types) then
+	set p_msg_retorno = concat('A pesquisa 3',p_questionnaireDescription,' tem Formulários de desfecho entretanto somente deveria ter 1 (um)');
+	leave sp;
+ end if;*/
  
  COMMIT;
  
- 
+ set p_msg_retorno = 'Essa função permite colocar uma pesquisa em uso. \n Todos os módulos do questionários estarão disponíveis para terem prontuários preenchidos. \n Você tem certeza disso?';
  
 END sp;	
 
@@ -204,32 +196,6 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `getcrfForms` (IN `p_questionnaireID
         t2.questionnaireID = p_questionnaireID;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `getLastInsertedCrfformsID` (OUT `p_msg_retorno` VARCHAR(500))  BEGIN
-#========================================================================================================================
-#== Procedure criada para obter o último ID inserido na tabela tb_crfformsid
-#== Criada em 10 de outubro de 2022
-#========================================================================================================================
-
-DECLARE v_nextid integer; 
-
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
-    BEGIN
-		ROLLBACK;
-        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
-    END;
-    
-sp:BEGIN		
-    
-	SET v_nextid = (SELECT MAX(crfFormsID) + 1 FROM tb_crfforms);
-
-    SET p_msg_retorno = v_nextid;
-	    
-END;
-
-select p_msg_retorno as msgRetorno from DUAL;
-		
-END$$
-
 CREATE DEFINER=`root`@`localhost` PROCEDURE `getLastInsertedGroupID` (OUT `p_msg_retorno` VARCHAR(500))  BEGIN
 #========================================================================================================================
 #== Procedure criada para obter o último ID inserido na tabela tb_questiongroup
@@ -247,58 +213,6 @@ DECLARE v_nextid integer;
 sp:BEGIN		
     
 	SET v_nextid = (SELECT MAX(questionGroupID) + 1 FROM tb_questiongroup);
-
-    SET p_msg_retorno = v_nextid;
-	    
-END;
-
-select p_msg_retorno as msgRetorno from DUAL;
-		
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `getLastInsertedListOfValuesID` (OUT `p_msg_retorno` VARCHAR(500))  BEGIN
-#========================================================================================================================
-#== Procedure criada para obter o último ID inserido na tabela tb_listOfValuesID
-#== Criada em 09 de outubro de 2022
-#========================================================================================================================
-
-DECLARE v_nextid integer; 
-
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
-    BEGIN
-		ROLLBACK;
-        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
-    END;
-    
-sp:BEGIN		
-    
-	SET v_nextid = (SELECT MAX(listOfValuesID) + 1 FROM tb_listofvalues);
-
-    SET p_msg_retorno = v_nextid;
-	    
-END;
-
-select p_msg_retorno as msgRetorno from DUAL;
-		
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `getLastInsertedListTypeID` (OUT `p_msg_retorno` VARCHAR(500))  BEGIN
-#========================================================================================================================
-#== Procedure criada para obter o último ID inserido na tabela tb_listtype
-#== Criada em 09 de setembro de 2022
-#========================================================================================================================
-
-DECLARE v_nextid integer; 
-
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
-    BEGIN
-		ROLLBACK;
-        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
-    END;
-    
-sp:BEGIN		
-    
-	SET v_nextid = (SELECT MAX(listTypeID) + 1 FROM tb_listtype);
 
     SET p_msg_retorno = v_nextid;
 	    
@@ -518,27 +432,6 @@ from tb_questionnaire as t1
 where questionnaireID = p_questionnaireID;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `getQuestionnaireFromMedicalRecord` (IN `p_medicalRecord` VARCHAR(500))  BEGIN
-#========================================================================================================================
-#== Procedure criada para obter o ID de um questionário a partir de um medicalRecord (prontuário)
-#== Criada em 25 de Junho de 2022
-#========================================================================================================================
-
-# Grupos das questões
-DECLARE v_participant_id integer; # id do participante
-
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
-    BEGIN
-		ROLLBACK;
-        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
-    END;
-       
-	set v_participant_id =	(Select participantID from tb_participant where medicalRecord = p_medicalRecord);
-    
-    Select questionnaireID from tb_assessmentquestionnaire where participantID = v_participant_id;
-
-END$$
-
 CREATE DEFINER=`root`@`localhost` PROCEDURE `getQuestionnaireMotherModules` (IN `p_questionnaireID` INT)  Select 	crfFormsID,
         questionnaireID,
         translate('pt-br',description) as description,
@@ -676,117 +569,7 @@ DECLARE v_alteracao text;
 		
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `postListOfValues` (IN `p_listofvalues` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
-#========================================================================================================================
-#== Procedure criada para criar novos valores predefinidos de respostas em tb_listofvalues
-#== Criada em 09 de Julho de 2022
-#========================================================================================================================
-
-# Grupos das questões
-DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
-DECLARE v_description varchar(500); # a descrição da resposta da lista de respostas
-DECLARE v_lista2 text; # lista de valores respostas associados com questões que tem um tipo de lista: v_questionid2 : v_groupid
-DECLARE v_apoio2 varchar(500); 
-DECLARE v_questionid2 integer;  # o id da resposta
-
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
-    BEGIN
-		ROLLBACK;
-        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
-    END;
-    
-sp:BEGIN		
-   START TRANSACTION;
-
-	# Alterando os grupos associados as questões em v_lista
-    set v_lista2 = concat(p_listofvalues, ',') ;
-        
-   	while length(v_lista2) > 1 DO
-		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
-		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
-		set v_description     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
-        set v_description    = REPLACE(v_description, ',', '');
-		set v_questionid2 = CONVERT(v_group, SIGNED);
-            
-        if v_questionid2 is not null then
-			INSERT into tb_listofvalues(listOfValuesID, listTypeID,description) VALUES(v_questionid2, null,v_description);
-        end if;
-        
-  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
-        if position(',' in v_lista2) < length(v_lista2) then
-	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
-		else 
-           set v_lista2 = '';
-		end if;
-	
-	End While;
-	    
-    set p_msg_retorno = 'Valores de respostas predefinidos das novos tipos de listas salvos com sucesso.';
-    
-	COMMIT;
-    
-END;
-
-select p_msg_retorno as msgRetorno from DUAL;
-		
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `postListType` (IN `p_stringlisttype` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
-#========================================================================================================================
-#== Procedure criada para criar novos tipos de listas em tb_listType
-#== Criada em 09 de Julho de 2022
-#========================================================================================================================
-
-# Grupos das questões
-DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
-DECLARE v_description varchar(500); # a descrição do tipo de lista
-DECLARE v_lista2 text; # lista de tipos de lista com questões: v_questionid2 : v_groupid
-DECLARE v_apoio2 varchar(500); 
-DECLARE v_questionid2 integer;  # o id do novo tipo de lista
-
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
-    BEGIN
-		ROLLBACK;
-        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
-    END;
-    
-sp:BEGIN		
-   START TRANSACTION;
-
-	# Alterando os grupos associados as questões em v_lista
-    set v_lista2 = concat(p_stringlisttype, ',') ;
-        
-   	while length(v_lista2) > 1 DO
-		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
-		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
-		set v_description     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
-        set v_description    = REPLACE(v_description, ',', '');
-		set v_questionid2 = CONVERT(v_group, SIGNED);
-            
-        if v_questionid2 is not null then
-			INSERT into tb_listtype(listTypeID, description,`comment`) VALUES(v_questionid2, v_description, null);
-        end if;
-        
-  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
-        if position(',' in v_lista2) < length(v_lista2) then
-	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
-		else 
-           set v_lista2 = '';
-		end if;
-	
-	End While;
-	    
-    set p_msg_retorno = 'Associações entre as perguntas e os tipos de listas salvas com sucesso.';
-    
-	COMMIT;
-    
-END;
-
-select p_msg_retorno as msgRetorno from DUAL;
-		
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `postMedicalRecord` (IN `p_userid` INT, IN `p_groupRoleid` INT, IN `p_hospitalUnitid` INT, IN `p_questionnaireId` INT, IN `p_medicalRecord` VARCHAR(255), OUT `p_msg_retorno` VARCHAR(500))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `postMedicalRecord` (IN `p_userid` INT, IN `p_groupRoleid` INT, IN `p_hospitalUnitid` INT, IN `p_questionnaireId` INT, IN `p_medicalRecord` VARCHAR(255))  BEGIN
 #========================================================================================================================
 #== Procedure criada para o registro de um participant associado a um hospital para futuro lançamento dos modulos do formulario
 #== Cria o registro na tb_participant e na tb_AssessmentQuestionnaire
@@ -919,162 +702,6 @@ select p_msg_retorno as msgRetorno from DUAL;
   
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `postQst` (IN `p_stringquestions` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
-#========================================================================================================================
-#== Procedure criada para incluir questões novas
-#== Criada em 01 maio 2021
-#========================================================================================================================
-
-# Questões
-DECLARE v_Exist integer; # Está sendo usado para checar se existe entrada em pt-br na multilanguage
-DECLARE v_question varchar(50);  # Variável auxiliar do id da pergunta
-DECLARE v_answer varchar(500); # descrição da questão nova
-DECLARE v_questionid integer; # variavel auxiliar do id da pergunta que será criada
-DECLARE v_listOfValuesid integer;
-DECLARE v_listtypeid integer;
-DECLARE v_questionGroupFormid integer;
-DECLARE v_lista text;
-DECLARE v_apoio varchar(500);
-DECLARE v_resposta varchar(500);
-DECLARE v_listofvaluesid_ant integer;
-DECLARE v_answer_ant varchar(500);
-DECLARE v_operacao varchar(01);
-
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
-    BEGIN
-		ROLLBACK;
-        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
-    END;
-    
-sp:BEGIN		
-   START TRANSACTION;
-
-	# Inserindo/Alterando as questoes registro do form e a questão associada a data    
-    set v_lista = concat(p_stringquestions, ',') ;
-    
-    while length(v_lista) > 1 DO
-		set v_apoio = substring(v_lista, 1, position(',' in v_lista));
-		set v_question = substring(v_apoio, 1, position(':' in v_apoio) - 1);
-		set v_answer     = substring(v_apoio, position(':' in v_apoio) + 1, position(',' in v_apoio) - 1);
-        set v_answer     = REPLACE(v_answer, ',', '');
-		set v_questionid = CONVERT(v_question, SIGNED);  
-	
-        if v_questionid is not null then
-              
-			Insert into tb_questions (questionID, v_answer, questionTypeID,listTypeID,questionGroupID,subordinateTo,subordinateValues,isAbout,`comment`) VALUES (v_questionid,v_answer,7,NULL,NULL,NULL,NULL,NULL,NULL);
-            
-            Insert into tb_multilanguage (languageID, description, descriptionLang) values(1,v_answer, v_answer);
-            Insert into tb_multilanguage (languageID, description, descriptionLang) values(2,v_answer, v_answer);
-            
-            
-        end if;
-        
-  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
-        if position(',' in v_lista) < length(v_lista) then
-	  	   set v_lista = substring(v_lista,  position(',' in v_lista) + 1, length(v_lista));
-		else 
-           set v_lista = '';
-		end if;
-	
-	End While;
-	    
-    set p_msg_retorno = 'Questões inseridos com sucesso.';
-    
-	COMMIT;
-    
-END;
-
-select p_msg_retorno as msgRetorno from DUAL;
-		
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `postQst2` (IN `p_stringquestions` INT, IN `p_stringgroups` INT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
-#========================================================================================================================
-#== Procedure criada para incluir grupo de questões
-#== Criada em 01 maio 2021
-#========================================================================================================================
-
-# Questões
-DECLARE v_Exist integer; # Está sendo usado para checar se existe entrada em pt-br na multilanguage
-DECLARE v_question varchar(50);  # Descrição do novo grupo
-DECLARE v_answer varchar(500); # variavel auxiliar do novo grupo
-DECLARE v_questionid integer; # variavel auxiliar do id da pergunta que será alterada
-DECLARE v_listOfValuesid integer;
-DECLARE v_listtypeid integer;
-DECLARE v_questionGroupFormid integer;
-DECLARE v_lista text;
-DECLARE v_apoio varchar(500);
-DECLARE v_resposta varchar(500);
-DECLARE v_listofvaluesid_ant integer;
-DECLARE v_answer_ant varchar(500);
-DECLARE v_operacao varchar(01);
-
-# Grupos das questões
-DECLARE v_thisgroup integer; # marcador do id do grupo da questão atual em v_lista
-DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
-DECLARE v_groupid integer; # o id do grupo da questão
-DECLARE v_lista2 text; # lista de grupos com questões: v_questionid2 : v_groupid
-DECLARE v_apoio2 varchar(500); 
-DECLARE v_questionid2 varchar(500); # o id da questão na v_lista2
-
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
-    BEGIN
-		ROLLBACK;
-        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
-    END;
-    
-sp:BEGIN		
-   START TRANSACTION;
-
-	# Inserindo/Alterando as questoes registro do form e a questão associada a data    
-    set v_lista = concat(p_stringquestions, ',') ;
-    set v_lista2 = concat(p_stringgroups, ',') ;
-    
-    while length(v_lista) > 1 DO
-		set v_apoio = substring(v_lista, 1, position(',' in v_lista));
-		set v_question = substring(v_apoio, 1, position(':' in v_apoio) - 1);
-		set v_answer     = substring(v_apoio, position(':' in v_apoio) + 1, position(',' in v_apoio) - 1);
-        set v_answer     = REPLACE(v_answer, ',', '');
-		set v_questionid = CONVERT(v_question, SIGNED);
-        
-   		while length(v_lista2) > 1 DO
-			set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
-			set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
-			set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
-        	set v_groupid     = REPLACE(v_groupid, ',', '');
-			set v_questionid2 = CONVERT(v_group, SIGNED);
-            
-            if (v_questionid2 = v_questionid) then
-            	set v_thisgroup = v_groupid;
-            end if;  
-            
-        end While;     
-	
-        if v_questionid is not null then
-              
-			Insert into tb_questions (questionID, description, questionTypeID,listTypeID,questionGroupID,subordinatedTo,subordinatedValues,isAbout,`comment`) VALUES (v_questionid,v_answer,7,NULL,v_groupid,NULL,NULL,NULL,NULL);
-            
-        end if;
-        
-  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
-        if position(',' in v_lista) < length(v_lista) then
-	  	   set v_lista = substring(v_lista,  position(',' in v_lista) + 1, length(v_lista));
-		else 
-           set v_lista = '';
-		end if;
-	
-	End While;
-	    
-    set p_msg_retorno = 'Questões inseridos com sucesso.';
-    
-	COMMIT;
-    
-END;
-
-select p_msg_retorno as msgRetorno from DUAL;
-		
-END$$
-
 CREATE DEFINER=`root`@`localhost` PROCEDURE `postQstGroup` (IN `p_stringgroups` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
 #========================================================================================================================
 #== Procedure criada para incluir grupo de questões
@@ -1090,11 +717,6 @@ DECLARE v_listtypeid integer;
 DECLARE v_questionGroupFormid integer;
 DECLARE v_lista text;
 DECLARE v_apoio varchar(500);
-DECLARE v_resposta varchar(500);
-DECLARE v_listofvaluesid_ant integer;
-DECLARE v_answer_ant varchar(500);
-DECLARE v_operacao varchar(01);
- 
 
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
     BEGIN
@@ -1113,14 +735,13 @@ sp:BEGIN
 		set v_question = substring(v_apoio, 1, position(':' in v_apoio) - 1);
 		set v_answer     = substring(v_apoio, position(':' in v_apoio) + 1, position(',' in v_apoio) - 1);
         set v_answer     = REPLACE(v_answer, ',', '');
-		set v_questionid = CONVERT(v_question, UNSIGNED);
+		set v_questionid = CONVERT(v_question, SIGNED);
 	
         if v_questionid is not null then
               
-                        if v_questionid = 0 then
-				SET v_questionid = (Select MAX(questiongroupID)+1 from tb_questiongroup);
-			end if;
-			Insert into tb_questiongroup (questionGroupID, description, `comment`) VALUES (CONVERT(v_questionid,UNSIGNED),v_answer,"");
+			Insert into tb_questiongroup (questionGroupID, description, `comment`) VALUES (DEFAULT,v_answer,"");
+            Insert into tb_multilanguage(languageID, description, descriptionLang) values(1,v_answer,v_answer);
+            Insert into tb_multilanguage(languageID, description, descriptionLang) values(2,v_answer,v_answer);
             set p_msg_retorno = 'Grupos inseridos com sucesso.';
         end if;
         
@@ -1132,7 +753,7 @@ sp:BEGIN
 		end if;
 	
 	End While;
-	    
+    
 	COMMIT;
     
 END;
@@ -1290,74 +911,6 @@ END;
 		
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `postQstOrder` (IN `p_moduleID` INT, IN `p_questionsorder` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
-#========================================================================================================================
-#== Procedure criada para alterar as ordens das questões em um determinado módulo
-#== Criada em 28 de setembro de 2022
-#== A entrada para esta procedure é uma string que contém os valores novos de ordem no seguinte formato:
-#== A entrada apra esta procedure é uma string do tipo: id_1:value_1,id_2:value_2,..id_n:value_n
-#== Onde id_i: id da pergunta e value_i é a nova ordem da questão
-#========================================================================================================================
-
-DECLARE v_Exist integer; # Está sendo usado para checar se existe entrada em pt-br na multilanguage
-DECLARE v_question varchar(50);
-DECLARE v_answer varchar(500); # variavel auxiliar da nova ordem da pergunta
-DECLARE v_questionid integer; # variavel auxiliar do id da pergunta que será alterada
-DECLARE v_listOfValuesid integer;
-DECLARE v_listtypeid integer;
-DECLARE v_questionGroupFormid integer;
-DECLARE v_lista text;
-DECLARE v_apoio varchar(500);
-DECLARE v_resposta varchar(500);
-DECLARE v_listofvaluesid_ant integer;
-DECLARE v_answer_ant varchar(500);
-DECLARE v_operacao varchar(01);
- 
-
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
-    BEGIN
-		ROLLBACK;
-        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
-    END;
-    
-sp:BEGIN		
-   START TRANSACTION;
-
-	# Inserindo/Alterando as questoes registro do form e a questão associada a data    
-    set v_lista = concat(p_questionsorder, ',') ;
-    
-    while length(v_lista) > 1 DO
-		set v_apoio = substring(v_lista, 1, position(',' in v_lista));
-		set v_question = substring(v_apoio, 1, position(':' in v_apoio) - 1);
-		set v_answer     = substring(v_apoio, position(':' in v_apoio) + 1, position(',' in v_apoio) - 1);
-        set v_answer     = REPLACE(v_answer, ',', '');
-		set v_questionid = CONVERT(v_question, SIGNED);
-	
-        if v_questionid is not null then
-              
-			INSERT INTO tb_questiongroupform (
-			crfFormsID, questionID, questionOrder)
-            values (p_moduleID,v_questionID, CONVERT(v_answer,UNSIGNED));
-            set p_msg_retorno = 'Ordem das questões inseridas com sucesso.';
-        end if;
-        
-  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
-        if position(',' in v_lista) < length(v_lista) then
-	  	   set v_lista = substring(v_lista,  position(',' in v_lista) + 1, length(v_lista));
-		else 
-           set v_lista = '';
-		end if;
-	
-	End While;
-	    
-	COMMIT;
-    
-END;
-
-select p_msg_retorno as msgRetorno from DUAL;
-		
-END$$
-
 CREATE DEFINER=`root`@`localhost` PROCEDURE `postQuestionnaire` (IN `p_userID` INT, IN `p_groupRoleID` INT, IN `p_hospitalUnitID` INT, IN `p_isVersionOf` INT, IN `p_isBasedOn` INT, IN `p_questionnaireDescription` VARCHAR(255), IN `p_questionnaireVersion` VARCHAR(255), IN `p_questionnaireStatusID` INT, IN `p_questionnaireLastModification` TIMESTAMP, IN `p_questionnaireCreationDate` TIMESTAMP)  BEGIN
 #========================================================================================================================
 #== Procedure criada para o registro de um participant associado a um hospital para futuro lançamento dos modulos do formulario
@@ -1369,7 +922,6 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `postQuestionnaire` (IN `p_userID` I
 
 DECLARE p_userID integer;
 DECLARE p_msg_retorno varchar(500);
-DECLARE p_lastID integer;
 
 sp:BEGIN 
 
@@ -1390,14 +942,12 @@ sp:BEGIN
 
 	
    START TRANSACTION;
-	# Inserindo nova pesquisa     
-    
-    set p_lastID = (Select MAX(questionnaireID)+1 from tb_questionnaire);
+	# Inserindo nova pesquisa       
     
     INSERT INTO tb_questionnaire (
 			questionnaireID, description, questionnaireStatusID, isNewVersionOf, isBasedOn, version, 
     		lastModification, creationDate )
-            values (p_lastID, p_questionnaireDescription, p_questionnaireStatusID, p_isVersionOf, p_isBasedOn, p_questionnaireVersion, p_questionnaireLastModification, p_questionnaireCreationDate);
+            values (DEFAULT, p_questionnaireDescription, p_questionnaireStatusID, p_isVersionOf, p_isBasedOn, p_questionnaireVersion, p_questionnaireLastModification, p_questionnaireCreationDate);
 
 
     # registrando a informação de notificação para a inclusao de questionário 
@@ -1510,99 +1060,6 @@ DECLARE v_hospitalUnitName varchar(500);
     
     COMMIT;
 	
-		
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `publishQuestionnaire` (IN `p_questionnaireID` INT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
-#========================================================================================================================
-#== Procedure criada para publicar um questionário e seus módulos
-#== Criada em 26 de março de 2022
-#== Alterada em 26 de março de 2022
-#========================================================================================================================
- 
-
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
-    BEGIN
-		ROLLBACK;
-        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
-    END;
-    
-sp:BEGIN		
-   START TRANSACTION;
-
-	# Alterando o status do questionário para publicado 
-    
-    Update tb_questionnaire set questionnaireStatusID = 1 where questionnaireID = p_questionnaireID;
-    Update tb_questionnaire set version = "1.0" where questionnaireID = p_questionnaireID;
-    Update tb_questionnaire set lastModification = NOW() where questionnaireID = p_questionnaireID;
-    
-	# Alterando o status dos seus módulos para publicado
-    
-    UPDATE tb_crfforms set crfformsStatusID = 1 where questionnaireID = p_questionnaireID;
-    
-   
-	COMMIT;
-    
-    set p_msg_retorno = "Questionário publicado com sucesso.";
-    
-END;
-
-select p_msg_retorno as msgRetorno from DUAL;
-		
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `putListTypeListOfValues` (IN `p_listtypelistofvalues` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
-#========================================================================================================================
-#== Procedure criada para alterar os grupos de questões associados às questões
-#== Criada em 25 de Maio de 2022
-#========================================================================================================================
-
-# Grupos das questões
-DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
-DECLARE v_groupid varchar(500); # o id do valor
-DECLARE v_lista2 text; # lista de valores resposta amarrados a listas de valores: v_questionid2 : v_groupid
-DECLARE v_apoio2 varchar(500); 
-DECLARE v_questionid2 integer; # o id da lista de valores resposta
-
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
-    BEGIN
-		ROLLBACK;
-        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
-    END;
-    
-sp:BEGIN		
-   START TRANSACTION;
-
-	# Alterando os grupos associados as questões em v_lista
-    set v_lista2 = concat(p_listtypelistofvalues, ',') ;
-        
-   	while length(v_lista2) > 1 DO
-		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
-		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
-		set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
-        set v_groupid     = REPLACE(v_groupid, ',', '');
-		set v_questionid2 = CONVERT(v_group, UNSIGNED);
-            
-        if v_questionid2 is not null then
-			UPDATE tb_listofvalues set listTypeID =  CONVERT(v_groupid, UNSIGNED) where listOfValuesID = v_questionid2;
-        end if;
-        
-  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
-        if position(',' in v_lista2) < length(v_lista2) then
-	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
-		else 
-           set v_lista2 = '';
-		end if;
-	
-	End While;
-	    
-    set p_msg_retorno = 'Associações entre grupos e questões atualizados com sucesso.';
-    
-	COMMIT;
-    
-END;
-
-select p_msg_retorno as msgRetorno from DUAL;
 		
 END$$
 
@@ -1837,116 +1294,6 @@ select p_msg_retorno as msgRetorno from DUAL;
 		
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstComment` (IN `p_stringcomment` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
-#========================================================================================================================
-#== Procedure criada para alterar comentários associados às questões
-#== Criada em 25 de Maio de 2022
-#========================================================================================================================
-
-# Grupos das questões
-DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
-DECLARE v_groupid integer; # o comentário associado a questão
-DECLARE v_lista2 text; # lista de grupos com questões: v_questionid2 : v_groupid
-DECLARE v_apoio2 varchar(500); 
-DECLARE v_questionid2 varchar(500); # o id da questão na v_lista2
-
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
-    BEGIN
-		ROLLBACK;
-        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
-    END;
-    
-sp:BEGIN		
-   START TRANSACTION;
-
-	# Alterando os grupos associados as questões em v_lista
-    set v_lista2 = concat(p_stringcomment, ',') ;
-        
-   	while length(v_lista2) > 1 DO
-		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
-		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
-		set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
-        set v_groupid     = REPLACE(v_groupid, ',', '');
-		set v_questionid2 = CONVERT(v_group, SIGNED);
-            
-        if v_questionid2 is not null then
-			UPDATE tb_questions set questionGroupID = CONVERT(v_groupid, SIGNED) where questionID = v_questionid2;
-        end if;
-        
-  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
-        if position(',' in v_lista2) < length(v_lista2) then
-	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
-		else 
-           set v_lista2 = '';
-		end if;
-	
-	End While;
-	    
-    set p_msg_retorno = 'Comentários associados as questões atualizados com sucesso.';
-    
-	COMMIT;
-    
-END;
-
-select p_msg_retorno as msgRetorno from DUAL;
-		
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstGroup` (IN `p_stringquestionsgroups` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
-#========================================================================================================================
-#== Procedure criada para alterar os grupos de questões associados às questões
-#== Criada em 25 de Maio de 2022
-#========================================================================================================================
-
-# Grupos das questões
-DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
-DECLARE v_groupid integer; # o id do grupo da questão
-DECLARE v_lista2 text; # lista de grupos com questões: v_questionid2 : v_groupid
-DECLARE v_apoio2 varchar(500); 
-DECLARE v_questionid2 varchar(500); # o id da questão na v_lista2
-
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
-    BEGIN
-		ROLLBACK;
-        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
-    END;
-    
-sp:BEGIN		
-   START TRANSACTION;
-
-	# Alterando os grupos associados as questões em v_lista
-    set v_lista2 = concat(p_stringquestionsgroups, ',') ;
-        
-   	while length(v_lista2) > 1 DO
-		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
-		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
-		set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
-        set v_groupid     = REPLACE(v_groupid, ',', '');
-		set v_questionid2 = CONVERT(v_group, UNSIGNED);
-            
-        if v_questionid2 is not null then
-			UPDATE tb_questions set questionGroupID = CONVERT(v_groupid, UNSIGNED) where questionID = v_questionid2;
-        end if;
-        
-  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
-        if position(',' in v_lista2) < length(v_lista2) then
-	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
-		else 
-           set v_lista2 = '';
-		end if;
-	
-	End While;
-	    
-    set p_msg_retorno = 'Associações entre grupos e questões atualizados com sucesso.';
-    
-	COMMIT;
-    
-END;
-
-select p_msg_retorno as msgRetorno from DUAL;
-		
-END$$
-
 CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstGroupModuleDescription` (IN `p_moduleID` INT, IN `p_questionsgroupsdescriptions` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
 #========================================================================================================================
 #== Procedure criada para alterar as descrições dos grupos de questões de um determinado módulo
@@ -2010,116 +1357,6 @@ sp:BEGIN
 	
 	End While;
 	    
-	COMMIT;
-    
-END;
-
-select p_msg_retorno as msgRetorno from DUAL;
-		
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstIsAbout` (IN `p_stringquestionsisabout` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
-#========================================================================================================================
-#== Procedure criada para alterar as associação isAbout entre as questões
-#== Criada em 25 de Maio de 2022
-#========================================================================================================================
-
-# Grupos das questões
-DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
-DECLARE v_groupid integer; # o id da questão isAbout
-DECLARE v_lista2 text; # lista de grupos com questões: v_questionid2 : v_groupid
-DECLARE v_apoio2 varchar(500); 
-DECLARE v_questionid2 varchar(500); # o id da questão na v_lista2
-
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
-    BEGIN
-		ROLLBACK;
-        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
-    END;
-    
-sp:BEGIN		
-   START TRANSACTION;
-
-	# Alterando os grupos associados as questões em v_lista
-    set v_lista2 = concat(p_stringquestionsisabout, ',') ;
-        
-   	while length(v_lista2) > 1 DO
-		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
-		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
-		set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
-        set v_groupid     = REPLACE(v_groupid, ',', '');
-		set v_questionid2 = CONVERT(v_group, SIGNED);
-            
-        if v_questionid2 is not null then
-			UPDATE tb_questions set questionGroupID = CONVERT(v_groupid, SIGNED) where questionID = v_questionid2;
-        end if;
-        
-  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
-        if position(',' in v_lista2) < length(v_lista2) then
-	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
-		else 
-           set v_lista2 = '';
-		end if;
-	
-	End While;
-	    
-    set p_msg_retorno = 'Associações isAbout entre as questões atualizados com sucesso.';
-    
-	COMMIT;
-    
-END;
-
-select p_msg_retorno as msgRetorno from DUAL;
-		
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstListType` (IN `p_stringquestionslisttypes` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
-#========================================================================================================================
-#== Procedure criada para alterar os tipos de lista associados às questões
-#== Criada em 25 de Maio de 2022
-#========================================================================================================================
-
-# Grupos das questões
-DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
-DECLARE v_groupid integer; # o id do tipo de lista
-DECLARE v_lista2 text; # lista de grupos com questões: v_questionid2 : v_groupid
-DECLARE v_apoio2 varchar(500); 
-DECLARE v_questionid2 varchar(500); # o id da questão na v_lista2
-
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
-    BEGIN
-		ROLLBACK;
-        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
-    END;
-    
-sp:BEGIN		
-   START TRANSACTION;
-
-	# Alterando os grupos associados as questões em v_lista
-    set v_lista2 = concat(p_stringquestionslisttypes, ',') ;
-        
-   	while length(v_lista2) > 1 DO
-		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
-		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
-		set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
-        set v_groupid     = REPLACE(v_groupid, ',', '');
-		set v_questionid2 = CONVERT(v_group, SIGNED);
-            
-        if v_questionid2 is not null then
-			UPDATE tb_questions set listTypeID = CONVERT(v_groupid, SIGNED) where questionID = v_questionid2;
-        end if;
-        
-  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
-        if position(',' in v_lista2) < length(v_lista2) then
-	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
-		else 
-           set v_lista2 = '';
-		end if;
-	
-	End While;
-	    
-    set p_msg_retorno = 'Associações entre os tipos de lista e questões atualizadas com sucesso.';
-    
 	COMMIT;
     
 END;
@@ -2348,171 +1585,6 @@ END;
 		
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstSubordinateTo` (IN `p_stringquestionssubordinateto` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
-#========================================================================================================================
-#== Procedure criada para alterar os grupos de questões associados às questões
-#== Criada em 25 de Maio de 2022
-#========================================================================================================================
-
-# Grupos das questões
-DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
-DECLARE v_groupid integer; # o id da questão a que se subordina
-DECLARE v_lista2 text; # lista de grupos com questões: v_questionid2 : v_groupid
-DECLARE v_apoio2 varchar(500); 
-DECLARE v_questionid2 varchar(500); # o id da questão na v_lista2
-
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
-    BEGIN
-		ROLLBACK;
-        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
-    END;
-    
-sp:BEGIN		
-   START TRANSACTION;
-
-	# Alterando as subordinações associadas as questões em v_lista
-    set v_lista2 = concat(p_stringquestionssubordinateto, ',') ;
-        
-   	while length(v_lista2) > 1 DO
-		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
-		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
-		set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
-        set v_groupid     = REPLACE(v_groupid, ',', '');
-		set v_questionid2 = CONVERT(v_group, SIGNED);
-            
-        if v_questionid2 is not null then
-			UPDATE tb_questions set subordinateTo = CONVERT(v_groupid, SIGNED) where questionID = v_questionid2;
-        end if;
-        
-  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
-        if position(',' in v_lista2) < length(v_lista2) then
-	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
-		else 
-           set v_lista2 = '';
-		end if;
-	
-	End While;
-	    
-    set p_msg_retorno = 'Associações de subordinações entre questões atualizados com sucesso.';
-    
-	COMMIT;
-    
-END;
-
-select p_msg_retorno as msgRetorno from DUAL;
-		
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstSubordinateValues` (IN `p_stringquestionssudbordinatevalues` TEXT, IN `p_msg_retorno` VARCHAR(500))  BEGIN
-#========================================================================================================================
-#== Procedure criada para alterar os valores de subordinação associados às questões
-#== Criada em 25 de Maio de 2022
-#========================================================================================================================
-
-# Grupos das questões
-DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
-DECLARE v_groupid varchar(50); # os valores novos de subordinação
-DECLARE v_lista2 text; # lista de grupos com questões: v_questionid2 : v_groupid
-DECLARE v_apoio2 varchar(500); 
-DECLARE v_questionid2 varchar(500); # o id da questão na v_lista2
-
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
-    BEGIN
-		ROLLBACK;
-        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
-    END;
-    
-sp:BEGIN		
-   START TRANSACTION;
-
-	# Alterando os grupos associados as questões em v_lista
-    set v_lista2 = concat(p_stringquestionssudbordinatevalues, ',') ;
-        
-   	while length(v_lista2) > 1 DO
-		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
-		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
-		set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
-        set v_groupid     = REPLACE(v_groupid, ',', '');
-		set v_questionid2 = CONVERT(v_group, SIGNED);
-            
-        if v_questionid2 is not null then
-			UPDATE tb_questions set subordinateValues = v_groupid where questionID = v_questionid2;
-        end if;
-        
-  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
-        if position(',' in v_lista2) < length(v_lista2) then
-	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
-		else 
-           set v_lista2 = '';
-		end if;
-	
-	End While;
-	    
-    set p_msg_retorno = 'Associações entre os valores de subordinação e questões atualizadas com sucesso.';
-    
-	COMMIT;
-    
-END;
-
-select p_msg_retorno as msgRetorno from DUAL;
-		
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `putQstType` (IN `p_stringquestionstypes` TEXT, OUT `p_msg_retorno` VARCHAR(500))  BEGIN
-#========================================================================================================================
-#== Procedure criada para alterar os tipios de questões associados às questões
-#== Criada em 25 de Maio de 2022
-#========================================================================================================================
-
-# Grupos das questões
-DECLARE v_group varchar(50); # auxiliar ponteiro da v_lista2
-DECLARE v_groupid integer; # o id do tipo da questão
-DECLARE v_lista2 text; # lista de grupos com questões: v_questionid2 : v_groupid
-DECLARE v_apoio2 varchar(500); 
-DECLARE v_questionid2 varchar(500); # o id da questão na v_lista2
-
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION, 1062 
-    BEGIN
-		ROLLBACK;
-        SELECT 'Ocorreu um erro durante a execução do procedimento. Contacte o administrador!' Message; 
-    END;
-    
-sp:BEGIN		
-   START TRANSACTION;
-
-	# Alterando os grupos associados as questões em v_lista
-    set v_lista2 = concat(p_stringquestionstypes, ',') ;
-        
-   	while length(v_lista2) > 1 DO
-		set v_apoio2 = substring(v_lista2, 1, position(',' in v_lista2));
-		set v_group = substring(v_apoio2, 1, position(':' in v_apoio2) - 1);
-		set v_groupid     = substring(v_apoio2, position(':' in v_apoio2) + 1, position(',' in v_apoio2) - 1);
-        set v_groupid     = REPLACE(v_groupid, ',', '');
-		set v_questionid2 = CONVERT(v_group, SIGNED);
-            
-        if v_questionid2 is not null then
-			UPDATE tb_questions set questionTypeID = CONVERT(v_groupid, SIGNED) where questionID = v_questionid2;
-        end if;
-
-  #      SELECT v_lista, length(v_lista), position(',' in v_lista);
-        if position(',' in v_lista2) < length(v_lista2) then
-	  	   set v_lista2 = substring(v_lista2,  position(',' in v_lista2) + 1, length(v_lista2));
-		else 
-           set v_lista2 = '';
-		end if;
-	
-	End While;
-	    
-    set p_msg_retorno = 'Associações entre tipos e questões atualizadas com sucesso.';
-    
-	COMMIT;
-    
-END;
-
-select p_msg_retorno as msgRetorno from DUAL;
-		
-END$$
-
 CREATE DEFINER=`root`@`localhost` PROCEDURE `putQuestionnaire` (IN `p_userID` INT, IN `p_groupRoleID` INT, IN `p_hospitalUnitID` INT, IN `p_questionnaireDescription` VARCHAR(500), IN `p_questionnaireVersion` VARCHAR(50), IN `p_questionnaireStatusID` INT, IN `p_questionnaireLastModification` DATETIME, IN `p_questionnaireCreationDate` DATETIME)  BEGIN
 #========================================================================================================================
 #== Procedure criada para atualizar um questionário
@@ -2683,18 +1755,8 @@ WHERE t1.description like CONCAT('%',p_descricao, '%');
 END$$
 
 --
--- Funções
+-- Functions
 --
-CREATE DEFINER=`root`@`localhost` FUNCTION `getQuestionnaireNewVersionNumber` (`p_questionnaireID` INT) RETURNS VARCHAR(50) CHARSET utf8mb4 BEGIN
-
-   DECLARE version VARCHAR(500);
-
-   SET version = (Select version from tb_Questionnaire where questionnaireID = p_questionnaireID);
-
-   RETURN version;
-
-END$$
-
 CREATE DEFINER=`root`@`localhost` FUNCTION `getTotalMedicalRecordHospitalUnit` (`p_hospitalUnitid` INTEGER, `p_questionnaireid` INTEGER) RETURNS INT(11) BEGIN
 #========================================================================================================================
 #== Função criada para verificar se já existem prontuários/registros associados a um determinado hospital
@@ -2756,7 +1818,7 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_assessmentquestionnaire`
+-- Table structure for table `tb_assessmentquestionnaire`
 --
 
 CREATE TABLE `tb_assessmentquestionnaire` (
@@ -2766,7 +1828,7 @@ CREATE TABLE `tb_assessmentquestionnaire` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
--- Extraindo dados da tabela `tb_assessmentquestionnaire`
+-- Dumping data for table `tb_assessmentquestionnaire`
 --
 
 INSERT INTO `tb_assessmentquestionnaire` (`participantID`, `hospitalUnitID`, `questionnaireID`) VALUES
@@ -2868,22 +1930,12 @@ INSERT INTO `tb_assessmentquestionnaire` (`participantID`, `hospitalUnitID`, `qu
 (184, 1, 1),
 (185, 1, 1),
 (186, 1, 1),
-(187, 1, 1),
-(188, 1, 1),
-(189, 1, 1),
-(0, 1, 2),
-(190, 1, 4),
-(191, 1, 4),
-(203, 1, 3),
-(204, 2, 1),
-(205, 2, 3),
-(206, 1, 3),
-(207, 1, 1);
+(187, 1, 1);
 
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_crfforms`
+-- Table structure for table `tb_crfforms`
 --
 
 CREATE TABLE `tb_crfforms` (
@@ -2892,11 +1944,11 @@ CREATE TABLE `tb_crfforms` (
   `description` varchar(255) NOT NULL COMMENT '(pt-br) Descrição .\r\n(en) description.',
   `crfformsStatusID` int(10) NOT NULL,
   `lastModification` timestamp NOT NULL DEFAULT current_timestamp(),
-  `creationDate` timestamp NULL DEFAULT NULL
+  `creationDate` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='(pt-br)\r\ntb_CRFForms identifica o tipo do formulario refere-se ao Questionnaire Subsection da Ontologia:\r\nAdmissão - Modulo 1\r\nAcompanhamento - Modulo 2\r\nDesfecho - Modulo 3\r\n(en)\r\ntb_CRFForms identifies the type of the form refers to the Questionnaire Subsection of Ontology: Admission - Module 1 Monitoring - Module 2 Outcome - Module 3';
 
 --
--- Extraindo dados da tabela `tb_crfforms`
+-- Dumping data for table `tb_crfforms`
 --
 
 INSERT INTO `tb_crfforms` (`crfFormsID`, `questionnaireID`, `description`, `crfformsStatusID`, `lastModification`, `creationDate`) VALUES
@@ -2916,7 +1968,7 @@ INSERT INTO `tb_crfforms` (`crfFormsID`, `questionnaireID`, `description`, `crff
 (577, 14, 'Discharge/death form', 2, '2022-01-03 20:51:58', '2022-01-03 20:51:58'),
 (578, 14, 'Admission Form', 2, '2022-01-03 20:54:48', '2022-01-03 20:54:48'),
 (579, 14, 'Follow-up', 2, '2022-01-03 21:07:01', '2022-01-03 21:07:01'),
-(580, 2, 'Discharge/death form', 2, '2022-01-07 23:53:04', '2022-01-07 23:53:04'),
+(0, 2, 'Discharge/death form', 2, '2022-01-07 23:53:04', '2022-01-07 23:53:04'),
 (581, 30, 'Admission Form', 2, '2022-01-09 19:28:23', '2022-01-09 19:28:23'),
 (582, 30, 'Admission Form', 2, '2022-01-09 19:28:28', '2022-01-09 19:28:28'),
 (583, 30, 'Follow-up', 2, '2022-01-09 19:31:01', '2022-01-09 19:31:01'),
@@ -2929,16 +1981,15 @@ INSERT INTO `tb_crfforms` (`crfFormsID`, `questionnaireID`, `description`, `crff
 (590, 35, 'Discharge/death form', 2, '2022-01-10 19:13:57', '2022-01-10 19:13:57'),
 (593, 2, 'Follow-up', 2, '2022-01-12 14:39:15', '2022-01-12 14:39:15'),
 (595, 2, 'Discharge/death form', 2, '2022-02-14 16:52:44', '2022-02-14 16:52:44'),
-(596, 3, 'Admission Form', 1, '2022-03-09 17:41:15', '2022-03-09 17:41:15'),
-(597, 10, 'Admission Form', 2, '2022-04-30 17:30:42', '2022-04-30 17:30:42'),
-(598, 3, 'Follow-up', 1, '2022-05-22 19:54:20', '2022-05-22 19:54:20'),
-(599, 3, 'Discharge/death form', 1, '2022-06-19 16:36:32', '2022-06-19 16:36:32'),
-(0, 3, 'Admission Form', 2, '2022-10-11 00:02:08', '2022-10-11 00:02:08');
+(0, 3, 'Admission Form', 2, '2022-03-09 17:41:15', '2022-03-09 17:41:15'),
+(0, 10, 'Admission Form', 2, '2022-04-30 17:30:42', '2022-04-30 17:30:42'),
+(0, 3, 'Follow-up', 2, '2022-05-22 19:54:20', '2022-05-22 19:54:20'),
+(22, 3, 'Admission Form', 2, '2022-05-22 19:55:38', '2022-05-22 19:55:38');
 
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_crfformsstatus`
+-- Table structure for table `tb_crfformsstatus`
 --
 
 CREATE TABLE `tb_crfformsstatus` (
@@ -2948,7 +1999,7 @@ CREATE TABLE `tb_crfformsstatus` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Extraindo dados da tabela `tb_crfformsstatus`
+-- Dumping data for table `tb_crfformsstatus`
 --
 
 INSERT INTO `tb_crfformsstatus` (`crfformsStatusID`, `description`, `creationDate`) VALUES
@@ -2959,7 +2010,7 @@ INSERT INTO `tb_crfformsstatus` (`crfformsStatusID`, `description`, `creationDat
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_formrecord`
+-- Table structure for table `tb_formrecord`
 --
 
 CREATE TABLE `tb_formrecord` (
@@ -2972,7 +2023,7 @@ CREATE TABLE `tb_formrecord` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
--- Extraindo dados da tabela `tb_formrecord`
+-- Dumping data for table `tb_formrecord`
 --
 
 INSERT INTO `tb_formrecord` (`formRecordID`, `participantID`, `hospitalUnitID`, `questionnaireID`, `crfFormsID`, `dtRegistroForm`) VALUES
@@ -3234,15 +2285,12 @@ INSERT INTO `tb_formrecord` (`formRecordID`, `participantID`, `hospitalUnitID`, 
 (258, 186, 1, 1, 1, '2021-11-30 20:14:48'),
 (1293, NULL, 1, 28, 3, '2021-12-29 20:11:45'),
 (1292, NULL, 1, 28, 2, '2021-12-29 20:11:45'),
-(1291, NULL, 1, 28, 1, '2021-12-29 20:11:45'),
-(1294, 168, 1, 1, 2, '2022-06-26 00:39:19'),
-(1295, 168, 1, 1, 3, '2022-06-26 01:03:55'),
-(1296, 173, 2, 1, 1, '2022-06-26 17:34:48');
+(1291, NULL, 1, 28, 1, '2021-12-29 20:11:45');
 
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_grouprole`
+-- Table structure for table `tb_grouprole`
 --
 
 CREATE TABLE `tb_grouprole` (
@@ -3251,7 +2299,7 @@ CREATE TABLE `tb_grouprole` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
--- Extraindo dados da tabela `tb_grouprole`
+-- Dumping data for table `tb_grouprole`
 --
 
 INSERT INTO `tb_grouprole` (`groupRoleID`, `description`) VALUES
@@ -3266,7 +2314,7 @@ INSERT INTO `tb_grouprole` (`groupRoleID`, `description`) VALUES
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_grouprolepermission`
+-- Table structure for table `tb_grouprolepermission`
 --
 
 CREATE TABLE `tb_grouprolepermission` (
@@ -3277,7 +2325,7 @@ CREATE TABLE `tb_grouprolepermission` (
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_hospitalunit`
+-- Table structure for table `tb_hospitalunit`
 --
 
 CREATE TABLE `tb_hospitalunit` (
@@ -3286,7 +2334,7 @@ CREATE TABLE `tb_hospitalunit` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='(pt-br) Tabela para identificação de unidades hospitalares.\r\n(en) Table for hospital units identification.';
 
 --
--- Extraindo dados da tabela `tb_hospitalunit`
+-- Dumping data for table `tb_hospitalunit`
 --
 
 INSERT INTO `tb_hospitalunit` (`hospitalUnitID`, `hospitalUnitName`) VALUES
@@ -3296,7 +2344,7 @@ INSERT INTO `tb_hospitalunit` (`hospitalUnitID`, `hospitalUnitName`) VALUES
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_language`
+-- Table structure for table `tb_language`
 --
 
 CREATE TABLE `tb_language` (
@@ -3305,7 +2353,7 @@ CREATE TABLE `tb_language` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
--- Extraindo dados da tabela `tb_language`
+-- Dumping data for table `tb_language`
 --
 
 INSERT INTO `tb_language` (`languageID`, `description`) VALUES
@@ -3315,17 +2363,17 @@ INSERT INTO `tb_language` (`languageID`, `description`) VALUES
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_listofvalues`
+-- Table structure for table `tb_listofvalues`
 --
 
 CREATE TABLE `tb_listofvalues` (
   `listOfValuesID` int(10) NOT NULL,
-  `listTypeID` int(10) DEFAULT NULL,
+  `listTypeID` int(10) NOT NULL,
   `description` varchar(255) NOT NULL COMMENT '(pt-br) Descrição.\r\n(en) description.'
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='(pt-br) Representa todos os valores padronizados do formulário.\r\n(en) Represents all standard values on the form.';
 
 --
--- Extraindo dados da tabela `tb_listofvalues`
+-- Dumping data for table `tb_listofvalues`
 --
 
 INSERT INTO `tb_listofvalues` (`listOfValuesID`, `listTypeID`, `description`) VALUES
@@ -3635,23 +2683,22 @@ INSERT INTO `tb_listofvalues` (`listOfValuesID`, `listTypeID`, `description`) VA
 (304, 11, 'Positive'),
 (305, 1, 'Azithromycin'),
 (306, 1, 'Chloroquine/hydroxychloroquine'),
-(307, 1, 'Favipiravir'),
-(308, 17, 'novo valor resposta');
+(307, 1, 'Favipiravir');
 
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_listtype`
+-- Table structure for table `tb_listtype`
 --
 
 CREATE TABLE `tb_listtype` (
   `listTypeID` int(10) NOT NULL,
   `description` varchar(255) NOT NULL COMMENT '(pt-br) Descrição.\r\n(en) description.',
-  `comment` varchar(500) DEFAULT NULL
+  `comment` varchar(500) NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
--- Extraindo dados da tabela `tb_listtype`
+-- Dumping data for table `tb_listtype`
 --
 
 INSERT INTO `tb_listtype` (`listTypeID`, `description`, `comment`) VALUES
@@ -3671,12 +2718,12 @@ INSERT INTO `tb_listtype` (`listTypeID`, `description`, `comment`) VALUES
 (14, 'Source of oxygen list', 'Este é um comentário sobre o tipo da lista'),
 (15, 'ynu_list', 'Este é um comentário sobre o tipo da lista'),
 (16, 'ynun_list', 'Este é um comentário sobre o tipo da lista'),
-(17, 'novo tipo de lista', NULL);
+(0, '', 'Este é um comentário sobre o tipo da lista');
 
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_multilanguage`
+-- Table structure for table `tb_multilanguage`
 --
 
 CREATE TABLE `tb_multilanguage` (
@@ -3686,7 +2733,7 @@ CREATE TABLE `tb_multilanguage` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
--- Extraindo dados da tabela `tb_multilanguage`
+-- Dumping data for table `tb_multilanguage`
 --
 
 INSERT INTO `tb_multilanguage` (`languageID`, `description`, `descriptionLang`) VALUES
@@ -4287,12 +3334,41 @@ INSERT INTO `tb_multilanguage` (`languageID`, `description`, `descriptionLang`) 
 (1, 'Paísa', 'Paísa'),
 (1, 'Nome da Instalaçãosd', 'Nome da Instalaçãosd'),
 (1, 'Medico safadinho', 'Medico safadinho'),
-(1, 'Doidera', 'Doidera');
+(1, 'Doidera', 'Doidera'),
+(1, 'Teste', 'Teste'),
+(1, 'Um grupão só', 'Um grupão só'),
+(2, 'Um grupão só', 'Um grupão só'),
+(1, ' oia oia', ' oia oia'),
+(2, ' oia oia', ' oia oia'),
+(1, 'olha oklha', 'olha oklha'),
+(2, 'olha oklha', 'olha oklha'),
+(1, 'novo grupão', 'novo grupão'),
+(2, 'novo grupão', 'novo grupão'),
+(1, 'Critérios Clínicos para Inclusão', 'Critérios Clínicos para Inclusão'),
+(2, 'Critérios Clínicos para Inclusão', 'Critérios Clínicos para Inclusão'),
+(1, 'Novo Grupo - 1', 'Novo Grupo - 1'),
+(2, 'Novo Grupo - 1', 'Novo Grupo - 1'),
+(1, 'Dados demográficos', 'Dados demográficos'),
+(2, 'Dados demográficos', 'Dados demográficos'),
+(1, 'Início da doença e sinais vitais na admissão', 'Início da doença e sinais vitais na admissão'),
+(2, 'Início da doença e sinais vitais na admissão', 'Início da doença e sinais vitais na admissão'),
+(1, 'Comorbidades', 'Comorbidades'),
+(2, 'Comorbidades', 'Comorbidades'),
+(1, 'Pré-admissão e medicamentos de uso contínuo', 'Pré-admissão e medicamentos de uso contínuo'),
+(2, 'Pré-admissão e medicamentos de uso contínuo', 'Pré-admissão e medicamentos de uso contínuo'),
+(1, 'Sinais e sintomas na hora da admissão', 'Sinais e sintomas na hora da admissão'),
+(2, 'Sinais e sintomas na hora da admissão', 'Sinais e sintomas na hora da admissão'),
+(1, 'Doidera', 'Doidera'),
+(2, 'Doidera', 'Doidera'),
+(1, 'Cuidados', 'Cuidados'),
+(2, 'Cuidados', 'Cuidados'),
+(1, 'Resultados laboratoriais]', 'Resultados laboratoriais]'),
+(2, 'Resultados laboratoriais]', 'Resultados laboratoriais]');
 
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_notificationrecord`
+-- Table structure for table `tb_notificationrecord`
 --
 
 CREATE TABLE `tb_notificationrecord` (
@@ -4307,7 +3383,7 @@ CREATE TABLE `tb_notificationrecord` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
--- Extraindo dados da tabela `tb_notificationrecord`
+-- Dumping data for table `tb_notificationrecord`
 --
 
 INSERT INTO `tb_notificationrecord` (`userID`, `profileID`, `hospitalUnitID`, `tableName`, `rowdID`, `changedOn`, `operation`, `log`) VALUES
@@ -4990,160 +4066,13 @@ INSERT INTO `tb_notificationrecord` (`userID`, `profileID`, `hospitalUnitID`, `t
 (20, 1, 1, 'tb_questiongroupformrecord', 1377, '2021-11-30 23:14:48', 'I', 'Inclusão de Resposta da 252:Sim - 15:298'),
 (20, 1, 1, 'tb_questiongroupformrecord', 1378, '2021-11-30 23:14:48', 'I', 'Inclusão de Resposta da 253:Sim - 15:298'),
 (20, 1, 1, 'tb_questiongroupformrecord', 1379, '2021-11-30 23:14:48', 'I', 'Inclusão de Resposta da 254:Inibidor de neuraminidase - 1:4'),
-(20, 7, 1, 'tb_participant', 0, '2022-06-20 17:52:54', 'I', 'Inclusão de paciente: 8324234332'),
-(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-20 17:52:54', 'I', 'Inclusão do registro referente ao paciente: 0 para o hospital: 1'),
-(20, 7, 1, 'tb_participant', 0, '2022-06-25 20:50:02', 'I', 'Inclusão de paciente: 9435345'),
-(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-25 20:50:02', 'I', 'Inclusão do registro referente ao paciente: 0 para o hospital: 1'),
-(20, 7, 1, 'tb_participant', 0, '2022-06-25 20:51:17', 'I', 'Inclusão de paciente: 94353456'),
-(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-25 20:51:17', 'I', 'Inclusão do registro referente ao paciente: 0 para o hospital: 1'),
-(20, 7, 1, 'tb_participant', 0, '2022-06-25 20:58:59', 'I', 'Inclusão de paciente: 0032442345'),
-(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-25 20:58:59', 'I', 'Inclusão do registro referente ao paciente: 0 para o hospital: 1'),
-(20, 7, 1, 'tb_participant', 0, '2022-06-25 21:09:35', 'I', 'Inclusão de paciente: 45455'),
-(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-25 21:09:35', 'I', 'Inclusão do registro referente ao paciente: 0 para o hospital: 1'),
-(20, 7, 1, 'tb_participant', 0, '2022-06-25 21:09:38', 'I', 'Inclusão de paciente: 45455'),
-(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-25 21:09:38', 'I', 'Inclusão do registro referente ao paciente: 0 para o hospital: 1'),
-(20, 7, 1, 'tb_participant', 203, '2022-06-25 21:17:05', 'I', 'Inclusão de paciente: 45455345'),
-(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-25 21:17:05', 'I', 'Inclusão do registro referente ao paciente: 203 para o hospital: 1'),
-(20, 7, 1, 'tb_formRecord', 0, '2022-06-26 00:39:19', 'I', 'Inclusão de Modulo para paciente: 168'),
-(20, 7, 1, 'tb_questiongroupformrecord', 2052, '2022-06-26 00:39:20', 'A', NULL),
-(20, 7, 1, 'tb_formRecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Modulo para paciente: 168'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 30:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 31:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 32:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 33:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 34:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 35:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 36:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 37:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 39:Não - 15:296'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 66:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 67:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 68:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 69:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 70:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 71:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 72:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 73:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 74:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 75:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 76:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 77:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 78:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 80:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 81:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 117:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 119:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 120:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 122:Como antes da doença - 12:293'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 123:Internado - 9:277'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 124:2022-06-24T09:00'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 149:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 150:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 151:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 152:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 153:Desconhecido - 16:301'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 154:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 155:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 176:Desconhecido - 15:297'),
-(20, 7, 1, 'tb_questiongroupformrecord', 1295, '2022-06-26 01:03:55', 'I', 'Inclusão de Resposta da 199:Não - 15:296'),
-(20, 7, 2, 'tb_participant', 204, '2022-06-26 17:28:17', 'I', 'Inclusão de paciente: 12345678'),
-(20, 7, 2, 'tb_assessmentquestionnaire', 0, '2022-06-26 17:28:17', 'I', 'Inclusão do registro referente ao paciente: 204 para o hospital: 2'),
-(20, 7, 2, 'tb_participant', 205, '2022-06-26 17:29:55', 'I', 'Inclusão de paciente: 12345678'),
-(20, 7, 2, 'tb_assessmentquestionnaire', 0, '2022-06-26 17:29:55', 'I', 'Inclusão do registro referente ao paciente: 205 para o hospital: 2'),
-(20, 7, 2, 'tb_formRecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Modulo para paciente: 173'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 29:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 33:Não - 15:296'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 34:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 35:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 36:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 37:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 38:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 39:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 47:false'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 48:false'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 49:false'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 50:Não - 15:296'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 51:Não - 15:296'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 52:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 53:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 54:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 55:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 56:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 57:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 58:Não - 15:296'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 59:Não - 6:261'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 60:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 61:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 62:Não - 15:296'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 63:false'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 64:false'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 65:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 93:2021-06-05T12:10'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 95:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 97:2020-05-10T10:00'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 107:2020-05-10T10:04'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 108:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 109:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 110:Não - 16:300'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 111:Feminino - 13:284'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 117:Não - 15:296'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 119:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 120:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 127:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 128:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 129:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 130:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 132:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 133:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 134:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 135:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 136:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 137:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 138:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 139:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 140:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 149:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 150:Não - 15:296'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 151:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 152:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 153:Não - 16:300'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 154:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 155:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 167:2020-06-07T10:05'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 189:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 190:Dor - 2:7'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 196:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 199:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 200:Não - 15:296'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 201:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 202:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 203:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 204:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 205:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 206:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 207:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 208:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 209:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 210:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 211:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 213:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 214:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 215:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 225:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 241:Desconhecido - 15:297'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 242:Textão desnecessário'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 252:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 253:Sim - 15:298'),
-(20, 7, 2, 'tb_questiongroupformrecord', 1296, '2022-06-26 17:34:48', 'I', 'Inclusão de Resposta da 254:Ribavirina - 1:5'),
-(20, 7, 1, 'tb_participant', 206, '2022-06-26 17:35:46', 'I', 'Inclusão de paciente: 12345678'),
-(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-26 17:35:46', 'I', 'Inclusão do registro referente ao paciente: 206 para o hospital: 1'),
-(20, 7, 1, 'tb_participant', 207, '2022-06-26 17:36:12', 'I', 'Inclusão de paciente: 769769'),
-(20, 7, 1, 'tb_assessmentquestionnaire', 0, '2022-06-26 17:36:12', 'I', 'Inclusão do registro referente ao paciente: 207 para o hospital: 1');
+(1, 1, 11, 'tb_questiongroups', 1, '2022-05-24 20:42:32', 'I', 'Criação de uma lista de grupos: 2344:olha oklha'),
+(11, 1, 2, 'tb_questiongroups', 1, '2022-05-25 17:36:38', 'I', 'Criação de uma lista de grupos: ');
 
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_ontology`
+-- Table structure for table `tb_ontology`
 --
 
 CREATE TABLE `tb_ontology` (
@@ -5158,7 +4087,7 @@ CREATE TABLE `tb_ontology` (
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_ontologyterms`
+-- Table structure for table `tb_ontologyterms`
 --
 
 CREATE TABLE `tb_ontologyterms` (
@@ -5170,7 +4099,7 @@ CREATE TABLE `tb_ontologyterms` (
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_participant`
+-- Table structure for table `tb_participant`
 --
 
 CREATE TABLE `tb_participant` (
@@ -5179,7 +4108,7 @@ CREATE TABLE `tb_participant` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='(pt-br) Tabela para registros de pacientes.\r\n(en) Table for patient records.';
 
 --
--- Extraindo dados da tabela `tb_participant`
+-- Dumping data for table `tb_participant`
 --
 
 INSERT INTO `tb_participant` (`participantID`, `medicalRecord`) VALUES
@@ -5281,32 +4210,12 @@ INSERT INTO `tb_participant` (`participantID`, `medicalRecord`) VALUES
 (184, '1234355345'),
 (185, '6575675778'),
 (186, '94564563'),
-(187, '54654654'),
-(188, '8324234332'),
-(189, '9435345'),
-(190, '94353456'),
-(191, '34234234'),
-(192, '34234234'),
-(193, '23423434'),
-(194, '93453454'),
-(195, '93453453'),
-(196, '23123123'),
-(197, '23123123'),
-(198, '0032442345'),
-(199, '45455'),
-(200, '45455'),
-(201, '45455'),
-(202, '45455'),
-(203, '45455345'),
-(204, '12345678'),
-(205, '12345678'),
-(206, '12345678'),
-(207, '769769');
+(187, '54654654');
 
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_permission`
+-- Table structure for table `tb_permission`
 --
 
 CREATE TABLE `tb_permission` (
@@ -5315,7 +4224,7 @@ CREATE TABLE `tb_permission` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
--- Extraindo dados da tabela `tb_permission`
+-- Dumping data for table `tb_permission`
 --
 
 INSERT INTO `tb_permission` (`permissionID`, `description`) VALUES
@@ -5327,7 +4236,7 @@ INSERT INTO `tb_permission` (`permissionID`, `description`) VALUES
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_questiongroup`
+-- Table structure for table `tb_questiongroup`
 --
 
 CREATE TABLE `tb_questiongroup` (
@@ -5337,7 +4246,7 @@ CREATE TABLE `tb_questiongroup` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='Relacionado ao Question Group da ontologia relaciona as diversas sessoes existentes nos formularios do CRF COVID-19';
 
 --
--- Extraindo dados da tabela `tb_questiongroup`
+-- Dumping data for table `tb_questiongroup`
 --
 
 INSERT INTO `tb_questiongroup` (`questionGroupID`, `description`, `comment`) VALUES
@@ -5349,18 +4258,33 @@ INSERT INTO `tb_questiongroup` (`questionGroupID`, `description`, `comment`) VAL
 (6, 'Demographics', ''),
 (7, 'Diagnostic/pathogen testing', ''),
 (8, 'Laboratory results', ''),
-(9, 'Medication', 'Is the patient CURRENTLY receiving any of the following?'),
+(9, 'Doidera', 'Is the patient CURRENTLY receiving any of the following?'),
 (10, 'Outcome', ''),
 (11, 'Pre-admission & chronic medication', 'Were any of the following taken within 14 days of admission?'),
 (12, 'Signs and symptoms on admission', ''),
 (13, 'Supportive care', 'Is the patient CURRENTLY receiving any of the following?'),
 (14, 'Vital signs', ''),
-(234, 'testado', '');
+(15, 'we', ''),
+(16, 'Testando grupo', ''),
+(17, 'Um grupão só', ''),
+(18, ' oia oia', ''),
+(19, 'olha oklha', ''),
+(20, 'novo grupão', ''),
+(21, 'Critérios Clínicos para Inclusão', ''),
+(22, 'Novo Grupo - 1', ''),
+(23, 'Dados demográficos', ''),
+(24, 'Início da doença e sinais vitais na admissão', ''),
+(25, 'Comorbidades', ''),
+(26, 'Pré-admissão e medicamentos de uso contínuo', ''),
+(27, 'Sinais e sintomas na hora da admissão', ''),
+(28, 'Doidera', ''),
+(29, 'Cuidados', ''),
+(30, 'Resultados laboratoriais]', '');
 
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_questiongroupform`
+-- Table structure for table `tb_questiongroupform`
 --
 
 CREATE TABLE `tb_questiongroupform` (
@@ -5370,7 +4294,7 @@ CREATE TABLE `tb_questiongroupform` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
--- Extraindo dados da tabela `tb_questiongroupform`
+-- Dumping data for table `tb_questiongroupform`
 --
 
 INSERT INTO `tb_questiongroupform` (`crfFormsID`, `questionID`, `questionOrder`) VALUES
@@ -5676,13 +4600,12 @@ INSERT INTO `tb_questiongroupform` (`crfFormsID`, `questionID`, `questionOrder`)
 (3, 236, 30412),
 (3, 237, 30414),
 (3, 238, 30416),
-(3, 240, 30419),
-(599, 256, 1);
+(3, 240, 30419);
 
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_questiongroupformrecord`
+-- Table structure for table `tb_questiongroupformrecord`
 --
 
 CREATE TABLE `tb_questiongroupformrecord` (
@@ -5695,7 +4618,7 @@ CREATE TABLE `tb_questiongroupformrecord` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='(pt-br) Tabela para registro da resposta associada a uma questão de um agrupamento de um formulário referente a um questionario de avaliação.\r\n(en) Form record table.';
 
 --
--- Extraindo dados da tabela `tb_questiongroupformrecord`
+-- Dumping data for table `tb_questiongroupformrecord`
 --
 
 INSERT INTO `tb_questiongroupformrecord` (`questionGroupFormRecordID`, `formRecordID`, `crfFormsID`, `questionID`, `listOfValuesID`, `answer`) VALUES
@@ -7182,7 +6105,7 @@ INSERT INTO `tb_questiongroupformrecord` (`questionGroupFormRecordID`, `formReco
 (2055, 0, 1, 29, 296, NULL),
 (2054, 0, 1, 109, 298, NULL),
 (2053, 0, 2, 187, 297, NULL),
-(2052, 0, 2, 28, 297, ''),
+(2052, 0, 2, 28, 297, NULL),
 (2051, 0, 1, 109, 296, NULL),
 (2050, 0, 1, 108, 296, NULL),
 (2049, 0, 1, 60, 298, NULL),
@@ -7278,141 +6201,18 @@ INSERT INTO `tb_questiongroupformrecord` (`questionGroupFormRecordID`, `formReco
 (2162, 0, 1, 247, NULL, NULL),
 (2163, 0, 1, 248, NULL, NULL),
 (2164, 0, 1, 249, NULL, NULL),
-(2165, 0, 1, 254, 4, NULL),
-(0, 1295, 3, 30, 297, ''),
-(0, 1295, 3, 31, 297, ''),
-(0, 1295, 3, 32, 297, ''),
-(0, 1295, 3, 33, 297, ''),
-(0, 1295, 3, 34, 297, ''),
-(0, 1295, 3, 35, 297, ''),
-(0, 1295, 3, 36, 297, ''),
-(0, 1295, 3, 37, 297, ''),
-(0, 1295, 3, 39, 296, ''),
-(0, 1295, 3, 66, 297, ''),
-(0, 1295, 3, 67, 297, ''),
-(0, 1295, 3, 68, 297, ''),
-(0, 1295, 3, 69, 297, ''),
-(0, 1295, 3, 70, 297, ''),
-(0, 1295, 3, 71, 297, ''),
-(0, 1295, 3, 72, 297, ''),
-(0, 1295, 3, 73, 297, ''),
-(0, 1295, 3, 74, 297, ''),
-(0, 1295, 3, 75, 297, ''),
-(0, 1295, 3, 76, 297, ''),
-(0, 1295, 3, 77, 297, ''),
-(0, 1295, 3, 78, 297, ''),
-(0, 1295, 3, 80, 297, ''),
-(0, 1295, 3, 81, 297, ''),
-(0, 1295, 3, 117, 297, ''),
-(0, 1295, 3, 119, 297, ''),
-(0, 1295, 3, 120, 297, ''),
-(0, 1295, 3, 122, 293, ''),
-(0, 1295, 3, 123, 277, ''),
-(0, 1295, 3, 124, NULL, '2022-06-24T09:00'),
-(0, 1295, 3, 149, 297, ''),
-(0, 1295, 3, 150, 297, ''),
-(0, 1295, 3, 151, 297, ''),
-(0, 1295, 3, 152, 297, ''),
-(0, 1295, 3, 153, 301, ''),
-(0, 1295, 3, 154, 297, ''),
-(0, 1295, 3, 155, 297, ''),
-(0, 1295, 3, 176, 297, ''),
-(0, 1295, 3, 199, 296, ''),
-(0, 1296, 1, 29, 297, ''),
-(0, 1296, 1, 33, 296, ''),
-(0, 1296, 1, 34, 297, ''),
-(0, 1296, 1, 35, 297, ''),
-(0, 1296, 1, 36, 297, ''),
-(0, 1296, 1, 37, 297, ''),
-(0, 1296, 1, 38, 297, ''),
-(0, 1296, 1, 39, 297, ''),
-(0, 1296, 1, 47, NULL, 'false'),
-(0, 1296, 1, 48, NULL, 'false'),
-(0, 1296, 1, 49, NULL, 'false'),
-(0, 1296, 1, 50, 296, ''),
-(0, 1296, 1, 51, 296, ''),
-(0, 1296, 1, 52, 297, ''),
-(0, 1296, 1, 53, 297, ''),
-(0, 1296, 1, 54, 297, ''),
-(0, 1296, 1, 55, 297, ''),
-(0, 1296, 1, 56, 297, ''),
-(0, 1296, 1, 57, 297, ''),
-(0, 1296, 1, 58, 296, ''),
-(0, 1296, 1, 59, 261, ''),
-(0, 1296, 1, 60, 297, ''),
-(0, 1296, 1, 61, 297, ''),
-(0, 1296, 1, 62, 296, ''),
-(0, 1296, 1, 63, NULL, 'false'),
-(0, 1296, 1, 64, NULL, 'false'),
-(0, 1296, 1, 65, 297, ''),
-(0, 1296, 1, 93, NULL, '2021-06-05T12:10'),
-(0, 1296, 1, 95, 297, ''),
-(0, 1296, 1, 97, NULL, '2020-05-10T10:00'),
-(0, 1296, 1, 107, NULL, '2020-05-10T10:04'),
-(0, 1296, 1, 108, 297, ''),
-(0, 1296, 1, 109, 297, ''),
-(0, 1296, 1, 110, 300, ''),
-(0, 1296, 1, 111, 284, ''),
-(0, 1296, 1, 117, 296, ''),
-(0, 1296, 1, 119, 297, ''),
-(0, 1296, 1, 120, 297, ''),
-(0, 1296, 1, 127, 298, ''),
-(0, 1296, 1, 128, 298, ''),
-(0, 1296, 1, 129, 298, ''),
-(0, 1296, 1, 130, 298, ''),
-(0, 1296, 1, 132, 298, ''),
-(0, 1296, 1, 133, 298, ''),
-(0, 1296, 1, 134, 298, ''),
-(0, 1296, 1, 135, 298, ''),
-(0, 1296, 1, 136, 298, ''),
-(0, 1296, 1, 137, 298, ''),
-(0, 1296, 1, 138, 298, ''),
-(0, 1296, 1, 139, 298, ''),
-(0, 1296, 1, 140, 298, ''),
-(0, 1296, 1, 149, 297, ''),
-(0, 1296, 1, 150, 296, ''),
-(0, 1296, 1, 151, 297, ''),
-(0, 1296, 1, 152, 297, ''),
-(0, 1296, 1, 153, 300, ''),
-(0, 1296, 1, 154, 297, ''),
-(0, 1296, 1, 155, 297, ''),
-(0, 1296, 1, 167, NULL, '2020-06-07T10:05'),
-(0, 1296, 1, 189, 297, ''),
-(0, 1296, 1, 190, 7, ''),
-(0, 1296, 1, 196, 297, ''),
-(0, 1296, 1, 199, 297, ''),
-(0, 1296, 1, 200, 296, ''),
-(0, 1296, 1, 201, 297, ''),
-(0, 1296, 1, 202, 297, ''),
-(0, 1296, 1, 203, 297, ''),
-(0, 1296, 1, 204, 298, ''),
-(0, 1296, 1, 205, 298, ''),
-(0, 1296, 1, 206, 298, ''),
-(0, 1296, 1, 207, 298, ''),
-(0, 1296, 1, 208, 298, ''),
-(0, 1296, 1, 209, 298, ''),
-(0, 1296, 1, 210, 298, ''),
-(0, 1296, 1, 211, 298, ''),
-(0, 1296, 1, 213, 298, ''),
-(0, 1296, 1, 214, 298, ''),
-(0, 1296, 1, 215, 298, ''),
-(0, 1296, 1, 225, 298, ''),
-(0, 1296, 1, 241, 297, ''),
-(0, 1296, 1, 242, NULL, 'Textão desnecessário'),
-(0, 1296, 1, 252, 298, ''),
-(0, 1296, 1, 253, 298, ''),
-(0, 1296, 1, 254, 5, '');
+(2165, 0, 1, 254, 4, NULL);
 
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_questionnaire`
+-- Table structure for table `tb_questionnaire`
 --
 
 CREATE TABLE `tb_questionnaire` (
   `questionnaireID` int(255) NOT NULL,
   `description` varchar(255) NOT NULL,
-  `questionnaireStatusID` int(10) NOT NULL,
+  `questionnaireStatusID` int(10) DEFAULT NULL,
   `isNewVersionOf` int(11) DEFAULT NULL,
   `IsBasedOn` int(10) DEFAULT NULL,
   `version` varchar(50) NOT NULL,
@@ -7421,21 +6221,20 @@ CREATE TABLE `tb_questionnaire` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
--- Extraindo dados da tabela `tb_questionnaire`
+-- Dumping data for table `tb_questionnaire`
 --
 
 INSERT INTO `tb_questionnaire` (`questionnaireID`, `description`, `questionnaireStatusID`, `isNewVersionOf`, `IsBasedOn`, `version`, `lastModification`, `creationDate`) VALUES
-(1, 'WHO COVID-19 Rapid Version CRF', 1, 0, 0, '1.0', '2022-06-19 20:08:43', '2022-06-19 20:08:43'),
+(1, 'WHO COVID-19 Rapid Version CRF', 1, 0, 0, '1.0', '2021-11-17 21:06:57', '2022-02-28 22:20:37'),
 (2, 'Pesquisa de teste 2', 3, 0, 1, '2.0', '2021-11-17 23:16:07', '2022-03-02 00:35:35'),
-(3, 'Nova Pesquisa', 2, 0, 1, '1.0', '2022-06-19 20:08:10', '2022-10-11 00:00:15'),
+(3, 'Nova Pesquisa', 2, 0, 4, '0.0', '2022-02-14 17:45:19', '2022-03-09 18:19:38'),
 (4, 'WHO COVID-19 Full Version CRF', 2, 1, 0, '0.0', '2022-02-28 22:05:39', '2022-03-09 18:19:34'),
-(10, 'SDF', 2, 0, 0, '0.0', '2022-03-09 18:24:45', '2022-03-09 18:24:45'),
-(11, 'Pesquisa nova agorinha', 2, 0, 0, '0.0', '2022-10-11 00:25:58', '2022-10-11 00:25:58');
+(10, 'SDF', 2, 0, 0, '0.0', '2022-03-09 18:24:45', '2022-03-09 18:24:45');
 
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_questionnaireparts`
+-- Table structure for table `tb_questionnaireparts`
 --
 
 CREATE TABLE `tb_questionnaireparts` (
@@ -7446,7 +6245,7 @@ CREATE TABLE `tb_questionnaireparts` (
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_questionnairepartsontology`
+-- Table structure for table `tb_questionnairepartsontology`
 --
 
 CREATE TABLE `tb_questionnairepartsontology` (
@@ -7459,7 +6258,7 @@ CREATE TABLE `tb_questionnairepartsontology` (
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_questionnairepartstable`
+-- Table structure for table `tb_questionnairepartstable`
 --
 
 CREATE TABLE `tb_questionnairepartstable` (
@@ -7470,7 +6269,7 @@ CREATE TABLE `tb_questionnairepartstable` (
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_questionnairestatus`
+-- Table structure for table `tb_questionnairestatus`
 --
 
 CREATE TABLE `tb_questionnairestatus` (
@@ -7480,7 +6279,7 @@ CREATE TABLE `tb_questionnairestatus` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Extraindo dados da tabela `tb_questionnairestatus`
+-- Dumping data for table `tb_questionnairestatus`
 --
 
 INSERT INTO `tb_questionnairestatus` (`questionnaireStatusID`, `description`, `creationDate`) VALUES
@@ -7491,7 +6290,7 @@ INSERT INTO `tb_questionnairestatus` (`questionnaireStatusID`, `description`, `c
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_questions`
+-- Table structure for table `tb_questions`
 --
 
 CREATE TABLE `tb_questions` (
@@ -7503,11 +6302,11 @@ CREATE TABLE `tb_questions` (
   `subordinateTo` int(10) DEFAULT NULL,
   `subordinateValues` varchar(100) DEFAULT NULL,
   `isAbout` int(10) DEFAULT NULL,
-  `comment` varchar(500) DEFAULT NULL
+  `comment` varchar(500) NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
--- Extraindo dados da tabela `tb_questions`
+-- Dumping data for table `tb_questions`
 --
 
 INSERT INTO `tb_questions` (`questionID`, `description`, `questionTypeID`, `listTypeID`, `questionGroupID`, `subordinateTo`, `subordinateValues`, `isAbout`, `comment`) VALUES
@@ -7765,13 +6564,12 @@ INSERT INTO `tb_questions` (`questionID`, `description`, `questionTypeID`, `list
 (252, 'Loss of smell signs', 8, 15, 12, NULL, NULL, 243, 'Este é um comentário sobre a questão'),
 (253, 'Loss of taste signs', 8, 15, 12, NULL, NULL, 244, 'Este é um comentário sobre a questão'),
 (254, 'Which antiviral', 4, 1, 11, NULL, NULL, 101, 'Este é um comentário sobre a questão'),
-(255, 'Which other antiviral', 7, NULL, 11, 254, 'Sim', 104, 'Este é um comentário sobre a questão'),
-(256, ' Questão fresquinha', 7, NULL, 8, NULL, NULL, NULL, NULL);
+(255, 'Which other antiviral', 7, NULL, 11, 254, 'Sim', 104, 'Este é um comentário sobre a questão');
 
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_questiontype`
+-- Table structure for table `tb_questiontype`
 --
 
 CREATE TABLE `tb_questiontype` (
@@ -7781,25 +6579,25 @@ CREATE TABLE `tb_questiontype` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
--- Extraindo dados da tabela `tb_questiontype`
+-- Dumping data for table `tb_questiontype`
 --
 
 INSERT INTO `tb_questiontype` (`questionTypeID`, `description`, `comment`) VALUES
-(1, 'Boolean_Question', 'Lista de respostas: Sim ou Não'),
-(2, 'Date question', 'Questão do tipo data com mês e ano'),
-(3, 'Laboratory question', 'Questão de exame de sangue'),
-(4, 'List question', 'Lista de respostas com valores predefinidos'),
-(5, 'Number question', 'Questão númerica'),
-(6, 'PNNot_done_Question', 'Lista de respostas: Não realizado, Negativo ou Positivo'),
-(7, 'Text_Question', 'Questão textual'),
-(8, 'YNU_Question', 'Lista de respostas: Sim, Não ou Desconhecido'),
-(9, 'YNUN_Question', 'Lista de respostas: Não informado, Não, Desconhecido ou Sim'),
-(10, 'Ventilation question', 'Questão de ventilação de paciente');
+(1, 'Boolean_Question', 'Questões do tipo Sim ou Não'),
+(2, 'Date question', 'Questões do tipo data'),
+(3, 'Laboratory question', 'Questões de exame de sangue'),
+(4, 'List question', 'Questões de lista com valores fechados '),
+(5, 'Number question', 'Questões númericas'),
+(6, 'PNNot_done_Question', 'Questões ....'),
+(7, 'Text_Question', 'Questões textuais'),
+(8, 'YNU_Question', 'Questões de lista com valores fechados'),
+(9, 'YNUN_Question', 'Questões ....'),
+(10, 'Ventilation question', 'Questões de ventilação de paciente');
 
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_user`
+-- Table structure for table `tb_user`
 --
 
 CREATE TABLE `tb_user` (
@@ -7814,7 +6612,7 @@ CREATE TABLE `tb_user` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
--- Extraindo dados da tabela `tb_user`
+-- Dumping data for table `tb_user`
 --
 
 INSERT INTO `tb_user` (`userID`, `login`, `firstName`, `lastName`, `regionalCouncilCode`, `password`, `eMail`, `foneNumber`) VALUES
@@ -7839,7 +6637,7 @@ INSERT INTO `tb_user` (`userID`, `login`, `firstName`, `lastName`, `regionalCoun
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `tb_userrole`
+-- Table structure for table `tb_userrole`
 --
 
 CREATE TABLE `tb_userrole` (
@@ -7851,7 +6649,7 @@ CREATE TABLE `tb_userrole` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
--- Extraindo dados da tabela `tb_userrole`
+-- Dumping data for table `tb_userrole`
 --
 
 INSERT INTO `tb_userrole` (`userID`, `groupRoleID`, `hospitalUnitID`, `creationDate`, `expirationDate`) VALUES
@@ -7880,7 +6678,7 @@ INSERT INTO `tb_userrole` (`userID`, `groupRoleID`, `hospitalUnitID`, `creationD
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `vw_listype_covidcrfrapid`
+-- Table structure for table `vw_listype_covidcrfrapid`
 --
 
 CREATE TABLE `vw_listype_covidcrfrapid` (
@@ -7892,7 +6690,7 @@ CREATE TABLE `vw_listype_covidcrfrapid` (
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `vw_questiongroupform_covidcrfrapid`
+-- Table structure for table `vw_questiongroupform_covidcrfrapid`
 --
 
 CREATE TABLE `vw_questiongroupform_covidcrfrapid` (
@@ -7906,7 +6704,7 @@ CREATE TABLE `vw_questiongroupform_covidcrfrapid` (
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `vw_questiongroup_covidcrfrapid`
+-- Table structure for table `vw_questiongroup_covidcrfrapid`
 --
 
 CREATE TABLE `vw_questiongroup_covidcrfrapid` (
@@ -7919,7 +6717,7 @@ CREATE TABLE `vw_questiongroup_covidcrfrapid` (
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `vw_questionnaire_covidcrfrapid`
+-- Table structure for table `vw_questionnaire_covidcrfrapid`
 --
 
 CREATE TABLE `vw_questionnaire_covidcrfrapid` (
@@ -7931,7 +6729,7 @@ CREATE TABLE `vw_questionnaire_covidcrfrapid` (
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `vw_questions_covidcrfrapid`
+-- Table structure for table `vw_questions_covidcrfrapid`
 --
 
 CREATE TABLE `vw_questions_covidcrfrapid` (
@@ -7948,7 +6746,7 @@ CREATE TABLE `vw_questions_covidcrfrapid` (
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `vw_questiontype_covidcrfrapid`
+-- Table structure for table `vw_questiontype_covidcrfrapid`
 --
 
 CREATE TABLE `vw_questiontype_covidcrfrapid` (
@@ -7958,228 +6756,36 @@ CREATE TABLE `vw_questiontype_covidcrfrapid` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Índices para tabelas despejadas
+-- Indexes for dumped tables
 --
 
 --
--- Índices para tabela `tb_assessmentquestionnaire`
---
-ALTER TABLE `tb_assessmentquestionnaire`
-  ADD PRIMARY KEY (`participantID`);
-
---
--- Índices para tabela `tb_crfforms`
---
-ALTER TABLE `tb_crfforms`
-  ADD PRIMARY KEY (`crfFormsID`);
-
---
--- Índices para tabela `tb_crfformsstatus`
---
-ALTER TABLE `tb_crfformsstatus`
-  ADD PRIMARY KEY (`crfformsStatusID`);
-
---
--- Índices para tabela `tb_formrecord`
---
-ALTER TABLE `tb_formrecord`
-  ADD PRIMARY KEY (`formRecordID`);
-
---
--- Índices para tabela `tb_hospitalunit`
---
-ALTER TABLE `tb_hospitalunit`
-  ADD PRIMARY KEY (`hospitalUnitID`);
-
---
--- Índices para tabela `tb_language`
---
-ALTER TABLE `tb_language`
-  ADD PRIMARY KEY (`languageID`);
-
---
--- Índices para tabela `tb_listofvalues`
---
-ALTER TABLE `tb_listofvalues`
-  ADD PRIMARY KEY (`listOfValuesID`);
-
---
--- Índices para tabela `tb_listtype`
---
-ALTER TABLE `tb_listtype`
-  ADD PRIMARY KEY (`listTypeID`);
-
---
--- Índices para tabela `tb_ontology`
---
-ALTER TABLE `tb_ontology`
-  ADD PRIMARY KEY (`ontologyID`);
-
---
--- Índices para tabela `tb_participant`
---
-ALTER TABLE `tb_participant`
-  ADD PRIMARY KEY (`participantID`);
-
---
--- Índices para tabela `tb_questiongroup`
+-- Indexes for table `tb_questiongroup`
 --
 ALTER TABLE `tb_questiongroup`
   ADD PRIMARY KEY (`questionGroupID`);
 
 --
--- Índices para tabela `tb_questionnaire`
+-- Indexes for table `tb_questionnaire`
 --
 ALTER TABLE `tb_questionnaire`
   ADD PRIMARY KEY (`questionnaireID`);
 
 --
--- Índices para tabela `tb_questionnairepartsontology`
---
-ALTER TABLE `tb_questionnairepartsontology`
-  ADD PRIMARY KEY (`ontologyID`);
-
---
--- Índices para tabela `tb_questionnairepartstable`
---
-ALTER TABLE `tb_questionnairepartstable`
-  ADD PRIMARY KEY (`questionnairePartsTableID`);
-
---
--- Índices para tabela `tb_questionnairestatus`
---
-ALTER TABLE `tb_questionnairestatus`
-  ADD PRIMARY KEY (`questionnaireStatusID`);
-
---
--- Índices para tabela `tb_questions`
---
-ALTER TABLE `tb_questions`
-  ADD PRIMARY KEY (`questionID`);
-
---
--- Índices para tabela `tb_questiontype`
---
-ALTER TABLE `tb_questiontype`
-  ADD PRIMARY KEY (`questionTypeID`);
-
---
--- Índices para tabela `tb_user`
---
-ALTER TABLE `tb_user`
-  ADD PRIMARY KEY (`userID`);
-
---
--- AUTO_INCREMENT de tabelas despejadas
+-- AUTO_INCREMENT for dumped tables
 --
 
 --
--- AUTO_INCREMENT de tabela `tb_assessmentquestionnaire`
---
-ALTER TABLE `tb_assessmentquestionnaire`
-  MODIFY `participantID` int(10) NOT NULL AUTO_INCREMENT COMMENT '(pt-br)  Chave estrangeira para a tabela tb_Patient.\r\n(en) Foreign key to the tb_Patient table.', AUTO_INCREMENT=208;
-
---
--- AUTO_INCREMENT de tabela `tb_crfforms`
---
-ALTER TABLE `tb_crfforms`
-  MODIFY `crfFormsID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=600;
-
---
--- AUTO_INCREMENT de tabela `tb_crfformsstatus`
---
-ALTER TABLE `tb_crfformsstatus`
-  MODIFY `crfformsStatusID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT de tabela `tb_formrecord`
---
-ALTER TABLE `tb_formrecord`
-  MODIFY `formRecordID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1297;
-
---
--- AUTO_INCREMENT de tabela `tb_hospitalunit`
---
-ALTER TABLE `tb_hospitalunit`
-  MODIFY `hospitalUnitID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT de tabela `tb_language`
---
-ALTER TABLE `tb_language`
-  MODIFY `languageID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT de tabela `tb_listofvalues`
---
-ALTER TABLE `tb_listofvalues`
-  MODIFY `listOfValuesID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=309;
-
---
--- AUTO_INCREMENT de tabela `tb_listtype`
---
-ALTER TABLE `tb_listtype`
-  MODIFY `listTypeID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
-
---
--- AUTO_INCREMENT de tabela `tb_ontology`
---
-ALTER TABLE `tb_ontology`
-  MODIFY `ontologyID` int(10) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de tabela `tb_participant`
---
-ALTER TABLE `tb_participant`
-  MODIFY `participantID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=208;
-
---
--- AUTO_INCREMENT de tabela `tb_questiongroup`
+-- AUTO_INCREMENT for table `tb_questiongroup`
 --
 ALTER TABLE `tb_questiongroup`
-  MODIFY `questionGroupID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=235;
+  MODIFY `questionGroupID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
--- AUTO_INCREMENT de tabela `tb_questionnaire`
+-- AUTO_INCREMENT for table `tb_questionnaire`
 --
 ALTER TABLE `tb_questionnaire`
-  MODIFY `questionnaireID` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
-
---
--- AUTO_INCREMENT de tabela `tb_questionnairepartsontology`
---
-ALTER TABLE `tb_questionnairepartsontology`
-  MODIFY `ontologyID` int(10) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de tabela `tb_questionnairepartstable`
---
-ALTER TABLE `tb_questionnairepartstable`
-  MODIFY `questionnairePartsTableID` int(10) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de tabela `tb_questionnairestatus`
---
-ALTER TABLE `tb_questionnairestatus`
-  MODIFY `questionnaireStatusID` int(19) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT de tabela `tb_questions`
---
-ALTER TABLE `tb_questions`
-  MODIFY `questionID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=257;
-
---
--- AUTO_INCREMENT de tabela `tb_questiontype`
---
-ALTER TABLE `tb_questiontype`
-  MODIFY `questionTypeID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
-
---
--- AUTO_INCREMENT de tabela `tb_user`
---
-ALTER TABLE `tb_user`
-  MODIFY `userID` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `questionnaireID` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
