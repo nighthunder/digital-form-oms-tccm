@@ -55,8 +55,8 @@ function AddModule({user}) {
             description: selectModule,
             moduleStatusID: "2", 
             questionnaireID: location.state.questionnaireID,
-            lastModification: convertToDate(new Date()),
-            creationDate: convertToDate(new Date())
+            lastModification: creationDate,
+            creationDate: creationDate
        }
        console.log("request", param);
        
@@ -101,6 +101,7 @@ function AddModule({user}) {
         //console.log(user)
         //this.setState({ defaultModule: e.target.value});
         setSelectModule(e.target.value);
+        setCreationDate(convertToDate(new Date()));
         console.log("Valor selecionado", selectModule);
     }
 

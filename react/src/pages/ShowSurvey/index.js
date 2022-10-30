@@ -26,6 +26,7 @@ function ShowSurvey({user}) {
 	
   const [survey, setSurvey] = useState([]);
 	const [modules, setModules] = useState([]);
+	const [modulesMix, setModulesMix] = useState([]); // quando um questionário não tem todos os módulos do padrão WHO-CRF
   const [moduleID, setModuleID] = useState(''); // ID do módulo clicado
   const [moduleStatus, setModuleStatus] = useState('');
   const [motherID, setMotherID] = useState(''); // ID do mãe, se houver 
@@ -41,6 +42,8 @@ function ShowSurvey({user}) {
   const [popupAction, setPopupAction] = useState('');
 
 	useEffect(() => {
+
+      console.log("LOCATION", location.state);
 
       async function loadModules() {
           setModulesLoaded(false);
@@ -68,7 +71,29 @@ function ShowSurvey({user}) {
         }
       }                                                                                                                                                                                                       
       loadMotherModules();
-  }, [])
+
+      var modulesavailable= []; //
+      var modulesmix = [];
+      
+      // adiciona todos os módulos que o questionário filho já tem
+      modules.map(q => (  modulesmix.push(q) && modulesavailable.push(q.description) && console.log(q)
+                        ))
+
+      console.log("modulesAvailable", modulesavailable);
+      console.log("modulesMix", modulesMix);
+
+      // adiciona todos os módulos que o questionário filho não tem e que por isso ele precisa pegar do pai
+      motherModules.map(q => (
+                                !modulesavailable.includes(q.description) && modulesmix.push(q)
+                              ))
+      
+      if (!modules) { modulesmix = motherModules }            
+
+      console.log("modulesMix", modulesMix);                        
+
+      setModulesMix(modulesmix);  
+
+  })
 
 	function getPtBrDate(somedate) {
       //var today = new Date();
@@ -213,6 +238,19 @@ function ShowSurvey({user}) {
       setSearch(value);
   }
 
+  async function handleMotherMix(props){
+    
+    return (props.setMotherModules.map(q => ( 
+      <tr value={q.description} key={q.crfFormsID} data-key={q.description} onClick={() => handleClickOpen(q)}>
+          <td>{q.description}</td>
+          <td>{q.crfFormsStatus}</td>
+          <td>{getPtBrDate(new Date(q.creationDate))}</td> 
+          <td>{getPtBrDate(new Date(q.lastModification))}</td> 
+          <td><Edit /></td>
+      </tr>
+    )));
+  }
+
 	return (
 
 	  <main className="container containerWider">
@@ -287,8 +325,8 @@ function ShowSurvey({user}) {
               </tr>
             </thead>
             <tbody>
-            {  modules.length > 0 &&
-                                modules.map(q => ( 
+            {  (location.state.questionnaireStatus === "Publicado" || location.state.questionnaireStatus === "Deprecado") &&
+                                modules.map(q => (  
                                       <tr value={q.description} key={q.crfFormsID} data-key={q.description} onClick={() => handleClickOpen(q)}>
                                           <td>{q.description}</td>
                                           <td>{q.crfFormsStatus}</td>
@@ -298,8 +336,9 @@ function ShowSurvey({user}) {
                                       </tr>
                                 ))
             }
-            { !(modules.length > 0) &&
-                   motherModules.map(q => ( 
+
+            { location.state.questionnaireStatus === "Novo" && !setMotherModules &&
+                   modules.map(q => ( 
                       <tr value={q.description} key={q.crfFormsID} data-key={q.description} onClick={() => handleClickOpen(q)}>
                           <td>{q.description}</td>
                           <td>{q.crfFormsStatus}</td>
@@ -308,6 +347,10 @@ function ShowSurvey({user}) {
                           <td><Edit /></td>
                       </tr>
                     ))
+            }
+
+            { location.state.questionnaireStatus === "Novo" && setMotherModules &&
+                    <handleMotherMix motherModules={motherModules} modules={modules}></handleMotherMix>
             }
             </tbody>
                     <Dialog key={location.state.questionnaireStatus}
