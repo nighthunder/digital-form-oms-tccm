@@ -71,9 +71,10 @@ function AddModule({user}) {
         });
 
        if(response) {
+            console.log("response.data.msgRetorno", response.data);
             setLoading(false);
             setSuccess(response.data.msgRetorno);
-            //history.goBack();
+            history.goBack();
        }
     }
 

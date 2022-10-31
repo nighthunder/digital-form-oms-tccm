@@ -282,14 +282,17 @@ function EditPublishedForm({logged, user, participantId}) {
         }
 
         request = {
-            questionsorder: JSON.stringify(swapQstsOrder),  
-            modulo: location.state.modulo
+            modulo: location.state.modulo,
+            questionsorder: JSON.stringify(swapQstsOrder)
         }
+
+        console.log("swapQstsOrder submit", swapQstsOrder);
+        console.log("request", request);
 
         // console.log("JSON.stringify(swapQstsOrder)", JSON.stringify(swapQstsOrder));
 
         response = await api.put('/formqstorder/' + location.state.modulo, request);
-
+        console.log("Resposta do laravel", response.data);
         if (response){
             setFormError(response.data[0].msgRetorno);
         }

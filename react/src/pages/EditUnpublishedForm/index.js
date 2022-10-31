@@ -77,8 +77,8 @@ function EditUnpublishedForm({logged, user, participantId}) {
     // const [countLastListOfValuesId, setCountLastListOfValuesId] = useState(0)
     // const [listSubordinate, setListSubordinate] = useState([]) // Formato: [id_questaosubordinada: id_questaosubordinante]
     // const [listValueSubordinate, setListValueSubordinate] = useState([]) // Formato: [id_daquestao: id_dovalor1, id_dovalor2, id_dovalor3]
-
-
+    const [error, setError] = useState([]);
+    const [success, setSuccess] = useState([]);
 
     useEffect(() => {
         async function loadForm() {
@@ -197,14 +197,33 @@ function EditUnpublishedForm({logged, user, participantId}) {
         setOpen(true);
     };
 
+    // const [creationDate, setCreationDate] = useState('');
+    function convertToDate(somedate){
+        return String(somedate.getFullYear()+
+              "-"+(somedate.getMonth()+1)+
+              "-"+somedate.getDate()+
+              " "+somedate.getHours()+
+              ":"+somedate.getMinutes()+
+              ":"+somedate.getSeconds());
+    }
+
+    // const [success, setSuccess] = useState([]);
+    // const messageSucesso = [];
+    // const messageErro = [];
+    
     async function handleReorder() {
+        let param;
+        let reponse;
+        console.log("handleReorder - salvamento");
         if (location.state.motherID !== location.state.questionnaireID){
             var orderQuestions = [];
             var listGroups = [];
             var listQuestions = [];
             var listGroupsQuestions = [];
+            var listQuestionsTypes = [];
             var listSubordinate = [];
             var listValueSubordinate = [];
+            
 
             var pairKeyGroupId = {}
 
@@ -214,6 +233,11 @@ function EditUnpublishedForm({logged, user, participantId}) {
             let lastQuestionId = await api.get('/formqstid/');
             lastQuestionId = parseInt(lastQuestionId.data[0].msgRetorno);
 
+            let description = "Formulário de " + titles[location.state.modulo-1]
+
+            // setCreationDate(convertToDate(new Date()));
+            let dateCreate = convertToDate(new Date())
+           
             // console.log("lastQuestionId", lastQuestionId);
             document.querySelectorAll('.uniQuestion').forEach(function(i) {
                 orderQuestions.push(parseInt(i.getAttribute("id")))
@@ -235,6 +259,9 @@ function EditUnpublishedForm({logged, user, participantId}) {
 
                 let dictValueCurrentListQuestions = {}
                 let dictValueCurrentListGroupsQuestions = {}
+                let dictValueCurrentlistQuestionsTypes = {}
+
+                dictValueCurrentlistQuestionsTypes[lastQuestionId + i] = found.qst_type_id
 
                 dictValueCurrentListQuestions[lastQuestionId + i] = found.dsc_qst
                 if (parseInt(found.qstGroupId)){
@@ -245,6 +272,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
 
                 listQuestions.push(dictValueCurrentListQuestions)
                 listGroupsQuestions.push(dictValueCurrentListGroupsQuestions)
+                listQuestionsTypes.push(dictValueCurrentlistQuestionsTypes)
             });
             // console.log(location.state.motherID, " - ", location.state.questionnaireID);
             
@@ -263,6 +291,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                 console.log("deu certo!");
             }
             qstsorder.forEach((element,index )=> {
+                
                 if(element.sub_qst.length > 0){
                     // console.log("element", element);
                     var found_subordinante;
@@ -302,10 +331,239 @@ function EditUnpublishedForm({logged, user, participantId}) {
                 }
                 
             });
+
+            // Salvamento do modulo N1 ==========================================
+            param = {
+                userid : user[0].userid,    
+                grouproleid : user[0].grouproleid,    
+                hospitalunitid : user[0].hospitalunitid, 
+                description: description,
+                moduleStatusID: 2,
+                questionnaireID: location.state.questionnaireID,
+                lastModification: dateCreate,
+                creationDate: dateCreate,
+            }
+
+            reponse = await api.post('/module/', param).catch( function (error) {
+                console.log(error)
+                if(error.response.data.Message) {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                } else {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                }
+            });
+            if(response) {
+                // setSuccess(success => [...success,response.data.Message]);
+                setFormOk(response.data[0].msgRetorno)
+            }
+            // =======================================================================
+
+            // Salvamento da ordem das perguntas N2 =====================================
+            let lastModuloId = await api.get('/formmoduleid/');
+            lastModuloId = parseInt(lastModuloId.data[0].msgRetorno);
+
+            param = {
+                questionsorder: listQuestions,
+                modulo: lastModuloId
+            }
+
+            reponse = await api.post('/formpostqstorder/' + lastModuloId, param).catch( function (error) {
+                console.log(error)
+                if(error.response.data.Message) {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                } else {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                }
+            });
+            if(response) {
+                // setSuccess(success => [...success,response.data.Message]);
+                setFormOk(response.data[0].msgRetorno)
+            }
+
+            // =======================================================================
+
+            // Salvamento das perguntas N3 ==============================================
+            param = {
+                stringquestions: listQuestions
+            }
+
+            reponse = await api.put('/formqst/', param).catch( function (error) {
+                console.log(error)
+                if(error.response.data.Message) {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                } else {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                }
+            });
+            if(response) {
+                // setSuccess(success => [...success,response.data.Message]);
+                setFormOk(response.data[0].msgRetorno)
+            }
+            // =======================================================================
+
+            // Salvamento tipo novos de lista N4 ========================================
+
+            param = {
+                stringlisttypes: newListType
+            }
+
+            reponse = await api.put('/formqstlisttype/', param).catch( function (error) {
+                console.log(error)
+                if(error.response.data.Message) {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                } else {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                }
+            });
+            if(response) {
+                // setSuccess(success => [...success,response.data.Message]);
+                setFormOk(response.data[0].msgRetorno)
+            }
+
+            // =======================================================================
+
+            // Salvamento dos tipo de questoes N5 =======================================
+
+            param = {
+                stringlisttypes: listQuestionsTypes
+            }
+
+            reponse = await api.put('/formqsttype/', param).catch( function (error) {
+                console.log(error)
+                if(error.response.data.Message) {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                } else {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                }
+            });
+            if(response) {
+                // setSuccess(success => [...success,response.data.Message]);
+                setFormOk(response.data[0].msgRetorno)
+            }
+
+            // =======================================================================
+
+
+            // Salvamento questoes/novo tipo de lista N6 ================================
+            param = {
+                stringlisttypes: questionListType 
+            }
+            reponse = await api.put('/formqstlisttypeqst/', param).catch( function (error) {
+                console.log(error)
+                if(error.response.data.Message) {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                } else {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                }
+            });
+            if(response) {
+                // setSuccess(success => [...success,response.data.Message]);
+                setFormOk(response.data[0].msgRetorno)
+            }
+            // =======================================================================
+
+
+            // Salvamento lista de valores respostas de cada tipo de lista N7 ===========
+            param = {
+                stringlistofvalues: answerListType  
+            }
+            reponse = await api.put('/formqstlistofvalues/', param).catch( function (error) {
+                console.log(error)
+                if(error.response.data.Message) {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                } else {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                }
+            });
+            if(response) {
+                // setSuccess(success => [...success,response.data.Message]);
+                setFormOk(response.data[0].msgRetorno)
+            }
+            // =======================================================================
+
+
+            // Amarrando os novos tipos de lista com as listas de valoresa N8 ===========
+            param = {
+                stringlisttypeslistofvalues: answerListType2 
+            }
+            reponse = await api.put('/formqstlisttypelistofvalues/', param).catch( function (error) {
+                console.log(error)
+                if(error.response.data.Message) {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                } else {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                }
+            });
+            if(response) {
+                // setSuccess(success => [...success,response.data.Message]);
+                setFormOk(response.data[0].msgRetorno)
+            }
+            // =======================================================================
+
+
+            // Salvamento lista de questões subordinadas e subordinantes N9 =============
+            param = {
+                stringsubordinateto: listSubordinate 
+            }
+            reponse = await api.put('/formqstsubordinateto/', param).catch( function (error) {
+                console.log(error)
+                if(error.response.data.Message) {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                } else {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                }
+            });
+            if(response) {
+                // setSuccess(success => [...success,response.data.Message]);
+                setFormOk(response.data[0].msgRetorno)
+            }
+            // =======================================================================  
+            
+
+            // Salvamento array com a lista de valores subordinados N10 ==================
+            param = {
+                stringsubordinatevalues: listValueSubordinate  
+            }
+            reponse = await api.put('/formqstsubordinatevalues/', param).catch( function (error) {
+                console.log(error)
+                if(error.response.data.Message) {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                } else {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                }
+            });
+            if(response) {
+                // setSuccess(success => [...success,response.data.Message]);
+                setFormOk(response.data[0].msgRetorno)
+            }
+            // =======================================================================  
+
         }
         console.log("qstsorder", qstsorder);
         console.log("listGroups", listGroups);
+        console.log("location.state.questionnaireID", location.state.questionnaireID);
         console.log("listQuestions", listQuestions);
+        console.log("listQuestionsTypes", listQuestionsTypes);
         console.log("listGroupsQuestions", listGroupsQuestions);
         console.log("newListType", newListType);
         console.log("questionListType", questionListType);
@@ -522,14 +780,37 @@ function EditUnpublishedForm({logged, user, participantId}) {
             if(selectExistsTypeQuestion == "YNU_Question"){
                 objCopy.qst_list_type = "ynu_list";
                 objCopy.qst_list_type_comment = "Este é um comentário sobre o tipo da lista";
+                objCopy.qst_type_id = 8;
                 objCopy.rsp_pad = "Não,Desconhecido,Sim";
                 objCopy.rsp_padId = "296,297,298";
             }
             if(selectExistsTypeQuestion == "YNUN_Question"){
                 objCopy.qst_list_type = "ynun_list";
                 objCopy.qst_list_type_comment = "Este é um comentário sobre o tipo da lista";
+                objCopy.qst_type_id = 9;
                 objCopy.rsp_pad = "Não informado,Não,Desconhecido,Sim";
                 objCopy.rsp_padId = "299,300,301,302";
+            }
+            if(selectExistsTypeQuestion == "Boolean_Question"){
+                objCopy.qst_type_id = 1;
+            }
+            if(selectExistsTypeQuestion == "Date question"){
+                objCopy.qst_type_id = 2;
+            }
+            if(selectExistsTypeQuestion == "Laboratory question"){
+                objCopy.qst_type_id = 3;
+            }
+            if(selectExistsTypeQuestion == "Number question"){
+                objCopy.qst_type_id = 5;
+            }
+            if(selectExistsTypeQuestion == "PNNot_done_Question"){
+                objCopy.qst_type_id = 6;
+            }
+            if(selectExistsTypeQuestion == "Text_Question"){
+                objCopy.qst_type_id = 7;
+            }
+            if(selectExistsTypeQuestion == "Ventilation question"){
+                objCopy.qst_type_id = 10;
             }
         }
         if(tipoQuestao){
@@ -539,7 +820,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
             id_q[lastQuestionId + contI] = lastListTypeId + countLastListTypeId
             
             let id_q_desc = {}
-            id_q_desc[lastQuestionId + contI] = tipoQuestaoDescricao
+            id_q_desc[lastListTypeId + countLastListTypeId] = tipoQuestaoDescricao
 
             let str = valoresRespostas;
             let str_array_split = str.split(',');
@@ -547,6 +828,15 @@ function EditUnpublishedForm({logged, user, participantId}) {
             let idValoresResposta = ""
 
             str_array_split.forEach((element,index,array )=> {
+                console.log("element", element);
+                let structTemp = {}
+                structTemp[lastListOfValuesId + countLastListOfValuesId + index] = element
+                setAnswerListType(answerListType => [...answerListType,structTemp] );
+
+                let structTemp2 = {}
+                structTemp2[lastListOfValuesId + countLastListOfValuesId + index] = lastListTypeId + countLastListTypeId
+                setAnswerListType2(answerListType2 => [...answerListType2,structTemp2] );
+
                 if(index == 0){
                     idValoresResposta += (lastListOfValuesId + countLastListOfValuesId + index);
                 }else{
@@ -561,19 +851,20 @@ function EditUnpublishedForm({logged, user, participantId}) {
             setQuestionListType(questionListType => [...questionListType,id_q] );
 
             objCopy.qst_type = tipoQuestao
+            objCopy.qst_type_id = 4
             objCopy.qst_type_comment = tipoQuestaoDescricao
             objCopy.rsp_pad = valoresRespostas
             // objCopy.rsp_padId = "Sem id para respostas ainda"
             objCopy.rsp_padId = idValoresResposta
             setCountLastListTypeId(countLastListTypeId + 1);
 
-            let id_q_listOfValues = {}
-            id_q_listOfValues[idValoresResposta] = tipoQuestaoDescricao
-            setAnswerListType(answerListType => [...answerListType,id_q_listOfValues] );
+            // let id_q_listOfValues = {}
+            // id_q_listOfValues[idValoresResposta] = tipoQuestaoDescricao
+            // setAnswerListType(answerListType => [...answerListType,id_q_listOfValues] );
 
-            let id_q_listOfValues2 = {}
-            id_q_listOfValues2[idValoresResposta] = lastQuestionId + contI
-            setAnswerListType2(answerListType2 => [...answerListType2,id_q_listOfValues2] );
+            // let id_q_listOfValues2 = {}
+            // id_q_listOfValues2[idValoresResposta] = lastQuestionId + contI
+            // setAnswerListType2(answerListType2 => [...answerListType2,id_q_listOfValues2] );
 
         }else{
             let id_q = {}
@@ -621,6 +912,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
 
     // Submit do formulário de criação de novas questões 
     const onSubmit = (event) => {
+        console.log("submit - salvamento");
         event.preventDefault(event);
         var descricaoPergunta = event.target.descricaoPergunta.value
         try{
@@ -872,9 +1164,11 @@ function EditUnpublishedForm({logged, user, participantId}) {
                     <div className="form-submit">
                         { formError?   <FormError formError={formError}></FormError> : ''  } 
                         { formOk?   <FormOk formOk={formOk}></FormOk> : ''  } 
+                        {/* <span className="error">{ error }</span>
+                        <span className="success">{ success }</span> */}
                         {/* <Button variant="contained" type="submit" color="primary">Salvar</Button> */}
-                        {/* <Button onClick={handleReorder} type="submit" variant="contained" color="primary">Salvar</Button> */}
-                        <Button onClick={handleReorder} variant="contained" color="primary">Salvar</Button>
+                        <Button onClick={handleReorder} type="submit" variant="contained" color="primary">Salvar</Button>
+                        {/* <Button onClick={handleReorder} variant="contained" color="primary">Salvar</Button> */}
                     </div>
                 </form>
                 <Dialog key={Math.random()}

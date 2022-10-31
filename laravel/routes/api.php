@@ -54,19 +54,20 @@ Route::group(['middleware' => 'cors:api'], function() {
     Route::put('formqstdesc/{id}', [FormStructureController::class, 'updatePublishedFormQuestions']);
     Route::put('formgroupsdesc/{id}', [FormStructureController::class, 'updatePublishedFormQuestionsGroups']);
     Route::put('formqstorder/{id}', [FormStructureController::class, 'updateQstChangeOrder']);
-    Route::put('formpostqstorder/{id}', [FormStructureController::class, 'postQstOrder']);
+    Route::post('formpostqstorder/{id}', [FormStructureController::class, 'postQstOrder']);
     Route::put('formgroup/', [FormStructureController::class, 'postQstGroup']);
     Route::put('formqst/', [FormStructureController::class, 'postQst']);
     Route::put('formqstgroup/', [FormStructureController::class, 'putQstGroup']);
     Route::put('formqsttype/', [FormStructureController::class, 'putQstType']);
-    Route::put('formqstlisttype/', [FormStructureController::class, 'putQstListType']); // 6)
-    Route::post('formqstlisttype/', [FormStructureController::class, 'postQstListType']);
-    Route::post('formqstlistofvalues/', [FormStructureController::class, 'postQstListOfValues']);
-    Route::put('formqstlisttypelistofvalues/', [FormStructureController::class, 'putQstListTypeListOfValues']); //5)
-    Route::put('formqstsubordinateto/', [FormStructureController::class, 'putQstSubordinateTo']); // 7)
-    Route::put('formqstsubordinatevalues/', [FormStructureController::class, 'putQstSubordinateValues']);  // 8)
+    Route::put('formqstlisttype/', [FormStructureController::class, 'postQstListType']); 
+    Route::put('formqstlisttypeqst/', [FormStructureController::class, 'putQstListType']); 
+    // Route::post('formqstlisttype/', [FormStructureController::class, 'postQstListType']);
+    Route::put('formqstlistofvalues/', [FormStructureController::class, 'postQstListOfValues']); // N7
+    Route::put('formqstlisttypelistofvalues/', [FormStructureController::class, 'putQstListTypeListOfValues']); // N8
+    Route::put('formqstsubordinateto/', [FormStructureController::class, 'putQstSubordinateTo']); // N9
+    Route::put('formqstsubordinatevalues/', [FormStructureController::class, 'putQstSubordinateValues']); // 10
     Route::get('formgroupid/', [FormStructureController::class, 'getLastInsertedGroupID']);
-    Route::get('formqstid/', [FormStructureController::class, 'getLastInsertedCrfformsID']);
+    Route::get('formmoduleid/', [FormStructureController::class, 'getLastInsertedCrfformsID']);
     Route::get('formlisttypeid/', [FormStructureController::class, 'getLastInsertedListTypeID']);
     Route::get('formlistofvaluesid/', [FormStructureController::class, 'getLastInsertedListOfValuesID']);
     Route::get('formqstid/', [FormStructureController::class, 'getLastInsertedQstID']);

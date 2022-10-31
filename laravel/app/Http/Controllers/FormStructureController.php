@@ -61,10 +61,9 @@ class FormStructureController extends Controller
     {
         try {
           
-          $respostas = str_replace('"', "", $respostas);
-
           $respostas = str_replace("{", "", $request->questionsorder);
           $respostas = str_replace("}", "", $respostas);
+          $respostas = str_replace('"', "", $respostas);
           $query_msg = DB::select("CALL putQstChangeOrder('{$request->modulo}','{$respostas}', @p_msg_retorno)");
         
           return response()->json($query_msg);
@@ -90,15 +89,15 @@ class FormStructureController extends Controller
        }
     }
 
-    public function postQst(Request $request) // Cria uma lista de novos grupos
+    public function postQst(Request $request) // Cria uma lista de questoes novas
     {
         try {
 
-          $respostas = str_replace("{", "", $request->stringgroups);
+          $respostas = str_replace("{", "", $request->stringquestions);
           $respostas = str_replace("}", "", $respostas);
           $respostas = str_replace('"', "", $respostas);
 
-          $query_msg = DB::select("CALL postQstGroup('{$respostas}',@p_msg_retorno)");
+          $query_msg = DB::select("CALL postQst('{$respostas}',@p_msg_retorno)");
         
           return response()->json($query_msg);
 
@@ -141,7 +140,7 @@ class FormStructureController extends Controller
        }
     }
 
-    public function postQstListType(Request $request) // Altera associação entre tipos e questões
+    public function postQstListType(Request $request) // Criando novos tipos de lista de questoes
     {
         try {
 
@@ -158,6 +157,24 @@ class FormStructureController extends Controller
        }
 
     }
+    // public function postQstListTypeQst(Request $request) // Altera associação entre tipos e questões
+    // {
+    //     try {
+
+    //       $respostas = str_replace("{", "", $request->stringlisttypes);
+    //       $respostas = str_replace("}", "", $respostas);
+    //       $respostas = str_replace('"', "", $respostas);
+
+    //       $query_msg = DB::select("CALL postListType('{$respostas}',@p_msg_retorno)");
+        
+    //       return response()->json($query_msg);
+
+    //    } catch (Exception $e) {
+    //      return response()->json($e, 500);
+    //    }
+
+    // }
+    
 
     public function putQstListType(Request $request) // Altera associação entre tipos e questões
     {
