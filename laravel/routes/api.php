@@ -75,6 +75,8 @@ Route::group(['middleware' => 'cors:api'], function() {
     Route::get('checkpublication/{id}', [FormStructureController::class, 'checkQuestionnairePublicationRules']); //verifica se o questionário tem condições de ser publicado
     Route::post('publication/{id}', [FormStructureController::class, 'publication']); //publica o questionário e seus módulos
 
+    Route::put('formqstlang/', [FormStructureController::class, 'postQstMultilanguage']);
+
 });
 
 

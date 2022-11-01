@@ -291,6 +291,29 @@ function EditUnpublishedForm({logged, user, participantId}) {
 
     const [buttonOpen, setButtonOpen] = useState(true); 
 
+    async function updateQstType(listQuestionsTypes){
+        let param;
+        let response;
+        param = {
+            stringtypes: JSON.stringify(listQuestionsTypes)
+        }
+
+        response = await api.put('/formqsttype/', param).catch( function (error) {
+            console.log(error)
+            if(error.response.data.Message) {
+                // setError(error => [...error,error.response.data.Message]);
+                setFormError(response.data[0].msgRetorno);
+            } else {
+                // setError(error => [...error,error.response.data.Message]);
+                setFormError(response.data[0].msgRetorno);
+            }
+        });
+        if(response) {
+            // setSuccess(success => [...success,response.data.Message]);
+            setFormOk(response.data[0].msgRetorno)
+        }
+    }
+
     async function submit(e) {
         setFormError("");
         e.preventDefault();
@@ -533,28 +556,72 @@ function EditUnpublishedForm({logged, user, participantId}) {
 
             // // =======================================================================
 
-            // // Salvamento das perguntas N3 ==============================================
-            // param = {
-            //     stringquestions: JSON.stringify(listQuestions)
-            // }
+            // Salvamento das perguntas N3 ==============================================
+            param = {
+                stringquestions: JSON.stringify(listQuestions)
+            }
 
-            // response = await api.put('/formqst/', param).catch( function (error) {
-            //     console.log(error)
-            //     console.log("N3 - ", response.data);
-            //     if(error.response.data.Message) {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     } else {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     }
-            // });
-            // if(response) {
-            //     // setSuccess(success => [...success,response.data.Message]);
-            //     setFormOk(response.data[0].msgRetorno)
-            // }
+            response = await api.put('/formqst/', param).catch( function (error) {
+                console.log(error)
+                console.log("N3 - ", response.data);
+                if(error.response.data.Message) {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                } else {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                }
+            });
+            if(response) {
+                // setSuccess(success => [...success,response.data.Message]);
+                setFormOk(response.data[0].msgRetorno)
+                updateQstType(listQuestionsTypes); 
+            }
+
+            param = {
+                language: 1,
+                stringquestions: JSON.stringify(listQuestions)
+            }
+
+            response = await api.put('/formqstlang/', param).catch( function (error) {
+                console.log(error)
+                console.log("N3 - ", response.data);
+                if(error.response.data.Message) {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                } else {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                }
+            });
+            if(response) {
+                // setSuccess(success => [...success,response.data.Message]);
+                setFormOk(response.data[0].msgRetorno)
+            }
+
+            param = {
+                language: 2,
+                stringquestions: JSON.stringify(listQuestions)
+            }
+
+            response = await api.put('/formqstlang/', param).catch( function (error) {
+                console.log(error)
+                console.log("N3 - ", response.data);
+                if(error.response.data.Message) {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                } else {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                }
+            });
+            if(response) {
+                // setSuccess(success => [...success,response.data.Message]);
+                setFormOk(response.data[0].msgRetorno)
+            }
+            
             // // =======================================================================
-
+            
             // // Salvamento tipo novos de lista N4 ========================================
 
             // param = {
@@ -578,28 +645,9 @@ function EditUnpublishedForm({logged, user, participantId}) {
 
             // // =======================================================================
 
-            // // Salvamento dos tipo de questoes N5 =======================================
-
-            // param = {
-            //     stringlisttypes: JSON.stringify(listQuestionsTypes)
-            // }
-
-            // response = await api.put('/formqsttype/', param).catch( function (error) {
-            //     console.log(error)
-            //     if(error.response.data.Message) {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     } else {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     }
-            // });
-            // if(response) {
-            //     // setSuccess(success => [...success,response.data.Message]);
-            //     setFormOk(response.data[0].msgRetorno)
-            // }
-
-            // // =======================================================================
+            // Salvamento dos tipo de questoes N5 =======================================
+            // updateQstType(listQuestionsTypes); 
+            // =======================================================================
 
 
             // // Salvamento questoes/novo tipo de lista N6 ================================

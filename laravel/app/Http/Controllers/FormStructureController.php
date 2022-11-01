@@ -106,6 +106,23 @@ class FormStructureController extends Controller
        }
     }
 
+    public function postQstMultilanguage(Request $request) // Cria uma lista de questoes novas
+    {
+        try {
+
+          $respostas = str_replace("{", "", $request->stringquestions);
+          $respostas = str_replace("}", "", $respostas);
+          $respostas = str_replace('"', "", $respostas);
+
+          $query_msg = DB::select("CALL postQstMultilanguage('{$request->language}','{$respostas}',@p_msg_retorno)");
+        
+          return response()->json($query_msg);
+
+       } catch (Exception $e) {
+         return response()->json($e, 500);
+       }
+    }
+
     public function putQstGroup(Request $request) // Altera associação entre grupos e questões
     {
         try {
