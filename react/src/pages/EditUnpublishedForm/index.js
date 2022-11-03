@@ -314,6 +314,116 @@ function EditUnpublishedForm({logged, user, participantId}) {
         }
     }
 
+    async function addNewListType(questionListType){
+        let param;
+        let response;
+        param = {
+            stringqstlisttypes: JSON.stringify(questionListType)
+        }
+        response = await api.put('/formqstlisttypeqst/', param).catch( function (error) {
+            console.log(error)
+            if(error.response.data.Message) {
+                // setError(error => [...error,error.response.data.Message]);
+                setFormError(response.data[0].msgRetorno);
+            } else {
+                // setError(error => [...error,error.response.data.Message]);
+                setFormError(response.data[0].msgRetorno);
+            }
+        });
+        if(response) {
+            // setSuccess(success => [...success,response.data.Message]);
+            setFormOk(response.data[0].msgRetorno)
+        }
+    }
+
+    async function answerList_1(answerListType){
+        let param;
+        let response;
+        param = {
+            stringlistofvalues: JSON.stringify(answerListType)  
+        }
+        response = await api.put('/formqstlistofvalues/', param).catch( function (error) {
+            console.log(error)
+            if(error.response.data.Message) {
+                // setError(error => [...error,error.response.data.Message]);
+                setFormError(response.data[0].msgRetorno);
+            } else {
+                // setError(error => [...error,error.response.data.Message]);
+                setFormError(response.data[0].msgRetorno);
+            }
+        });
+        if(response) {
+            // setSuccess(success => [...success,response.data.Message]);
+            setFormOk(response.data[0].msgRetorno)
+        }
+    }
+
+    async function answerList_2(answerListType2){
+        let param;
+        let response;
+        param = {
+            stringlisttypeslistofvalues: JSON.stringify(answerListType2) 
+        }
+        response = await api.put('/formqstlisttypelistofvalues/', param).catch( function (error) {
+            console.log(error)
+            if(error.response.data.Message) {
+                // setError(error => [...error,error.response.data.Message]);
+                setFormError(response.data[0].msgRetorno);
+            } else {
+                // setError(error => [...error,error.response.data.Message]);
+                setFormError(response.data[0].msgRetorno);
+            }
+        });
+        if(response) {
+            // setSuccess(success => [...success,response.data.Message]);
+            setFormOk(response.data[0].msgRetorno)
+        }
+    }
+
+    async function addSubordinate(listSubordinate){
+        let param;
+        let response;
+        param = {
+            stringsubordinateto: JSON.stringify(listSubordinate)
+        }
+        response = await api.put('/formqstsubordinateto/', param).catch( function (error) {
+            console.log(error)
+            if(error.response.data.Message) {
+                // setError(error => [...error,error.response.data.Message]);
+                setFormError(response.data[0].msgRetorno);
+            } else {
+                // setError(error => [...error,error.response.data.Message]);
+                setFormError(response.data[0].msgRetorno);
+            }
+        });
+        if(response) {
+            // setSuccess(success => [...success,response.data.Message]);
+            setFormOk(response.data[0].msgRetorno)
+        }
+    }
+
+    async function addSubordinateValues(listValueSubordinate){
+        let param;
+        let response;
+        param = {
+            stringsubordinatevalues: JSON.stringify(listValueSubordinate)  
+        }
+        response = await api.put('/formqstsubordinatevalues/', param).catch( function (error) {
+            console.log(error)
+            if(error.response.data.Message) {
+                // setError(error => [...error,error.response.data.Message]);
+                setFormError(response.data[0].msgRetorno);
+            } else {
+                // setError(error => [...error,error.response.data.Message]);
+                setFormError(response.data[0].msgRetorno);
+            }
+        });
+        if(response) {
+            // setSuccess(success => [...success,response.data.Message]);
+            setFormOk(response.data[0].msgRetorno)
+        }
+    }
+
     async function submit(e) {
         setFormError("");
         e.preventDefault();
@@ -383,6 +493,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
             var listQuestionsTypes = [];
             var listSubordinate = [];
             var listValueSubordinate = [];
+            var questionListType  = [];
             
 
             var pairKeyGroupId = {}
@@ -457,6 +568,21 @@ function EditUnpublishedForm({logged, user, participantId}) {
             // }
 
             qstsorder.forEach((element,index )=> {
+                
+                if(element.qst_type == "List question" || element.qst_type == "YNU_Question" || element.qst_type == "ynun_list"){
+                    console.log("LISTAAAA", element);
+                    var found_listType_id;
+                    listQuestions.forEach((el,index_2) => {
+                        let obj = Object.values(el);
+                        if (obj == element.dsc_qst){
+                            console.log("obj", obj);
+                            found_listType_id = Object.keys(el);
+                        }
+                    })
+                    let type_q = {};
+                    type_q[found_listType_id] = element.qst_list_type_id
+                    questionListType.push(type_q)
+                }
                 
                 if(element.sub_qst.length > 0){
                     // console.log("element", element);
@@ -578,47 +704,47 @@ function EditUnpublishedForm({logged, user, participantId}) {
                 updateQstType(listQuestionsTypes); 
             }
 
-            param = {
-                language: 1,
-                stringquestions: JSON.stringify(listQuestions)
-            }
+            // param = {
+            //     language: 1,
+            //     stringquestions: JSON.stringify(listQuestions)
+            // }
 
-            response = await api.put('/formqstlang/', param).catch( function (error) {
-                console.log(error)
-                console.log("N3 - ", response.data);
-                if(error.response.data.Message) {
-                    // setError(error => [...error,error.response.data.Message]);
-                    setFormError(response.data[0].msgRetorno);
-                } else {
-                    // setError(error => [...error,error.response.data.Message]);
-                    setFormError(response.data[0].msgRetorno);
-                }
-            });
-            if(response) {
-                // setSuccess(success => [...success,response.data.Message]);
-                setFormOk(response.data[0].msgRetorno)
-            }
+            // response = await api.put('/formqstlang/', param).catch( function (error) {
+            //     console.log(error)
+            //     console.log("N3 - ", response.data);
+            //     if(error.response.data.Message) {
+            //         // setError(error => [...error,error.response.data.Message]);
+            //         setFormError(response.data[0].msgRetorno);
+            //     } else {
+            //         // setError(error => [...error,error.response.data.Message]);
+            //         setFormError(response.data[0].msgRetorno);
+            //     }
+            // });
+            // if(response) {
+            //     // setSuccess(success => [...success,response.data.Message]);
+            //     setFormOk(response.data[0].msgRetorno)
+            // }
 
-            param = {
-                language: 2,
-                stringquestions: JSON.stringify(listQuestions)
-            }
+            // param = {
+            //     language: 2,
+            //     stringquestions: JSON.stringify(listQuestions)
+            // }
 
-            response = await api.put('/formqstlang/', param).catch( function (error) {
-                console.log(error)
-                console.log("N3 - ", response.data);
-                if(error.response.data.Message) {
-                    // setError(error => [...error,error.response.data.Message]);
-                    setFormError(response.data[0].msgRetorno);
-                } else {
-                    // setError(error => [...error,error.response.data.Message]);
-                    setFormError(response.data[0].msgRetorno);
-                }
-            });
-            if(response) {
-                // setSuccess(success => [...success,response.data.Message]);
-                setFormOk(response.data[0].msgRetorno)
-            }
+            // response = await api.put('/formqstlang/', param).catch( function (error) {
+            //     console.log(error)
+            //     console.log("N3 - ", response.data);
+            //     if(error.response.data.Message) {
+            //         // setError(error => [...error,error.response.data.Message]);
+            //         setFormError(response.data[0].msgRetorno);
+            //     } else {
+            //         // setError(error => [...error,error.response.data.Message]);
+            //         setFormError(response.data[0].msgRetorno);
+            //     }
+            // });
+            // if(response) {
+            //     // setSuccess(success => [...success,response.data.Message]);
+            //     setFormOk(response.data[0].msgRetorno)
+            // }
             
             // // =======================================================================
             
@@ -651,108 +777,28 @@ function EditUnpublishedForm({logged, user, participantId}) {
 
 
             // // Salvamento questoes/novo tipo de lista N6 ================================
-            // param = {
-            //     stringlisttypes: JSON.stringify(questionListType)
-            // }
-            // response = await api.put('/formqstlisttypeqst/', param).catch( function (error) {
-            //     console.log(error)
-            //     if(error.response.data.Message) {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     } else {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     }
-            // });
-            // if(response) {
-            //     // setSuccess(success => [...success,response.data.Message]);
-            //     setFormOk(response.data[0].msgRetorno)
-            // }
+            addNewListType(questionListType);
             // // =======================================================================
 
 
-            // // Salvamento lista de valores respostas de cada tipo de lista N7 ===========
-            // param = {
-            //     stringlistofvalues: JSON.stringify(answerListType)  
-            // }
-            // response = await api.put('/formqstlistofvalues/', param).catch( function (error) {
-            //     console.log(error)
-            //     if(error.response.data.Message) {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     } else {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     }
-            // });
-            // if(response) {
-            //     // setSuccess(success => [...success,response.data.Message]);
-            //     setFormOk(response.data[0].msgRetorno)
-            // }
-            // // =======================================================================
+            // // // Salvamento lista de valores respostas de cada tipo de lista N7 ===========
+            // answerList_1(answerListType);
+            // // // =======================================================================
 
 
-            // // Amarrando os novos tipos de lista com as listas de valoresa N8 ===========
-            // param = {
-            //     stringlisttypeslistofvalues: JSON.stringify(answerListType2) 
-            // }
-            // response = await api.put('/formqstlisttypelistofvalues/', param).catch( function (error) {
-            //     console.log(error)
-            //     if(error.response.data.Message) {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     } else {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     }
-            // });
-            // if(response) {
-            //     // setSuccess(success => [...success,response.data.Message]);
-            //     setFormOk(response.data[0].msgRetorno)
-            // }
-            // // =======================================================================
+            // // // Amarrando os novos tipos de lista com as listas de valoresa N8 ===========
+            // answerList_2(answerListType2);
+            // // // =======================================================================
 
 
-            // // Salvamento lista de questões subordinadas e subordinantes N9 =============
-            // param = {
-            //     stringsubordinateto: JSON.stringify(listSubordinate)
-            // }
-            // response = await api.put('/formqstsubordinateto/', param).catch( function (error) {
-            //     console.log(error)
-            //     if(error.response.data.Message) {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     } else {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     }
-            // });
-            // if(response) {
-            //     // setSuccess(success => [...success,response.data.Message]);
-            //     setFormOk(response.data[0].msgRetorno)
-            // }
-            // // =======================================================================  
+            // // // Salvamento lista de questões subordinadas e subordinantes N9 =============
+            // addSubordinate(listSubordinate);
+            // // // =======================================================================  
             
 
-            // // Salvamento array com a lista de valores subordinados N10 ==================
-            // param = {
-            //     stringsubordinatevalues: JSON.stringify(listValueSubordinate)  
-            // }
-            // response = await api.put('/formqstsubordinatevalues/', param).catch( function (error) {
-            //     console.log(error)
-            //     if(error.response.data.Message) {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     } else {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     }
-            // });
-            // if(response) {
-            //     // setSuccess(success => [...success,response.data.Message]);
-            //     setFormOk(response.data[0].msgRetorno)
-            // }
-            // // =======================================================================  
+            // // // Salvamento array com a lista de valores subordinados N10 ==================
+            // addSubordinateValues(listValueSubordinate);
+            // // // =======================================================================  
 
         }else{
             setButtonOpen(false);
@@ -849,6 +895,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                 objCopy.qst_list_type = "ynu_list";
                 objCopy.qst_list_type_comment = "Este é um comentário sobre o tipo da lista";
                 objCopy.qst_type_id = 8;
+                objCopy.qst_list_type_id = 15;
                 objCopy.rsp_pad = "Não,Desconhecido,Sim";
                 objCopy.rsp_padId = "296,297,298";
             }
@@ -856,36 +903,44 @@ function EditUnpublishedForm({logged, user, participantId}) {
                 objCopy.qst_list_type = "ynun_list";
                 objCopy.qst_list_type_comment = "Este é um comentário sobre o tipo da lista";
                 objCopy.qst_type_id = 9;
+                objCopy.qst_list_type_id = 16;
                 objCopy.rsp_pad = "Não informado,Não,Desconhecido,Sim";
                 objCopy.rsp_padId = "299,300,301,302";
             }
             if(selectExistsTypeQuestion == "Boolean_Question"){
                 objCopy.qst_type_id = 1;
+                objCopy.qst_list_type_id = null;
             }
             if(selectExistsTypeQuestion == "Date question"){
                 objCopy.qst_type_id = 2;
+                objCopy.qst_list_type_id = null;
             }
             if(selectExistsTypeQuestion == "Laboratory question"){
                 objCopy.qst_type_id = 3;
+                objCopy.qst_list_type_id = null;
             }
             if(selectExistsTypeQuestion == "Number question"){
                 objCopy.qst_type_id = 5;
+                objCopy.qst_list_type_id = null;
             }
             if(selectExistsTypeQuestion == "PNNot_done_Question"){
                 objCopy.qst_type_id = 6;
+                objCopy.qst_list_type_id = null;
             }
             if(selectExistsTypeQuestion == "Text_Question"){
                 objCopy.qst_type_id = 7;
+                objCopy.qst_list_type_id = null;
             }
             if(selectExistsTypeQuestion == "Ventilation question"){
                 objCopy.qst_type_id = 10;
+                objCopy.qst_list_type_id = null;
             }
         }
         if(tipoQuestao){
             // console.log("tipoQuestao", tipoQuestao);
             
-            let id_q = {}
-            id_q[lastQuestionId + contI] = lastListTypeId + countLastListTypeId
+            // let id_q = {}
+            // id_q[lastQuestionId + contI] = lastListTypeId + countLastListTypeId
             
             let id_q_desc = {}
             id_q_desc[lastListTypeId + countLastListTypeId] = tipoQuestaoDescricao
@@ -916,7 +971,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
             });
 
             setNewListType(newListType => [...newListType,id_q_desc] );
-            setQuestionListType(questionListType => [...questionListType,id_q] );
+            // setQuestionListType(questionListType => [...questionListType,id_q] );
 
             objCopy.qst_type = tipoQuestao
             objCopy.qst_type_id = 4
@@ -924,6 +979,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
             objCopy.rsp_pad = valoresRespostas
             // objCopy.rsp_padId = "Sem id para respostas ainda"
             objCopy.rsp_padId = idValoresResposta
+            objCopy.qst_list_type_id = lastListTypeId + countLastListTypeId;
             setCountLastListTypeId(countLastListTypeId + 1);
 
             // let id_q_listOfValues = {}
@@ -934,12 +990,13 @@ function EditUnpublishedForm({logged, user, participantId}) {
             // id_q_listOfValues2[idValoresResposta] = lastQuestionId + contI
             // setAnswerListType2(answerListType2 => [...answerListType2,id_q_listOfValues2] );
 
-        }else{
-            let id_q = {}
-            id_q[lastQuestionId + contI] = null
-            setQuestionListType(questionListType => [...questionListType,id_q] );
-
         }
+        // else{
+        //     let id_q = {}
+        //     id_q[lastQuestionId + contI] = null
+        //     setQuestionListType(questionListType => [...questionListType,id_q] );
+
+        // }
 
  
         if(selectSubordinateQuestion){
