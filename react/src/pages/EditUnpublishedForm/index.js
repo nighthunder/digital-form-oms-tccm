@@ -73,7 +73,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
     const [newListType, setNewListType] = useState([]) // novos tipos de lista - Formato: [id_listtype: descricao]
     const [questionListType, setQuestionListType] = useState([]) // questões/tipo de lista - Formato: [id_questao: id_listtype]
     const [answerListType, setAnswerListType] = useState([]) // respostas dos tipos de lista - [id_listofvalues: descricao]
-    const [answerListType2, setAnswerListType2] = useState([]) // respostas dos tipos de lista - Formato: [id_listofvalues: id_listtype]
+    const [answerListType2, setAnswerListType2] = useState(["9999:9999"]) // respostas dos tipos de lista - Formato: [id_listofvalues: id_listtype]
     // const [countLastListOfValuesId, setCountLastListOfValuesId] = useState(0)
     // const [listSubordinate, setListSubordinate] = useState([]) // Formato: [id_questaosubordinada: id_questaosubordinante]
     // const [listValueSubordinate, setListValueSubordinate] = useState([]) // Formato: [id_daquestao: id_dovalor1, id_dovalor2, id_dovalor3]
@@ -384,7 +384,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
         let param;
         let response;
         param = {
-            stringsubordinateto: JSON.stringify(listSubordinate)
+            stringquestionstypes: JSON.stringify(listSubordinate)
         }
         response = await api.put('/formqstsubordinateto/', param).catch( function (error) {
             console.log(error)
@@ -494,7 +494,11 @@ function EditUnpublishedForm({logged, user, participantId}) {
             var listSubordinate = [];
             var listValueSubordinate = [];
             var questionListType  = [];
-            
+
+            let jump = {};
+            jump[9999] = '9999';
+            listSubordinate.push(jump);
+            listValueSubordinate.push(jump);
 
             var pairKeyGroupId = {}
 
@@ -683,26 +687,27 @@ function EditUnpublishedForm({logged, user, participantId}) {
             // // =======================================================================
 
             // Salvamento das perguntas N3 ==============================================
-            param = {
-                stringquestions: JSON.stringify(listQuestions)
-            }
+            // param = {
+            //     stringquestions: JSON.stringify(listQuestions)
+            // }
 
-            response = await api.put('/formqst/', param).catch( function (error) {
-                console.log(error)
-                console.log("N3 - ", response.data);
-                if(error.response.data.Message) {
-                    // setError(error => [...error,error.response.data.Message]);
-                    setFormError(response.data[0].msgRetorno);
-                } else {
-                    // setError(error => [...error,error.response.data.Message]);
-                    setFormError(response.data[0].msgRetorno);
-                }
-            });
-            if(response) {
-                // setSuccess(success => [...success,response.data.Message]);
-                setFormOk(response.data[0].msgRetorno)
-                updateQstType(listQuestionsTypes); 
-            }
+            // response = await api.put('/formqst/', param).catch( function (error) {
+            //     console.log(error)
+            //     console.log("N3 - ", response.data);
+            //     if(error.response.data.Message) {
+            //         // setError(error => [...error,error.response.data.Message]);
+            //         setFormError(response.data[0].msgRetorno);
+            //     } else {
+            //         // setError(error => [...error,error.response.data.Message]);
+            //         setFormError(response.data[0].msgRetorno);
+            //     }
+            // });
+            // if(response) {
+            //     // setSuccess(success => [...success,response.data.Message]);
+            //     setFormOk(response.data[0].msgRetorno)
+            //     updateQstType(listQuestionsTypes); 
+            //     addSubordinate(listSubordinate);
+            // }
 
             // param = {
             //     language: 1,
@@ -777,28 +782,28 @@ function EditUnpublishedForm({logged, user, participantId}) {
 
 
             // // Salvamento questoes/novo tipo de lista N6 ================================
-            addNewListType(questionListType);
+            // addNewListType(questionListType);
             // // =======================================================================
 
 
-            // // // Salvamento lista de valores respostas de cada tipo de lista N7 ===========
-            // answerList_1(answerListType);
-            // // // =======================================================================
+            // Salvamento lista de valores respostas de cada tipo de lista N7 ===========
+            answerList_1(answerListType);
+            // =======================================================================
 
 
-            // // // Amarrando os novos tipos de lista com as listas de valoresa N8 ===========
-            // answerList_2(answerListType2);
-            // // // =======================================================================
+            // Amarrando os novos tipos de lista com as listas de valoresa N8 ===========
+            answerList_2(answerListType2);
+            // =======================================================================
 
 
-            // // // Salvamento lista de questões subordinadas e subordinantes N9 =============
+            // Salvamento lista de questões subordinadas e subordinantes N9 =============
             // addSubordinate(listSubordinate);
-            // // // =======================================================================  
+            // =======================================================================  
             
 
-            // // // Salvamento array com a lista de valores subordinados N10 ==================
+            // Salvamento array com a lista de valores subordinados N10 ==================
             // addSubordinateValues(listValueSubordinate);
-            // // // =======================================================================  
+            // =======================================================================  
 
         }else{
             setButtonOpen(false);

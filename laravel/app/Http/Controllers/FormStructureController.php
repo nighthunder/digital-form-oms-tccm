@@ -218,6 +218,8 @@ class FormStructureController extends Controller
 
           $respostas = str_replace("{", "", $request->stringlistofvalues);
           $respostas = str_replace("}", "", $respostas);
+          $respostas = str_replace("[", "", $respostas);
+          $respostas = str_replace("]", "", $respostas);
           $respostas = str_replace('"', "", $respostas);
 
           $query_msg = DB::select("CALL postListOfValues('{$respostas}',@p_msg_retorno)");
@@ -236,6 +238,8 @@ class FormStructureController extends Controller
 
           $respostas = str_replace("{", "", $request->stringlisttypeslistofvalues);
           $respostas = str_replace("}", "", $respostas);
+          $respostas = str_replace("[", "", $respostas);
+          $respostas = str_replace("]", "", $respostas);
           $respostas = str_replace('"', "", $respostas);
 
           $query_msg = DB::select("CALL putListTypeListOfValues('{$respostas}',@p_msg_retorno)");
@@ -251,7 +255,7 @@ class FormStructureController extends Controller
     {
         try {
 
-          $respostas = str_replace("{", "", $request->stringsubordinateto);
+          $respostas = str_replace("{", "", $request->stringquestionstypes);
           $respostas = str_replace("}", "", $respostas);
           $respostas = str_replace('"', "", $respostas);
 
