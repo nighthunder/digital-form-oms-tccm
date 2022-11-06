@@ -79,6 +79,8 @@ function EditUnpublishedForm({logged, user, participantId}) {
     // const [listValueSubordinate, setListValueSubordinate] = useState([]) // Formato: [id_daquestao: id_dovalor1, id_dovalor2, id_dovalor3]
     const [error, setError] = useState([]);
     const [success, setSuccess] = useState([]);
+    var ordemPerguntas = 10500;
+    const [newGroups, setNewGroups] = useState([])
 
     useEffect(() => {
         async function loadForm() {
@@ -494,6 +496,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
             var listSubordinate = [];
             var listValueSubordinate = [];
             var questionListType  = [];
+            var questionListGroups  = [];
 
             let jump = {};
             jump[9999] = '9999';
@@ -504,6 +507,8 @@ function EditUnpublishedForm({logged, user, participantId}) {
 
             let lastGroupId = await api.get('/formgroupid/');
             lastGroupId = parseInt(lastGroupId.data[0].msgRetorno);
+
+            console.log("lastGroupId", lastGroupId);
 
             let lastQuestionId = await api.get('/formqstid/');
             lastQuestionId = parseInt(lastQuestionId.data[0].msgRetorno);
@@ -518,18 +523,20 @@ function EditUnpublishedForm({logged, user, participantId}) {
                 orderQuestions.push(parseInt(i.getAttribute("id")))
             });
             document.querySelectorAll('.groupQuestion').forEach(function(el, i) {
-                console.log("el, i", el, i);
+                // console.log("el, i", el, i);
                 pairKeyGroupId[parseInt(el.getAttribute("value"))] = lastGroupId + i
                 let dictValueCurrent = {}
                 dictValueCurrent[lastGroupId + i] = el.querySelector('.MuiInputBase-input.MuiInput-input').value
                 listGroups.push(dictValueCurrent)
             });
-            console.log("pairKeyGroupId", pairKeyGroupId);
+            // console.log("pairKeyGroupId", pairKeyGroupId);
             qstsorder = [];
             // console.log("orderQuestions", orderQuestions);
             orderQuestions.forEach((el, i) => {
                 // console.log("i: ", i, "- el: ", el);
                 let found = questions.find(element => element.qstId === el);
+                found.qstOrder = ordemPerguntas;
+                ordemPerguntas += 1;
                 // setQstOrder(qstsorder => [...qstsorder,found] );
                 qstsorder.push(found)
                 // console.log("found", found);
@@ -555,31 +562,30 @@ function EditUnpublishedForm({logged, user, participantId}) {
                 listNewOrderQuestions.push(dictValueCurrentlistNewOrderQuestions)
             });
             // console.log(location.state.motherID, " - ", location.state.questionnaireID);
-            
-            // let request;
-            // let response;
-            
-            // request = {
-            //     stringgroups: JSON.stringify(listGroups),
-            //     info: user[location.state.hospitalIndex]
-            // }
 
-            // response = await api.put('/formgroup/', request);
-
-            // if (response){
-            //     // setFormError(response.data[0].msgRetorno);
-            //     console.log("deu certo!");
-            // }
+            listQuestions.forEach((element,index )=> {
+                let found = qstsorder.find(el => {
+                    return el.dsc_qst == Object.values(element)[0]
+                });
+                let dictValueCurrentQuestionListGroups = {};
+                if(found.qstGroupId.length > 0){
+                    dictValueCurrentQuestionListGroups[Object.keys(element)[0]] = found.qstGroupId;
+                    questionListGroups.push(dictValueCurrentQuestionListGroups);
+                }
+                // else{
+                //     dictValueCurrentQuestionListGroups[Object.keys(element)[0]] = null;
+                // }
+            });
 
             qstsorder.forEach((element,index )=> {
                 
                 if(element.qst_type == "List question" || element.qst_type == "YNU_Question" || element.qst_type == "ynun_list"){
-                    console.log("LISTAAAA", element);
+                    // console.log("LISTAAAA", element);
                     var found_listType_id;
                     listQuestions.forEach((el,index_2) => {
                         let obj = Object.values(el);
                         if (obj == element.dsc_qst){
-                            console.log("obj", obj);
+                            // console.log("obj", obj);
                             found_listType_id = Object.keys(el);
                         }
                     })
@@ -628,161 +634,209 @@ function EditUnpublishedForm({logged, user, participantId}) {
                 
             });
 
-            // // Salvamento do modulo N1 ==========================================
-            // param = {
-            //     userid : user[0].userid,    
-            //     grouproleid : user[0].grouproleid,    
-            //     hospitalunitid : user[0].hospitalunitid, 
-            //     description: description,
-            //     moduleStatusID: 2,
-            //     questionnaireID: location.state.questionnaireID,
-            //     lastModification: dateCreate,
-            //     creationDate: dateCreate,
-            // }
+            // Salvamento do modulo N1 ==========================================
+            param = {
+                userid : user[0].userid,    
+                grouproleid : user[0].grouproleid,    
+                hospitalunitid : user[0].hospitalunitid, 
+                description: description,
+                moduleStatusID: 2,
+                questionnaireID: location.state.questionnaireID,
+                lastModification: dateCreate,
+                creationDate: dateCreate,
+            }
 
-            // response = await api.post('/module/', param).catch( function (error) {
-            //     console.log(error)
-            //     if(error.response.data.Message) {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     } else {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     }
-            // });
-            // if(response) {
-            //     // setSuccess(success => [...success,response.data.Message]);
-            //     // setFormOk(response.data[0].msgRetorno)
-            //     console.log("N1 OK - ", response.data);
-            // }
-            // // =======================================================================
+            response = await api.post('/module/', param).catch( function (error) {
+                console.log(error)
+                if(error.response.data.Message) {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                } else {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                }
+            });
+            if(response) {
+                // setSuccess(success => [...success,response.data.Message]);
+                // setFormOk(response.data[0].msgRetorno)
+                console.log("N1 OK - ", response.data);
+            }
+            // =======================================================================
 
-            // // Salvamento da ordem das perguntas N2 =====================================
-            // let lastModuloId = await api.get('/formmoduleid/');
-            // lastModuloId = parseInt(lastModuloId.data[0].msgRetorno);
+            // Salvamento da ordem das perguntas N2 =====================================
+            let lastModuloId = await api.get('/formmoduleid/');
+            lastModuloId = parseInt(lastModuloId.data[0].msgRetorno);
 
-            // param = {
-            //     questionsorder: JSON.stringify(listNewOrderQuestions),
-            //     modulo: lastModuloId
-            // }
+            param = {
+                questionsorder: JSON.stringify(listNewOrderQuestions),
+                modulo: lastModuloId
+            }
 
-            // response = await api.post('/formpostqstorder/' + lastModuloId, param).catch( function (error) {
-            //     console.log("N2 - ", error)
-            //     console.log("N2 - ", response.data);
-            //     if(error.response.data.Message) {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     } else {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     }
-            // });
-            // if(response) {
-            //     // setSuccess(success => [...success,response.data.Message]);
-            //     setFormOk(response.data[0].msgRetorno)
-            //     // console.log("N2 OK - ", response.data[0].msgRetorno);
+            console.log("param N2", param);
 
-            // }
+            response = await api.put('/formpostqstorder/' + lastModuloId, param).catch( function (error) {
+                console.log("N2 - ", error)
+                console.log("N2 - ", response.data);
+                if(error.response.data.Message) {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                } else {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                }
+            });
+            if(response) {
+                // setSuccess(success => [...success,response.data.Message]);
+                setFormOk(response.data[0].msgRetorno)
+                // console.log("N2 OK - ", response.data[0].msgRetorno);
 
-            // // =======================================================================
+            }
+
+            // =======================================================================
+
+            // Salvamento dos novos Grupos ===========================================
+            
+            param = {
+                stringgroups: JSON.stringify(newGroups)
+                // info: user[location.state.hospitalIndex]
+            }
+
+            response = await api.put('/formgroup/', param).catch( function (error) {
+                console.log(error)
+                if(error.response.data.Message) {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                } else {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                }
+            });
+
+            if (response){
+                setFormOk(response.data[0].msgRetorno);
+                // console.log("deu certo!");
+            }
+
+            // =======================================================================
 
             // Salvamento das perguntas N3 ==============================================
-            // param = {
-            //     stringquestions: JSON.stringify(listQuestions)
-            // }
+            param = {
+                stringquestions: JSON.stringify(listQuestions)
+            }
 
-            // response = await api.put('/formqst/', param).catch( function (error) {
-            //     console.log(error)
-            //     console.log("N3 - ", response.data);
-            //     if(error.response.data.Message) {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     } else {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     }
-            // });
-            // if(response) {
-            //     // setSuccess(success => [...success,response.data.Message]);
-            //     setFormOk(response.data[0].msgRetorno)
-            //     updateQstType(listQuestionsTypes); 
-            //     addSubordinate(listSubordinate);
-            // }
+            response = await api.put('/formqst/', param).catch( function (error) {
+                console.log(error)
+                console.log("N3 - ", response.data);
+                if(error.response.data.Message) {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                } else {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                }
+            });
+            if(response) {
+                // setSuccess(success => [...success,response.data.Message]);
+                setFormOk(response.data[0].msgRetorno)
+                updateQstType(listQuestionsTypes); 
+                addSubordinate(listSubordinate);
+            }
 
-            // param = {
-            //     language: 1,
-            //     stringquestions: JSON.stringify(listQuestions)
-            // }
+            param = {
+                language: 1,
+                stringquestions: JSON.stringify(listQuestions)
+            }
 
-            // response = await api.put('/formqstlang/', param).catch( function (error) {
-            //     console.log(error)
-            //     console.log("N3 - ", response.data);
-            //     if(error.response.data.Message) {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     } else {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     }
-            // });
-            // if(response) {
-            //     // setSuccess(success => [...success,response.data.Message]);
-            //     setFormOk(response.data[0].msgRetorno)
-            // }
+            response = await api.put('/formqstlang/', param).catch( function (error) {
+                console.log(error)
+                console.log("N3 - ", response.data);
+                if(error.response.data.Message) {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                } else {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                }
+            });
+            if(response) {
+                // setSuccess(success => [...success,response.data.Message]);
+                setFormOk(response.data[0].msgRetorno)
+            }
 
-            // param = {
-            //     language: 2,
-            //     stringquestions: JSON.stringify(listQuestions)
-            // }
+            param = {
+                language: 2,
+                stringquestions: JSON.stringify(listQuestions)
+            }
 
-            // response = await api.put('/formqstlang/', param).catch( function (error) {
-            //     console.log(error)
-            //     console.log("N3 - ", response.data);
-            //     if(error.response.data.Message) {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     } else {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     }
-            // });
-            // if(response) {
-            //     // setSuccess(success => [...success,response.data.Message]);
-            //     setFormOk(response.data[0].msgRetorno)
-            // }
+            response = await api.put('/formqstlang/', param).catch( function (error) {
+                console.log(error)
+                console.log("N3 - ", response.data);
+                if(error.response.data.Message) {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                } else {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                }
+            });
+            if(response) {
+                // setSuccess(success => [...success,response.data.Message]);
+                setFormOk(response.data[0].msgRetorno)
+            }
             
-            // // =======================================================================
+            // =======================================================================
             
-            // // Salvamento tipo novos de lista N4 ========================================
+            // Salvamento tipo novos de lista N4 ========================================
 
-            // param = {
-            //     stringlisttypes: JSON.stringify(newListType)
-            // }
+            param = {
+                stringlisttypes: JSON.stringify(newListType)
+            }
 
-            // response = await api.put('/formqstlisttype/', param).catch( function (error) {
-            //     console.log(error)
-            //     if(error.response.data.Message) {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     } else {
-            //         // setError(error => [...error,error.response.data.Message]);
-            //         setFormError(response.data[0].msgRetorno);
-            //     }
-            // });
-            // if(response) {
-            //     // setSuccess(success => [...success,response.data.Message]);
-            //     setFormOk(response.data[0].msgRetorno)
-            // }
+            response = await api.put('/formqstlisttype/', param).catch( function (error) {
+                console.log(error)
+                if(error.response.data.Message) {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                } else {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                }
+            });
+            if(response) {
+                // setSuccess(success => [...success,response.data.Message]);
+                setFormOk(response.data[0].msgRetorno)
+            }
 
-            // // =======================================================================
+            // =======================================================================
 
             // Salvamento dos tipo de questoes N5 =======================================
-            // updateQstType(listQuestionsTypes); 
+            updateQstType(listQuestionsTypes); 
             // =======================================================================
+
+            // Salvando groupquestionid ================================================
+            param = {
+                stringgroups: JSON.stringify(questionListGroups)
+            }
+
+            response = await api.put('/formqstgroup/', param).catch( function (error) {
+                console.log(error)
+                if(error.response.data.Message) {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                } else {
+                    // setError(error => [...error,error.response.data.Message]);
+                    setFormError(response.data[0].msgRetorno);
+                }
+            });
+            if(response) {
+                // setSuccess(success => [...success,response.data.Message]);
+                setFormOk(response.data[0].msgRetorno)
+            }
+            // ===========================================================================
 
 
             // // Salvamento questoes/novo tipo de lista N6 ================================
-            // addNewListType(questionListType);
+            addNewListType(questionListType);
             // // =======================================================================
 
 
@@ -797,12 +851,12 @@ function EditUnpublishedForm({logged, user, participantId}) {
 
 
             // Salvamento lista de questões subordinadas e subordinantes N9 =============
-            // addSubordinate(listSubordinate);
+            addSubordinate(listSubordinate);
             // =======================================================================  
             
 
             // Salvamento array com a lista de valores subordinados N10 ==================
-            // addSubordinateValues(listValueSubordinate);
+            addSubordinateValues(listValueSubordinate);
             // =======================================================================  
 
         }else{
@@ -813,6 +867,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
         console.log("location.state.questionnaireID", location.state.questionnaireID);
         console.log("listNewOrderQuestions", listNewOrderQuestions);
         console.log("listQuestions", listQuestions);
+        console.log("questionListGroups", questionListGroups);
         console.log("listQuestionsTypes", listQuestionsTypes);
         console.log("listGroupsQuestions", listGroupsQuestions);
         console.log("newListType", newListType);
@@ -821,6 +876,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
         console.log("answerListType2", answerListType2);
         console.log("listSubordinate", listSubordinate);
         console.log("listValueSubordinate", listValueSubordinate);
+        console.log("newGroups", newGroups);
 
     }
 
@@ -855,7 +911,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
     ) {
 
         let lastGroupId = await api.get('/formgroupid/');
-        lastGroupId = parseInt(lastGroupId.data[0].msgRetorno);
+        lastGroupId = lastGroupId.data[0].msgRetorno;
 
         let lastQuestionId = await api.get('/formqstid/');
         lastQuestionId = parseInt(lastQuestionId.data[0].msgRetorno);
@@ -888,6 +944,12 @@ function EditUnpublishedForm({logged, user, participantId}) {
 
         if(descricaoNovoGrupo){
             objCopy.dsc_qst_grp = descricaoNovoGrupo
+            objCopy.qstGroupId = lastGroupId
+
+            let tempStructNewGroup = {}
+            tempStructNewGroup[lastGroupId] = descricaoNovoGrupo
+            console.log("tempStructNewGroup", tempStructNewGroup);
+            setNewGroups(newGroups => [...newGroups,tempStructNewGroup]);
         }
 
         objCopy.dsc_qst = descricaoPergunta
