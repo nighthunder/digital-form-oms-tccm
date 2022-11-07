@@ -312,7 +312,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
         });
         if(response) {
             // setSuccess(success => [...success,response.data.Message]);
-            setFormOk(response.data[0].msgRetorno)
+                setFormOk(response.data[0].msgRetorno)
         }
     }
 
@@ -334,7 +334,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
         });
         if(response) {
             // setSuccess(success => [...success,response.data.Message]);
-            setFormOk(response.data[0].msgRetorno)
+                setFormOk(response.data[0].msgRetorno)
         }
     }
 
@@ -356,7 +356,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
         });
         if(response) {
             // setSuccess(success => [...success,response.data.Message]);
-            setFormOk(response.data[0].msgRetorno)
+                setFormOk(response.data[0].msgRetorno)
         }
     }
 
@@ -378,7 +378,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
         });
         if(response) {
             // setSuccess(success => [...success,response.data.Message]);
-            setFormOk(response.data[0].msgRetorno)
+                setFormOk(response.data[0].msgRetorno)
         }
     }
 
@@ -400,7 +400,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
         });
         if(response) {
             // setSuccess(success => [...success,response.data.Message]);
-            setFormOk(response.data[0].msgRetorno)
+                setFormOk(response.data[0].msgRetorno)
         }
     }
 
@@ -422,7 +422,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
         });
         if(response) {
             // setSuccess(success => [...success,response.data.Message]);
-            setFormOk(response.data[0].msgRetorno)
+                setFormOk(response.data[0].msgRetorno)
         }
     }
 
@@ -646,8 +646,8 @@ function EditUnpublishedForm({logged, user, participantId}) {
             });
             if(response) {
                 // setSuccess(success => [...success,response.data.Message]);
-                // setFormOk(response.data[0].msgRetorno)
-                console.log("N1 OK - ", response.data);
+                    setFormOk("Carregando...");
+                // console.log("N1 OK - ", response.data);
             }
             // =======================================================================
 
@@ -675,7 +675,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
             });
             if(response) {
                 // setSuccess(success => [...success,response.data.Message]);
-                setFormOk(response.data[0].msgRetorno)
+                    setFormOk("Ordem das perguntas atualizadas com sucesso.");
                 // console.log("N2 OK - ", response.data[0].msgRetorno);
 
             }
@@ -701,7 +701,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
             });
 
             if (response){
-                setFormOk(response.data[0].msgRetorno);
+                //     setFormOk(response.data[0].msgRetorno);
                 // console.log("deu certo!");
             }
 
@@ -725,7 +725,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
             });
             if(response) {
                 // setSuccess(success => [...success,response.data.Message]);
-                setFormOk(response.data[0].msgRetorno)
+                    setFormOk(response.data[0].msgRetorno);
                 updateQstType(listQuestionsTypes); 
                 addSubordinate(listSubordinate);
             }
@@ -748,7 +748,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
             });
             if(response) {
                 // setSuccess(success => [...success,response.data.Message]);
-                setFormOk(response.data[0].msgRetorno)
+                //     setFormOk(response.data[0].msgRetorno);
             }
 
             param = {
@@ -769,7 +769,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
             });
             if(response) {
                 // setSuccess(success => [...success,response.data.Message]);
-                setFormOk(response.data[0].msgRetorno)
+                //     setFormOk(response.data[0].msgRetorno);
             }
             
             // =======================================================================
@@ -792,7 +792,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
             });
             if(response) {
                 // setSuccess(success => [...success,response.data.Message]);
-                setFormOk(response.data[0].msgRetorno)
+                    setFormOk(response.data[0].msgRetorno);
             }
 
             // =======================================================================
@@ -818,7 +818,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
             });
             if(response) {
                 // setSuccess(success => [...success,response.data.Message]);
-                setFormOk(response.data[0].msgRetorno)
+                    setFormOk(response.data[0].msgRetorno);
             }
             // ===========================================================================
 
@@ -847,6 +847,8 @@ function EditUnpublishedForm({logged, user, participantId}) {
             addSubordinateValues(listValueSubordinate);
             // =======================================================================  
 
+            
+
         }else{
             setButtonOpen(false);
         }
@@ -866,7 +868,9 @@ function EditUnpublishedForm({logged, user, participantId}) {
         console.log("listSubordinate", listSubordinate);
         console.log("listValueSubordinate", listValueSubordinate);
         console.log("newGroups", newGroups);
-
+        setTimeout(() => {
+            setFormOk("Finalizado com sucesso")
+        }, 2500);
     }
 
     function handleBackButton(){
@@ -878,7 +882,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
     }
 
     function FormOk(props){
-        return <p className="error error2">{props.formOk}</p>
+        return <p className="error success2">{props.formOk}</p>
     }
 
     const [countLastListTypeId, setCountLastListTypeId] = useState(0);

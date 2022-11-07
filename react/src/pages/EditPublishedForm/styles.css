@@ -222,5 +222,15 @@ aside{
 	box-shadow: 5px 5px 5px #fff;
 }
 
+.success2 {
+    background: #228b22;
+    border-radius: 5px;
+	padding: 15px;
+	color: #eadcdc !important;
+	font-weight: bold;
+	opacity: .7;
+	box-shadow: 5px 5px 5px #fff;
+}
+
 
 

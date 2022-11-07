@@ -309,7 +309,7 @@ function ShowSurvey({user}) {
                       </tr>
                     ))
             }
-            {modules[0] && !(modules[1]) && motherModules[1] &&
+            {modules.length > 0 && !(modules[1]) && motherModules[1] &&
               <tr value={motherModules[1].description} key={motherModules[1].crfFormsID} data-key={motherModules[1].description} onClick={() => handleClickOpen(motherModules[1])}>
                   <td>{motherModules[1].description}</td>
                   <td>{motherModules[1].crfFormsStatus}</td>
@@ -317,7 +317,7 @@ function ShowSurvey({user}) {
                   <td>{getPtBrDate(new Date(motherModules[1].lastModification))}</td> 
                   <td><Edit /></td>
               </tr>}
-              {!(modules[2]) && motherModules[2] &&
+              {modules.length > 0 && !(modules[2]) && motherModules[2] &&
               <tr value={motherModules[2].description} key={motherModules[2].crfFormsID} data-key={motherModules[2].description} onClick={() => handleClickOpen(motherModules[2])}>
                   <td>{motherModules[2].description}</td>
                   <td>{motherModules[2].crfFormsStatus}</td>
