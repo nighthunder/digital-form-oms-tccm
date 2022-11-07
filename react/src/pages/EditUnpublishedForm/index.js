@@ -44,7 +44,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
     const location = useLocation();  
     const classes = useStyles();
     console.log("Location Formulario", location);
-    const titles = ['Admissão','Acompanhamento','Desfecho']
+    const titles = ['Desfecho','Admissão','Acompanhamento']
     const [form, setForm] = useState({}); // descrições das perguntas
     const [qstgroups, setQstGroups] = useState({}); // descrições dos grupos
     const [formError, setFormError] = useState('')
@@ -514,7 +514,17 @@ function EditUnpublishedForm({logged, user, participantId}) {
             let lastQuestionId = await api.get('/formqstid/');
             lastQuestionId = parseInt(lastQuestionId.data[0].msgRetorno);
 
-            let description = "Formulário de " + titles[location.state.modulo-1]
+            if(location.state.modulo == 1){
+                var description = "Formulário de Admissão"
+            }
+            if(location.state.modulo == 2){
+                var description = "Acompanhamento"
+                
+            }
+            if(location.state.modulo == 3){
+                var description = "Formulário de alta/óbito"
+                
+            }
 
             // setCreationDate(convertToDate(new Date()));
             let dateCreate = convertToDate(new Date())
@@ -1164,7 +1174,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                 </header>
                 <hr/>
                 <div className="mainNav">
-				    <h2 className="pageTitle pageTitle1">Módulo { location.state.modulo } - { titles[location.state.modulo-1] } - {location.state.moduleStatus} [Edição]</h2>
+				    <h2 className="pageTitle pageTitle1">Módulo { location.state.modulo } - { titles[(location.state.modulo%3)] } - {location.state.moduleStatus} [Edição]</h2>
                     <ArrowBackIcon className="ArrowBack ArrowBack1" onClick={handleBackButton}/>
                     <Scrollchor to="#vodan_br"><ArrowUpwardIcon className="ArrowUp" /></Scrollchor>
                 </div>
