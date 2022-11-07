@@ -1351,7 +1351,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                         { formOk?   <FormOk formOk={formOk}></FormOk> : ''  } 
                         {/* <span className="error">{ error }</span>
                         <span className="success">{ success }</span> */}
-                        { buttonOpen ? <Button variant="contained" type="submit" color="primary">Salvar</Button> : '' }
+                        {location.state.motherID !== location.state.questionnaireID ? <Button variant="contained" type="submit" color="primary">Salvar</Button> : '' }
                         {/* <Button onClick={handleReorder} type="submit" variant="contained" color="primary">Salvar</Button> */}
                         {/* <Button onClick={handleReorder} variant="contained" color="primary">Salvar</Button> */}
                     </div>

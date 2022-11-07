@@ -315,7 +315,7 @@ function EditPublishedForm({logged, user, participantId}) {
     }
 
     function FormOk(props){
-        return <p className="error error2">{props.formOk}</p>
+        return <p className="error success2">{props.formOk}</p>
     }
 
     return (
