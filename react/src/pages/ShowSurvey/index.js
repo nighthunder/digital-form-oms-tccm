@@ -309,21 +309,23 @@ function ShowSurvey({user}) {
                       </tr>
                     ))
             }
-            { modules.length > 0 &&
-                modules.map(q_son=> (
-                    motherModules.map(q_mother => (
-                      q_mother.description != q_son.description &&
-                      <tr value={q_mother.description} key={q_mother.crfFormsID} data-key={q_mother.description} onClick={() => handleClickOpen(q_mother)}>
-                          <td>{q_mother.description}</td>
-                          <td>{q_mother.crfFormsStatus}</td>
-                          <td>{getPtBrDate(new Date(q_mother.creationDate))}</td> 
-                          <td>{getPtBrDate(new Date(q_mother.lastModification))}</td> 
-                          <td><Edit /></td>
-                      </tr>
-                    ))
-
-                ))
-            }
+            {modules[0] && !(modules[1]) && motherModules[1] &&
+              <tr value={motherModules[1].description} key={motherModules[1].crfFormsID} data-key={motherModules[1].description} onClick={() => handleClickOpen(motherModules[1])}>
+                  <td>{motherModules[1].description}</td>
+                  <td>{motherModules[1].crfFormsStatus}</td>
+                  <td>{getPtBrDate(new Date(motherModules[1].creationDate))}</td> 
+                  <td>{getPtBrDate(new Date(motherModules[1].lastModification))}</td> 
+                  <td><Edit /></td>
+              </tr>}
+              {!(modules[2]) && motherModules[2] &&
+              <tr value={motherModules[2].description} key={motherModules[2].crfFormsID} data-key={motherModules[2].description} onClick={() => handleClickOpen(motherModules[2])}>
+                  <td>{motherModules[2].description}</td>
+                  <td>{motherModules[2].crfFormsStatus}</td>
+                  <td>{getPtBrDate(new Date(motherModules[2].creationDate))}</td> 
+                  <td>{getPtBrDate(new Date(motherModules[2].lastModification))}</td> 
+                  <td><Edit /></td>
+              </tr>}
+                
             
             </tbody>
                     <Dialog key={location.state.questionnaireStatus}

@@ -487,7 +487,8 @@ function EditUnpublishedForm({logged, user, participantId}) {
             let param;
             let response;
             console.log("submit - salvamento");
-            var listNewOrderQuestions = []
+            var indexPairQst = [];
+            var listNewOrderQuestions = [];
             var orderQuestions = [];
             var listGroups = [];
             var listQuestions = [];
@@ -529,12 +530,18 @@ function EditUnpublishedForm({logged, user, participantId}) {
                 dictValueCurrent[lastGroupId + i] = el.querySelector('.MuiInputBase-input.MuiInput-input').value
                 listGroups.push(dictValueCurrent)
             });
+            console.log("orderQuestions", orderQuestions);
             // console.log("pairKeyGroupId", pairKeyGroupId);
             qstsorder = [];
             // console.log("orderQuestions", orderQuestions);
             orderQuestions.forEach((el, i) => {
                 // console.log("i: ", i, "- el: ", el);
                 let found = questions.find(element => element.qstId === el);
+
+                let indexPairQstTemp = {}
+                indexPairQstTemp[lastQuestionId + i] = el;
+                indexPairQst.push(indexPairQstTemp)
+
                 found.qstOrder = ordemPerguntas;
                 ordemPerguntas += 1;
                 // setQstOrder(qstsorder => [...qstsorder,found] );
@@ -550,88 +557,69 @@ function EditUnpublishedForm({logged, user, participantId}) {
 
                 dictValueCurrentListQuestions[lastQuestionId + i] = found.dsc_qst
                 dictValueCurrentlistNewOrderQuestions[lastQuestionId + i] = found.qstOrder
-                if (parseInt(found.qstGroupId)){
-                    dictValueCurrentListGroupsQuestions[lastQuestionId + i] = pairKeyGroupId[parseInt(found.qstGroupId)]
-                }else{
-                    dictValueCurrentListGroupsQuestions[lastQuestionId + i] = null
+                if (found.qstGroupId){
+                    dictValueCurrentListGroupsQuestions[lastQuestionId + i] = found.qstGroupId
+                    listGroupsQuestions.push(dictValueCurrentListGroupsQuestions)
                 }
+                // else{
+                //     dictValueCurrentListGroupsQuestions[lastQuestionId + i] = null
+                // }
 
                 listQuestions.push(dictValueCurrentListQuestions)
-                listGroupsQuestions.push(dictValueCurrentListGroupsQuestions)
                 listQuestionsTypes.push(dictValueCurrentlistQuestionsTypes)
                 listNewOrderQuestions.push(dictValueCurrentlistNewOrderQuestions)
             });
+            console.log("qstsorder", qstsorder);
             // console.log(location.state.motherID, " - ", location.state.questionnaireID);
 
-            listQuestions.forEach((element,index )=> {
+            indexPairQst.forEach((element,index )=> {
+                let id_old = Object.values(element)[0]
+                let id_new = Object.keys(element)[0]
+
                 let found = qstsorder.find(el => {
-                    return el.dsc_qst == Object.values(element)[0]
+                    return el.qstId == id_old
                 });
+
+                // console.log("found", found);
                 let dictValueCurrentQuestionListGroups = {};
                 if(found.qstGroupId.length > 0){
                     dictValueCurrentQuestionListGroups[Object.keys(element)[0]] = found.qstGroupId;
                     questionListGroups.push(dictValueCurrentQuestionListGroups);
                 }
-                // else{
-                //     dictValueCurrentQuestionListGroups[Object.keys(element)[0]] = null;
-                // }
-            });
 
-            qstsorder.forEach((element,index )=> {
-                
-                if(element.qst_type == "List question" || element.qst_type == "YNU_Question" || element.qst_type == "ynun_list"){
-                    // console.log("LISTAAAA", element);
-                    var found_listType_id;
-                    listQuestions.forEach((el,index_2) => {
-                        let obj = Object.values(el);
-                        if (obj == element.dsc_qst){
-                            // console.log("obj", obj);
-                            found_listType_id = Object.keys(el);
-                        }
-                    })
+                if(found.qst_type == "List question" || found.qst_type == "YNU_Question" || found.qst_type == "YNUN_Question"){
                     let type_q = {};
-                    type_q[found_listType_id] = element.qst_list_type_id
+                    type_q[id_new] = found.qst_list_type_id
                     questionListType.push(type_q)
                 }
-                
-                if(element.sub_qst.length > 0){
-                    // console.log("element", element);
-                    var found_subordinante;
-                    var found_subordinada;
-                    listQuestions.forEach((el,index_2) => {
-                        let obj = Object.values(el);
-                        if (obj == element.sub_qst){
-                            // console.log("obj", obj[0]);
-                            // var found_obj = listQuestions.find(el => el === obj[0]);
-                            found_subordinante = Object.keys(el);
-                            // console.log("found_obj", found_obj);
-                            // console.log("found_subordinante", found_subordinante);
-                        }
-                        if(obj == element.dsc_qst){
-                            found_subordinada = Object.keys(el);
-                            // console.log("found_subordinada", found_subordinada);
-                        }
-                    })
-
-                    try {
+                try {
+                    if(found.sub_qst.length > 0){
+                        // console.log("element", element);
+                        var found_subordinante = indexPairQst.find(el => {
+                            return Object.values(el)[0] == found.idsub_qst
+                        });
+                        found_subordinante = Object.keys(found_subordinante)[0]
+                        var found_subordinada = id_new
+    
                         let sub_q = {};
                         // console.log("found_subordinada", found_subordinada);
-                        sub_q[found_subordinada[0]] = found_subordinante[0];
+                        sub_q[found_subordinada] = found_subordinante;
                         listSubordinate.push(sub_q)
-
-                        let str_sub = '' + element.sub_qst_values;
+    
+                        let str_sub = '' + found.sub_qst_values;
                         let str_array_replace_sub = str_sub.replaceAll(",", ';');
                         let sub_q_2 = {};
                         // console.log("found_subordinada", found_subordinada);
-                        sub_q_2[found_subordinada[0]] = str_array_replace_sub;
+                        sub_q_2[found_subordinada] = str_array_replace_sub;
                         listValueSubordinate.push(sub_q_2)
-                        
-                    } catch (error) {
-                        console.log("error", error);
+                            
                     }
-    
+                    
+                } catch (error) {
+                    console.log("error", error);
+                    
                 }
-                
+
             });
 
             // Salvamento do modulo N1 ==========================================
@@ -863,6 +851,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
             setButtonOpen(false);
         }
         console.log("qstsorder", qstsorder);
+        console.log("indexPairQst", indexPairQst);
         console.log("listGroups", listGroups);
         console.log("location.state.questionnaireID", location.state.questionnaireID);
         console.log("listNewOrderQuestions", listNewOrderQuestions);
