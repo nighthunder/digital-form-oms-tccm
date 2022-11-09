@@ -375,10 +375,6 @@ function ShowSurvey({user}) {
                         {
                           popupAction == "publication" && canShowPublishButton && <Button onClick={!canBePublished ? handlePublishing : publish} autoFocus>Publicar</Button>
                         }
-                        <p>comeca aqui:</p>
-                        {popupAction}
-                        {canShowPublishButton}
-                        {canBePublished}
                       </DialogActions>
                     </Dialog>
           </table>
