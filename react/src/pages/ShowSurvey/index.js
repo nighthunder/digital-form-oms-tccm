@@ -30,6 +30,7 @@ function ShowSurvey({user}) {
   const [moduleStatus, setModuleStatus] = useState('');
   const [motherID, setMotherID] = useState(''); // ID do mãe, se houver 
   const [motherModules, setMotherModules] = useState([]); // Módulos das mãe, se houver
+  const [motherModulesDiference, setMotherModulesDiference] = useState([]);
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
   const [modulesLoaded, setModulesLoaded] = useState(false);
@@ -77,6 +78,8 @@ function ShowSurvey({user}) {
       var yyyy = somedate.getFullYear();
       return dd + '/' + mm + '/' + yyyy;
   }
+
+  
 
   // popup  
 	const [open, setOpen] = React.useState(false);
@@ -212,6 +215,29 @@ function ShowSurvey({user}) {
       //console.log(value);
       setSearch(value);
   }
+  
+  var descModules = [];
+
+  modules.forEach(element => {
+    descModules.push(element.description)
+  });
+
+  useEffect(() => {
+  
+    console.log("descModules", descModules);
+    setMotherModulesDiference([]);
+    motherModules.forEach(element => {
+      let desc = element.description;
+      if(!(descModules.includes(desc))){
+        console.log("element", element);
+        setMotherModulesDiference(motherModulesDiference => [...motherModulesDiference,element])
+      }
+    });
+  }, [motherModules, modules])
+  
+  
+  console.log("motherModulesDiference", motherModulesDiference);
+  // console.log("motherModules", motherModules);
 
 	return (
 
@@ -309,23 +335,18 @@ function ShowSurvey({user}) {
                       </tr>
                     ))
             }
-            {modules.length > 0 && !(modules[1]) && motherModules[1] &&
-              <tr value={motherModules[1].description} key={motherModules[1].crfFormsID} data-key={motherModules[1].description} onClick={() => handleClickOpen(motherModules[1])}>
-                  <td>{motherModules[1].description}</td>
-                  <td>{motherModules[1].crfFormsStatus}</td>
-                  <td>{getPtBrDate(new Date(motherModules[1].creationDate))}</td> 
-                  <td>{getPtBrDate(new Date(motherModules[1].lastModification))}</td> 
-                  <td><Edit /></td>
-              </tr>}
-              {modules.length > 0 && !(modules[2]) && motherModules[2] &&
-              <tr value={motherModules[2].description} key={motherModules[2].crfFormsID} data-key={motherModules[2].description} onClick={() => handleClickOpen(motherModules[2])}>
-                  <td>{motherModules[2].description}</td>
-                  <td>{motherModules[2].crfFormsStatus}</td>
-                  <td>{getPtBrDate(new Date(motherModules[2].creationDate))}</td> 
-                  <td>{getPtBrDate(new Date(motherModules[2].lastModification))}</td> 
-                  <td><Edit /></td>
-              </tr>}
-                
+
+            {modules.length > 0 && motherModulesDiference.length > 0 &&
+                motherModulesDiference.map(q => ( 
+                      <tr value={q.description} key={q.crfFormsID} data-key={q.description} onClick={() => handleClickOpen(q)}>
+                          <td>{q.description}</td>
+                          <td>{q.crfFormsStatus}</td>
+                          <td>{getPtBrDate(new Date(q.creationDate))}</td> 
+                          <td>{getPtBrDate(new Date(q.lastModification))}</td> 
+                          <td><Edit /></td>
+                      </tr>
+                ))
+            }                
             
             </tbody>
                     <Dialog key={location.state.questionnaireStatus}

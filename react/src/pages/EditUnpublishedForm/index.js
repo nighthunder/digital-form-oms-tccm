@@ -58,6 +58,8 @@ function EditUnpublishedForm({logged, user, participantId}) {
     var swapQstsOrder = [];
     const [loadedResponses, setLoadedResponses] = useState(false);
     const [hospitalName, setHospitalName] = useState('');
+	const [modules, setModules] = useState([]);
+	const [currentModules, setCurrentModules] = useState([]);
 
     // popup
     const [popupTitle, setPopupTitle] = useState('');
@@ -93,8 +95,24 @@ function EditUnpublishedForm({logged, user, participantId}) {
         }
         loadForm();
         setHospitalName(user[location.state.hospitalIndex].hospitalName);
+
+        async function loadModules() {
+            const response = await api.get('/modules/'+location.state.questionnaireID);
+            if(response.data) {
+              setModules(response.data);
+            }  
+        } 
+        loadModules()
     }, [])
 
+    useEffect(() => {
+        modules.forEach(element => {
+            if(element.crfFormsID == location.state.modulo){
+                setCurrentModules(element)
+            }
+        });
+      }, [modules])
+    
     //Options para os selects do form de novas questões
     const optionsSubordinateQuestion = []
     questions.map(
@@ -1165,6 +1183,8 @@ function EditUnpublishedForm({logged, user, participantId}) {
         setCheckedSubordinateQuestion(event.target.checked)
         setSubordinateQuestionShow(event.target.checked);
     }
+    console.log("Modules", modules);
+    console.log("currentMoludes", currentModules);
 
     return (
         <main className="container">
@@ -1174,7 +1194,7 @@ function EditUnpublishedForm({logged, user, participantId}) {
                 </header>
                 <hr/>
                 <div className="mainNav">
-				    <h2 className="pageTitle pageTitle1">Módulo { location.state.modulo } - { titles[(location.state.modulo%3)] } - {location.state.moduleStatus} [Edição]</h2>
+				    <h2 className="pageTitle pageTitle1">Módulo { location.state.modulo } - { currentModules.length === 0 ? titles[(location.state.modulo%3)] : currentModules.description} - {location.state.moduleStatus} [Edição]</h2>
                     <ArrowBackIcon className="ArrowBack ArrowBack1" onClick={handleBackButton}/>
                     <Scrollchor to="#vodan_br"><ArrowUpwardIcon className="ArrowUp" /></Scrollchor>
                 </div>
